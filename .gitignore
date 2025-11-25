@@ -1,10 +1,10 @@
-----------------------------------------------------------------------
+#----------------------------------------------------------------------
 
-BASIS: PYTHON STANDARD REGELN
+#BASIS: PYTHON STANDARD REGELN
 
-----------------------------------------------------------------------
+#----------------------------------------------------------------------
 
-Byte-compiled / optimized / DLL files
+#Byte-compiled / optimized / DLL files
 
 pycache/
 *.py[codz]
@@ -14,7 +14,7 @@ C extensions
 
 *.so
 
-Distribution / packaging
+#Distribution / packaging
 
 .Python
 build/
@@ -35,7 +35,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-Environments (Virtual Environments)
+#Environments (Virtual Environments)
 
 .venv
 env/
@@ -44,44 +44,44 @@ ENV/
 env.bak/
 venv.bak/
 
-----------------------------------------------------------------------
+#----------------------------------------------------------------------
 
-FLASK & SICHERHEIT (KRITISCHE ERGÄNZUNGEN)
+#FLASK & SICHERHEIT 
 
-----------------------------------------------------------------------
+#----------------------------------------------------------------------
 
-KRITISCHE GEHEIMNISSE (MUSS IGNORIERT WERDEN)
+#KRITISCHE GEHEIMNISSE (MUSS IGNORIERT WERDEN)
 
-Diese Dateien enthalten Umgebungsvariablen wie SECRET_KEY,
+#Diese Dateien enthalten Umgebungsvariablen wie SECRET_KEY,
 
-Datenbank-Anmeldedaten und API-Schlüssel.
+#Datenbank-Anmeldedaten und API-Schlüssel.
 
 .env
 .flaskenv
 
-DATENBANK DATEIEN
+#DATENBANK DATEIEN
 
-Enthält Ihre SQLite-Datenbank. Diese Dateien sollten die
+#Enthält SQLite-Datenbank. Diese Dateien sollten die
 
-einzige Quelle für Benutzerdaten sein und NIE versioniert werden.
+#einzige Quelle für Benutzerdaten sein und NIE versioniert werden.
 
 db.sqlite3  # Bereits vorhanden (von Django/Flask), aber wichtig
 *.db
 *.sqlite
 *.sqlite3
 
-Flask stuff (instance/ ist der Ordner für laufzeit-spezifische Daten)
+#Flask stuff (instance/ ist der Ordner für laufzeit-spezifische Daten)
 
 instance/
 .webassets-cache
 
-----------------------------------------------------------------------
+#----------------------------------------------------------------------
 
-TOOLS, EDITOREN UND LOGS
+#TOOLS, EDITOREN UND LOGS
 
-----------------------------------------------------------------------
+#----------------------------------------------------------------------
 
-Unit test / coverage reports
+#Unit test / coverage reports
 
 htmlcov/
 .tox/
@@ -97,20 +97,20 @@ coverage.xml
 .pytest_cache/
 cover/
 
-Logs
+#Logs
 
 *.log
 
-PyCharm / JetBrains (optional, wenn Sie JetBrains verwenden)
+#PyCharm / JetBrains (optional, wenn Sie JetBrains verwenden)
 
 .idea/
 
-Visual Studio Code
+#Visual Studio Code
 
-Wird von der globalen VS Code Vorlage abgedeckt, aber hier zur Sicherheit:
+#Wird von der globalen VS Code Vorlage abgedeckt, aber hier zur Sicherheit:
 
 .vscode/
 
-Ruff stuff:
+#Ruff stuff:
 
 .ruff_cache/
