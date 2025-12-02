@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block body %}
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3DButler | {%block title%} Payment {%endblock%}</title>
+<style>
+
+    /* Zentraler Container, der alle Input-Gruppen zentriert */
+    .form-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        margin-top: 50px;
+    }
+
+    /* NEUER STIL: Für das Select-Feld */
+    #payment-select-group {
+        width: 30%;
+        margin: 15px 0 25px 0;
+    }
+
+    /* NEUER STIL: Für das Select-Feld */
+    #paymentmethods {
+        width: 100%;
+        padding: 12px 10px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+
+
+    /* Wrapper für Label und Input, erhält die gewünschte 30% Breite */
+    .input-group {
+        display: flex;
+        align-items: center;
+        margin: 8px 0;
+        width: 30%;
+        box-sizing: border-box;
+    }
+
+    /* Stellt sicher, dass die Labels links fixiert sind und die Inputs rechts beginnen */
+    .input-group label {
+        color: #fff;
+        text-align: left;
+        padding-right: 15px;
+        min-width: 120px;
+        font-size: 0.9rem;
+    }
+
+
+    /* Full-width input fields - jetzt nur noch 100% der verbleibenden Gruppenbreite */
+    input[type=text], input[type=password] {
+        flex-grow: 1;
+        padding: 12px 10px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        border-radius: 4px;
+        margin: 0;
+    }
+
+    /* Set a style for all buttons and the submit input */
+    button, input[type=submit] {
+        background-color: #04AA6D;
+        color: white;
+        padding: 14px 20px;
+        margin: 15px auto 8px auto;
+        display: block;
+        border: none;
+        cursor: pointer;
+        width: 30%;
+        border-radius: 8px;
+        transition: background-color 0.3s;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    button:hover, input[type=submit]:hover {
+        background-color: #038d58;
+    }
+
+    /* ----------------------------------------------------------------- */
+    /* OTHER STYLES */
+    /* ----------------------------------------------------------------- */
+    .icon-container {
+        position: relative;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    /* ... weitere Stile für Icons, Text und Alerts ... */
+    .text, .password, .rememberme {
+        color: #f1f1f1;
+    }
+
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        width: 30%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .alert-success {
+        color: #3c763d;
+        background-color: #dff0d8;
+        border-color: #d6e9c6;
+    }
+
+    .alert-danger {
+        color: #a94442;
+        background-color: #f2dede;
+        border-color: #ebccd1;
+    }
+
+    /* CSS für die ausblendbaren Formularteile */
+    .payment-fields-group {
+        display: none; /* Standardmäßig alle ausblenden */
+    }
+</style>
+
+<body style="background-color: #8d403cdb;">
+    <div class="form-container">
+
+        <!-- WICHTIG: Die Form umschließt alle Zahlungs-Inputs -->
+        <form method="POST" action="{{ url_for('views.check_payment') }}" style="width: 100%; display: contents;">
+
+            <div id="payment-select-group" class="input-group">
+                <select id="paymentmethods" name="payment_method">
+                    <option value="card" selected>Kreditkarte</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="wallets">Mobile Wallets</option>
+                    <option value="rechnung">Kauf auf Rechnung</option>
+                </select>
+            </div>
+
+            <!-- Kartenzahlung (Wird durch JS initial auf sichtbar gesetzt) -->
+            <div id="card-form-fields" class="payment-fields-group">
+                <div class="input-group">
+                    <label for="card_number">Kartennummer:</label>
+                    <!-- NEU: required im HTML, da es die Standardauswahl ist -->
+                    <input type="text" name="card_number" id="card_number" required>
+                </div>
+                <div class="input-group">
+                    <label for="expiry">Ablaufdatum:</label>
+                    <!-- NEU: required im HTML, da es die Standardauswahl ist -->
+                    <input type="text" name="expiry" id="expiry" placeholder="MM/JJ" required>
+                </div>
+            </div>
+
+            <!-- PayPal (Standardmäßig DEAKTIVIERT) -->
+            <div id="paypal-form-fields" class="payment-fields-group">
+                <div class="input-group">
+                    <p style="color: #fff; text-align: center; width: 100%;">Sie werden zu PayPal weitergeleitet.</p>
+                </div>
+            </div>
+
+            <!-- Mobile Wallets (Standardmäßig DEAKTIVIERT) -->
+            <div id="wallets-form-fields" class="payment-fields-group">
+                <div class="input-group">
+                    <p style="color: #fff; text-align: center; width: 100%;">Mobile Wallet Zahlungen werden im nächsten Schritt abgewickelt.</p>
+                </div>
+            </div>
+
+            <!-- Kauf auf Rechnung (Standardmäßig DEAKTIVIERT) -->
+            <div id="rechnung-form-fields" class="payment-fields-group">
+                <div class="input-group">
+                    <p style="color: #fff; text-align: center; width: 100%;">Wir senden Ihnen die Rechnung per E-Mail zu.</p>
+                </div>
+            </div>
+
+
+            <input type="submit" value="Zahlungsmethode speichern">
+        </form>
+    </div>
+
+<script>
+    // JavaScript-Logik zur Steuerung der Sichtbarkeit, 'required'- und 'disabled'-Attribute
+
+    const selectElement = document.getElementById('paymentmethods');
+    const formFields = {
+        'card': document.getElementById('card-form-fields'),
+        'paypal': document.getElementById('paypal-form-fields'),
+        'wallets': document.getElementById('wallets-form-fields'),
+        'rechnung': document.getElementById('rechnung-form-fields')
+    };
+
+    // Die Input-Felder, die 'required' und 'disabled' verwalten müssen
+    const cardInputs = [
+        document.getElementById('card_number'),
+        document.getElementById('expiry')
+    ];
+
+
+    function updatePaymentForm() {
+        const selectedValue = selectElement.value;
+
+        // 1. Alle Formulargruppen ausblenden (display: none)
+        Object.values(formFields).forEach(element => {
+            element.style.display = 'none';
+        });
+
+        // 2. Setze die Standardzustände: Deaktiviert und nicht erforderlich (disabled + no required)
+        // Dies ist der "Safe-State" für alle Felder, außer der aktuell ausgewählten Methode.
+        cardInputs.forEach(input => {
+            // Alle Felder deaktivieren und required entfernen, um sie aus der Validierung zu nehmen
+            input.removeAttribute('required');
+            input.setAttribute('disabled', 'disabled');
+        });
+
+        // 3. Die ausgewählte Gruppe anzeigen und korrekte Attribute setzen
+        if (formFields[selectedValue]) {
+            formFields[selectedValue].style.display = 'block';
+        }
+
+        if (selectedValue === 'card') {
+            // NUR wenn Karte ausgewählt: Felder aktivieren und required setzen
+            cardInputs.forEach(input => {
+                input.setAttribute('required', 'required');
+                input.removeAttribute('disabled'); // WICHTIG: Aktiviert die Felder für die Submission
+            });
+        }
+        // Für 'paypal', 'wallets', 'rechnung' bleiben die Felder deaktiviert ('disabled') und haben kein 'required'
+    }
+
+    // Event Listener hinzufügen, der bei jeder Änderung der Auswahl die Funktion aufruft
+    selectElement.addEventListener('change', updatePaymentForm);
+
+    // Formular beim Laden der Seite initialisieren
+    // Führt die Logik einmal aus, um den korrekten Zustand der 'disabled'-Attribute
+    // basierend auf der initialen Auswahl ('card') festzulegen.
+    updatePaymentForm();
+
+</script>
+
+</body>
+{% endblock %}

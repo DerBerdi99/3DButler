@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>3DButler | Konto-Verifizierung</title>
+    <style>
+        /* Allgemeine Styles */
+        body {
+            color: #000;
+            background: linear-gradient(to right, #263238, #BDBDBD, #1A237E);
+            text-align: center;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        /* Container für das Formular, um es modalartig zu zentrieren */
+        .modal-container {
+            width: 400px; /* Breite des Verifizierungsfensters */
+            margin: 50px auto; /* Zentrierung auf der Seite */
+            background-color: #fefefe; /* Heller Hintergrund für den "Modal"-Effekt */
+            border: 1px solid #888;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+            padding: 20px;
+        }
+
+        /* Überschrift im Stil des Login-Titels */
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Input-Felder */
+        input[type=email], input[type=text] {
+            width: 80%; /* Input-Breite im Container */
+            margin: 10px auto;
+            display: block;
+            padding: 12px 20px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        /* Labels für die Lesbarkeit */
+        label {
+            display: block;
+            margin-top: 15px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        /* Button-Stil (Login-Button-Stil) */
+        button {
+            background-color: #04AA6D;
+            color: white;
+            padding: 14px 20px;
+            margin: 20px auto 10px auto;
+            display: block;
+            border: none;
+            cursor: pointer;
+            width: 80%;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        /* Flash Messages (Übernommen) */
+        .flashes {
+            list-style-type: none;
+            padding: 0;
+            margin: 20px 0;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .success, .danger {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            text-align: left;
+        }
+
+        .success {
+            color: #3c763d;
+            background-color: #dff0d8;
+            border-color: #d6e9c6;
+        }
+
+        .danger {
+            color: #a94442;
+            background-color: #f2dede;
+            border-color: #ebccd1;
+        }
+
+        /* Code erneut senden Link */
+        .btn-link {
+            display: block;
+            margin-top: 10px;
+            color: #1A237E; /* Eine der Hauptfarben aus dem Gradient */
+            text-decoration: none;
+        }
+
+        .btn-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <div class="modal-container">
+        <h1>🔐 Konto-Verifizierung</h1>
+
+        <p>Wir haben Ihnen einen Verifizierungs-Code an Ihre registrierte E-Mail-Adresse gesendet. Bitte geben Sie den Code und Ihre E-Mail-Adresse unten ein, um Ihr Konto zu aktivieren.</p>
+
+        <form method="POST" action="{{ url_for('auth.verify_account') }}">
+
+            <div class="form-group">
+                <label for="email">E-Mail-Adresse:</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Ihre registrierte E-Mail-Adresse" required>
+            </div>
+
+            <div class="form-group">
+                <label for="verification_code">Verifizierungs-Code:</label>
+                <input type="text" id="verification_code" name="verification_code" class="form-control" placeholder="Den Code aus Ihrer E-Mail eingeben" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Konto aktivieren</button>
+        </form>
+
+        <hr>
+        <p>Haben Sie keinen Code erhalten?</p>
+        <a href="{{ url_for('auth.resend_verification') }}" class="btn btn-link">Code erneut senden</a>
+    </div>
+
+</body>
+</html>

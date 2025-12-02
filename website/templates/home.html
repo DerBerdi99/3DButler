@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %} Home {% endblock %}
+
+{% block body %}
+
+<div class="container text-center">
+    <div class="row" style="margin: 10px;">
+      <div class="col " style="margin: 3px;">
+        <div class="list-group" >
+
+            <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action">
+                <i class="shop-link" aria-hidden="true"></i>
+                <span class="link-name">Shop</span>
+            </a>
+            <a href="{{ url_for('views.start_project') }}" class="list-group-item list-group-item-action">
+                <i class="project-link" aria-hidden="true"></i>
+                <span class="link-name">Projekt starten</span>
+            </a>
+            <a href="{{ url_for('views.my_reviews') }}" class="list-group-item list-group-item-action">
+                <i class="reviews-link"></i>
+                <span class="link-name">Meine Reviews</span>
+            </a>
+            <a href="{{ url_for('views.my_orders') }}" class="list-group-item list-group-item-action">
+                <i class="orders-link"></i>
+                <span class="link-name">Meine Bestellungen</span>
+            </a>
+
+        </div>
+      </div>
+
+
+    
+
+    <div class="col-md-9 container-slideshow" style="width: 100%;">
+            <div class="mySlides fade">
+            <img src="{{ url_for('static', filename='images/shop-items.png') }}" style="width:100%">
+            <div class="text-overlay">
+                <h3>Entdecke unsere Produkte</h3>
+                <p>Kaufe hochwertige 3D-gedruckte Artikel oder Rohmaterialien.</p>
+                <a href="{{ url_for('views.shop') }}" class="btn btn-secondary btn-lg mt-3">Zum Shop</a>
+            </div>
+        </div>
+
+
+        <div class="mySlides fade">
+            <img src="{{ url_for('static', filename='images/what-we-make.png') }}" style="width:100%">
+            <div class="text-overlay">
+                <h3>So funktioniert's</h3>
+                <p>Das machen wir, das zeichnet uns aus.</p>
+                <a href="{{ url_for('views.what_we_make') }}" class="btn btn-warning btn-lg mt-3">Prozess ansehen</a>
+            </div>
+        </div>
+
+        <div class="mySlides fade">
+            <img src="{{ url_for('static', filename='images/handle-project-start.png') }}" style="width:100%">
+            <div class="text-overlay">
+                <h3>Wie kann ich mitmachen?</h3>
+                <p>Lade deine Modelle hoch und erhalte ein schnelles Review. Wie das genau geht erfährst du hier.</p>
+                <a href="{{ url_for('views.handle_project_start') }}" class="btn btn-warning btn-lg mt-3">Jetzt starten!</a>
+            </div>
+        </div>
+
+                <div class="mySlides fade">
+            <img src="{{ url_for('static', filename='images/start-project.png') }}" style="width:100%">
+            <div class="text-overlay">
+                <h3>Dein 3D-Projekt starten</h3>
+                <p>Lade deine Modelle hoch und erhalte ein schnelles Review.</p>
+                <a href="{{ url_for('views.start_project') }}" class="btn btn-warning btn-lg mt-3">Jetzt starten!</a>
+            </div>
+        </div>
+
+        <div class="mySlides fade">
+            <img src="{{ url_for('static', filename='images/send-filaments.png') }}" style="width:100%">
+            <div class="text-overlay">
+                <h3>Eigene Filamente einsenden</h3>
+                <p>Nutze deine eigenen Materialien für deine Druckprojekte.</p>
+                <a href="{{ url_for('views.send_filaments') }}" class="btn btn-secondary btn-lg mt-3">Infos zur Einsendung</a>
+            </div>
+        </div>
+
+    <a class="prev" onclick="plusSlides(-1)">
+        <img src="{{ url_for('static', filename='icons/backslide-icon.png') }}" alt="Previous Slide" style="position: absolute; left: 250px;">
+    </a>
+    <a class="next" onclick="plusSlides(1)">
+        <img src="{{ url_for('static', filename='icons/nextslide-icon.png') }}" alt="Next Slide" style="position: absolute; right: 250px;">
+    </a>
+</div>
+
+
+
+ <!--Products-->
+ <!-- Products Section Display Products infinity scroll -->
+<div class="row" style="margin-top: 20px;">
+    <div class="col">
+        <h2 style="text-align: center;">Unsere Produkte</h2>
+        <div class="d-flex justify-content-center">
+
+            <div class="card" style="width: 18rem; margin: 10px;">
+                <img class="card-img-top" src="{{ url_for('static', filename='images/P001.png') }}" alt="ALMOSTBLACK">
+                <div class="card-body">
+                    <h5 class="card-title">Tätowier-Sprühflaschenhalterung</h5>
+                    <p class="card-text">Maße: 40x10x4cm , Material: ABS, Farbe: Schwarz ,Maker: Peter Petersen .</p>
+                    <a href="{{ url_for('views.product_detail', product_id='bcdf7063-3e63-4045-b2ec-6d710a706c61') }}" class="btn-details">Details</a>
+                </div>
+            </div>
+
+            <div class="card" style="width: 18rem; margin: 10px;">
+                <img class="card-img-top" src="{{ url_for('static', filename='images/P002.png') }}" alt="CRIMSONRED">
+                <div class="card-body">
+                    <h5 class="card-title">Diffusor-LED Kombi</h5>
+                    <p class="card-text">Maße: 30x30x15cm , Material: Silk PLA , Farbe: Rot , Maker: Anders Anderssen.</p>
+                    <a href="{{ url_for('views.product_detail', product_id='b3efca71-fe88-4af9-9f22-ceb4b94f9edd') }}" class="btn-details">Details</a>
+                </div>
+            </div>
+            <div class="card" style="width: 18rem; margin: 10px;">
+                <img class="card-img-top" src="{{ url_for('static', filename='images/P003.png') }}" alt="LUNATICBLUE">
+                <div class="card-body">
+                    <h5 class="card-title">Products.Name</h5>
+                    <p class="card-text">Products.Description , Products.Color, Projects.UserID </p>
+                    <a href="{{ url_for('views.product_detail', product_id='b623b740-5eb3-42e1-825e-d8b582b94f12') }}" class="btn-details">Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+
+
+{% endblock %}

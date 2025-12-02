@@ -1,0 +1,307 @@
+h1{
+
+
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(217, 209, 201);
+
+}
+
+h2{
+
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(217, 209, 201);
+}
+h3{
+
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(217, 209, 201);
+}
+h4{
+
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(217, 209, 201);
+}
+h5{
+
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(217, 209, 201);
+}
+h6{
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(217, 209, 201);
+
+}
+.btn{
+    background: #1A237E;
+    border: 2px solid #0078a0;
+    border-radius: 8px;
+    color: #fff;
+}
+.d-flex .search-btn{
+    background: #1A237E;
+    border: 2px solid #0078a0;
+    border-radius: 8px;
+    color: #fff;
+}
+
+.p-site-description{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: rgb(200, 200, 200);
+}
+
+.d-flex .btn:hover{
+    background: rgb(228, 150, 7);
+    border: 2px solid rgb(228, 150, 7);
+}
+
+#right1 :hover{
+    color: orange;
+    transition: 300ms;
+}
+
+.row .right2 {
+    margin-left: -10px;
+    height: 180px;
+    width: 180px;
+    border-radius: 10px;
+}
+
+.container .row .col .row .col a {
+    background-color: orange;
+    padding: 10px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: white;
+
+}
+
+.container .row .col .row .col a :hover {
+    background-color: rgb(201, 132, 5);
+}
+
+.container-slideshow {
+    outline: 3px solid #0078a0;
+    outline-offset: 6px;
+    border-radius: 3%;
+    /* Füge Padding hinzu, das den Abstand zwischen Inhalt und Outline gewährleistet */
+    padding: 10px; /* Muss größer sein als der outline-offset von 6px */
+
+    /* ... Rest des Stils ... */
+}
+
+/* NEU: CSS zur Verschiebung des Hauptinhalts nach rechts, um Platz für eine fixierte linke Navigationsleiste zu schaffen.
+   Dieser Wert muss an die Breite Ihrer linken Navbar angepasst werden. */
+.content-shift {
+    /* Standard-Abstand für Desktops (270px schafft Platz für eine ca. 250px breite linke Navbar) */
+    padding-left: 45px;
+}
+#column :hover{
+    transform: scale(0.9);
+    transition: 450ms;
+    border-radius: 10px;
+}
+
+#items :hover {
+    color: orange;
+    transition: 200ms;
+}
+.lavaplates-icon{
+    background-image: url('/static/icons/lavaplates.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.cart-icon {
+    background-image: url('/static/icons/shoppingcart-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.heart-icon {
+    background-image: url('/static/icons/wishlist-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.account-icon{
+    background-image: url('/static/icons/account-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.shop-link{
+    background-image: url('/static/icons/shop-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.project-link{
+    background-image: url('/static/icons/start-project-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.reviews-link{
+    background-image: url('/static/icons/my-reviews-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.orders-link{
+    background-image: url('/static/icons/my-orders-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.placeholder1{
+    background-image: url('/static/icons/special.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.placeholder2{
+    background-image: url('/static/icons/furniture.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+
+
+
+.mySlides{
+    display: none;
+    }
+.mySlides img{
+    border-radius: 3%;
+}
+.prev, .next{
+
+position: absolute;
+top:50%;
+width: auto;
+margin-top: -22px;
+padding: 16px;
+color:white;
+
+transition: transform 0.3s, opacity 0.3s;
+border-radius: 0 3px 3px 0;
+
+}
+.prev{
+left:0;
+border-radius:3px 0 0 3px;
+}
+.next{
+right:0;
+border-radius:3px 0 0 3px;
+}
+.prev:hover,.next:hover{
+    opacity: 0.8; /* Slightly reduce opacity for effect */
+}
+.prev img,
+.next img {
+    /* WICHTIG: Die Images stylen, da der Schatten direkt auf das Icon soll */
+    
+    /* Definiert einen weichen, dunklen Schatten.
+       Parameter: Versatz-X | Versatz-Y | Weichzeichner-Radius | Farbe */
+    filter: drop-shadow(0px 4px 12px rgba(0, 0, 0, 0.4));
+    
+    /* Optionale Anpassung bei Hover (Schatten verstärken) */
+    transition: filter 0.2s ease-in-out;
+}
+
+/* Optional: Stärkerer Schatten bei Interaktion */
+.prev:hover img,
+.next:hover img {
+    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.6));
+}
+.fade{
+animation-name: fade;
+animation-duration: 6s;
+}
+@keyframes fade {
+        from {opacity:.4}
+        to {opacity:1}
+}
+
+
+
+.list-group{
+position: absolute;
+left:0px;
+
+}
+.list-group-item{
+    padding-top: 20px; /* Adjust as needed */
+    padding-bottom: 20px; /* Adjust as needed */
+}
+.rotate-1 {
+    transform: rotate(-2deg);
+}
+
+.rotate-2 {
+    transform: rotate(2deg);
+}
+
+.rotate-3 {
+    transform: rotate(45deg);
+}
+.btn-details{
+    background-color: #8e0b0b;
+    text-decoration: none;
+    margin: 2%;
+    font-size: larger;
+    padding: 10px;
+    border-radius: 15%;
+    border: 2px solid rgb(162, 59, 59);
+    color: rgb(246, 172, 172);
+    transition: transform 0.3s, opacity 0.3s;
+}
+.btn-details:hover{
+    transform: scale(1.1); /* Makes the image stick out */
+    opacity: 0.8; /* Slightly reduce opacity for effect */
+}
+.Icon{
+    transform: scale(.8);
+    border-radius: 5%;
+}
+.text-overlay h3
+{
+    font-size: 2.5em;
+    color: white;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.text-overlay p
+{
+    font-size: 1.2em;
+    color:#bdbdbd;
+    margin-bottom: 20px;
+}
+.site-description{
+    background-color: rgba(255, 255, 255, 0.6);
+    padding: 20px;
+    border-radius: 10px;
+    display: inline-block;
+    text-align: center;
+}

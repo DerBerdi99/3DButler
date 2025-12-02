@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Meine Projekte{% endblock %}
+{% block body %}
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+      <div class="col " style="margin: 13px;">
+        <div class="list-group text-center" >
+
+            <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action">
+                <i class="shop-link" aria-hidden="true"></i>
+                <span class="link-name">Shop</span>
+            </a>
+            <a href="{{ url_for('views.start_project') }}" class="list-group-item list-group-item-action">
+                <i class="project-link" aria-hidden="true"></i>
+                <span class="link-name">Projekt starten</span>
+            </a>
+            <a href="{{ url_for('views.my_reviews') }}" class="list-group-item list-group-item-action">
+                <i class="reviews-link"></i>
+                <span class="link-name">Meine Reviews</span>
+            </a>
+            <a href="{{ url_for('views.my_orders') }}" class="list-group-item list-group-item-action">
+                <i class="orders-link"></i>
+                <span class="link-name">Meine Bestellungen</span>
+            </a>
+
+        </div>
+      </div>
+
+<div class="container mt-4">
+    <h1>Meine Projektübersicht ({{ projects|length }} Projekte)</h1>
+    <p class="p-site-description">Hier finden Sie den aktuellen Status Ihrer eingereichten Projekte und können die Details einsehen.</p>
+
+    {% if projects %}
+        <div class="row">
+            {# Iterate über alle Projekte des Kunden #}
+            {% for project in projects %}
+            <div class="col-12 col-md-6 col-lg-4 mb-4">
+
+                <div class="card shadow-sm h-100 border
+                    {% if project.Status == 'QUOTED_AWAITING_CUSTOMER' %}border-success{% elif project.Status == 'CANCELLED' %}border-danger{% else %}border-warning{% endif %}">
+
+                    <div class="card-body d-flex flex-column">
+
+                        <h5 class="card-title text-primary">{{ project.ProjectName | default('Unbenanntes Projekt') }}</h5>
+
+                        <p class="mb-1">
+                            <strong>Status:</strong>
+                            <span class="badge
+                                {% if project.Status == 'UNDER_REVIEW' %}bg-warning
+                                {% elif project.Status == 'QUOTED_AWAITING_CUSTOMER' %}bg-success
+                                {% elif project.Status == 'CANCELLED' %}bg-danger
+                                {% else %}bg-secondary{% endif %}">
+                                {{ project.Status | replace('_', ' ') }}
+                            </span>
+                        </p>
+
+                        <p class="card-text small mb-2">
+                             Eingereicht: {{ project.DateAdded | default('N/A') }}
+                        </p>
+
+                        <p class="card-text text-muted small mt-auto">
+                            {{ project.ProjectDescription | truncate(80, True) }}
+                        </p>
+
+                        <a href="{{ url_for('views.project_detail', project_id=project.ProjectID) }}" class="btn btn-sm btn-info mt-3">
+                            Details & Kommunikation
+                        </a>
+
+
+
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info mt-5 text-center" role="alert">
+            <h4 class="alert-heading">Noch keine Projekte gefunden!</h4>
+            <p>Es wurden noch keine Projekte unter Ihrem Konto eingereicht. Starten Sie jetzt Ihr erstes Projekt.</p>
+            <hr>
+            <a href="{{ url_for('views.start_project') }}" class="btn btn-primary"><h1><b> + </b></h1>Neues Projekt starten</a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

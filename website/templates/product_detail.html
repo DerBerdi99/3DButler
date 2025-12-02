@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ product_description }}</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
+<html>
+<head>
+    <title>{{ product_description }}</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
+    <style>
+        body {
+            background: linear-gradient(to right, #777, #636363, #a0a0a0);
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-top: 50px;
+        }
+
+        h2 {
+            color: #6d163a; /* Match button color */
+            margin-bottom: 20px;
+        }
+
+        .img-fluid {
+            width: 80%;
+            transform: translateX(-5%) rotate(2deg);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.8);
+            border-radius: 5px;
+            transition: transform 0.3s ease; /* Add hover effect */
+        }
+
+        .img-fluid:hover {
+            transform: translateX(-5%) rotate(2deg) scale(1.05);
+        }
+
+        .btn-primary {
+            background-color: #6d163a;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease; /* Add hover effect */
+        }
+
+        .btn-backwards {
+            transform: scale(60%);
+            position: fixed;
+            top: 30%; /* Adjust top position as needed */
+            left: 0%; /* Adjust left position as needed */
+            transition: transform 0.3s, opacity 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #a90b0b;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            margin-top: 20px;
+        }
+
+        .btn-backwards:hover {
+            transform: scale(70%); /* Makes the image stick out */
+            opacity: 0.8; /* Slightly reduce opacity for effect */
+        }
+
+        .wishlist-icon {
+            transform: scale(20%);
+            position: fixed;
+            top: 5%; /* Adjust top position as needed */
+            left: 75%; /* Adjust right position as needed */
+
+        }
+
+        .wishlist-icon:hover {
+            transform: rotate3d(0, .9, .1, 180deg) scale(30%);
+            transition: transform .5s ease-in-out;
+            opacity: 0.8;
+        }
+        .left-navbar {
+            width: 250px; /* Adjust as needed */
+
+            float: left;
+            padding: 20px;
+            background-color: #f0f0f0; /* Optional: add a background color */
+            height: 50%; /* Make it full height */
+        }
+
+        .main-content {
+            margin-left: 220px; /* Adjust to match navbar width + padding */
+            padding: 20px;
+        }
+
+        .list-group-item {
+            text-align: left; /* Align navbar items to the left */
+        }
+        .products-plates{
+            background-image: url('/static/icons/plates.png');
+            width: 20px;      /* Set the width of the icon */
+            height: 20px;     /* Set the height of the icon */
+            background-size: cover; /* or contain, or 100% 100% */
+            background-repeat: no-repeat; /* Prevent the image from tiling */
+            display: inline-block; /* or block, depending on how you want the element to flow */
+        }
+        .products-palisades{
+            background-image: url('/static/icons/palisades.png');
+            width: 20px;      /* Set the width of the icon */
+            height: 20px;     /* Set the height of the icon */
+            background-size: cover; /* or contain, or 100% 100% */
+            background-repeat: no-repeat; /* Prevent the image from tiling */
+            display: inline-block; /* or block, depending on how you want the element to flow */
+        }
+        .products-parking{
+            background-image: url('/static/icons/parking.png');
+            width: 20px;      /* Set the width of the icon */
+            height: 20px;     /* Set the height of the icon */
+            background-size: cover; /* or contain, or 100% 100% */
+            background-repeat: no-repeat; /* Prevent the image from tiling */
+            display: inline-block; /* or block, depending on how you want the element to flow */
+        }
+        .products-stairs{
+            background-image: url('/static/icons/stairs.png');
+            width: 20px;      /* Set the width of the icon */
+            height: 20px;     /* Set the height of the icon */
+            background-size: cover; /* or contain, or 100% 100% */
+            background-repeat: no-repeat; /* Prevent the image from tiling */
+            display: inline-block; /* or block, depending on how you want the element to flow */
+        }
+        .products-specials{
+            background-image: url('/static/icons/special.png');
+            width: 20px;      /* Set the width of the icon */
+            height: 20px;     /* Set the height of the icon */
+            background-size: cover; /* or contain, or 100% 100% */
+            background-repeat: no-repeat; /* Prevent the image from tiling */
+            display: inline-block; /* or block, depending on how you want the element to flow */
+        }
+        .products-furniture{
+            background-image: url('/static/icons/furniture.png');
+            width: 20px;      /* Set the width of the icon */
+            height: 20px;     /* Set the height of the icon */
+            background-size: cover; /* or contain, or 100% 100% */
+            background-repeat: no-repeat; /* Prevent the image from tiling */
+            display: inline-block; /* or block, depending on how you want the element to flow */
+        }
+
+    </style>
+</head>
+<body>
+
+
+    <div class="left-navbar">
+
+                <div class="list-group" >
+                    <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action">
+                        <i class="products-plates" aria-hidden="true"></i> <!-- die classes musst du noch mal anpassen-->
+                        <span class="link-name">Shop</span>
+                    </a>
+                    <a href="{{ url_for('views.start_project') }}" class="list-group-item list-group-item-action">
+                        <i class="products-palisades" aria-hidden="true"></i>
+                        <span class="link-name">Start Project</span>
+                    </a>
+                    <a href="" class="list-group-item list-group-item-action">
+                        <i class="products-parking"></i>
+                        <span class="link-name">My Reviews</span>
+                    </a>
+
+
+            <div class="col-md-9" style="width: 150%;">
+                </div>
+        </div>
+        <div class="row" style="margin-top: 20px;">
+            </div>
+    </div>
+    <a href="{{ url_for('views.home') }}" class="btn-backwards">
+        <img src="{{ url_for('static', filename='icons/back.png') }}" alt="Back to Home">
+    </a>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='images/' ~ product_image) }}" alt="{{ product_description }}" class="img-fluid" style="width: 80%; transform: translateX(-5%); transform: rotate(2deg); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.8);border-radius: 5px;">
+            </div>
+            <div class="col-md-6">
+                <h2>{{ product_description }}</h2>
+
+                <p>Preis: €{{ price }}</p>
+                <p>Auf Lager: {{ stock_quantity }}</p>
+
+                <form method="POST" action="{{ url_for('views.add_to_cart', product_id=product_id) }}">
+                    <div class="form-group">
+                        <label for="quantity">Bestellmenge:</label>
+                        <input type="number" name="quantity" id="quantity" value="1" min="1" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add to Cart</button>
+                </form>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+            </div>
+
+        </div>
+        <form method="POST" action="{{ url_for('views.add_to_wishlist', product_id=product_id) }}" class="wishlist-icon">
+            <button type="submit" style="border: none; background: none; padding: 0;">
+                <img src="{{ url_for('static', filename='icons/heart.png') }}" alt="Add to Wishlist">
+
+            </button>
+        </form>
+    </div>
+
+</body>
+</html>

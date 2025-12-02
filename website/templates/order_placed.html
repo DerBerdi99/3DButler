@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container mt-5">
+    <div class="alert alert-success text-center" role="alert">
+        <h4 class="alert-heading">Vielen Dank für Ihre Bestellung!</h4>
+        <p>Ihre Bestellung mit der Bestellnummer <strong>{{ order_id }}</strong> wurde erfolgreich aufgegeben.</p>
+        <hr>
+        <p class="mb-0">Sie erhalten in Kürze eine Bestätigungs-E-Mail mit den Details Ihrer Bestellung.</p>
+    </div>
+    <div class="text-center mt-4">
+        <a href="{{ url_for('views.home') }}" class="btn btn-primary">Zur Startseite zurückkehren</a>
+        <a href="{{ url_for('views.my_orders') }}" class="btn btn-secondary">Meine Bestellungen ansehen</a>
+    </div>
+</div>
+{% endblock %}

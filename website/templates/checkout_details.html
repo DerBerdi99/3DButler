@@ -1,0 +1,610 @@
+{% extends 'base.html' %}
+{% block title %}Checkout für Bestellung {{ order.OrderID }}{% endblock %}
+
+{# Suchleiste ausblenden #}
+{% block header %}
+
+<style>
+    .stepcontainer {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        padding: 10px;
+        border-radius: 12px;
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    h4.animate-attention {
+        font-size: 18px;
+        font-weight: bold;
+        color: #370987;
+    }
+    h6.my-0{
+        color: black;
+    }
+    .icon-symbol {
+        font-size: 1.25rem;
+        margin-right: 0.5rem;
+        vertical-align: middle;
+        display: inline-block;
+        width: 1.25rem;
+        text-align: center;
+    }
+    /* Animation */
+    @keyframes subtle-bounce {
+        0%, 50% { transform: scale(1); opacity: 0.1; }
+        50%, 100% { transform: scale(1.05); opacity: 0.8; }
+    }
+    .animate-attention {
+        animation: subtle-bounce 1s ease-out 2; /* Läuft nur zweinmal */
+    }
+</style>
+<div class="stepcontainer">
+    <h4 class="animate-attention"> Schritt 3 von 4 : Bestelldetails prüfen </h4>
+</div>
+{% endblock %}
+
+{# Warenkorb Icon ausblenden #}
+{% block cart_icon %}
+{% endblock %}
+
+{# Wishlist ausblenden #}
+{% block wishlist_icon %}
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-12">
+            <h2>Abschluss der Bestellung 🛍</h2>
+            <h3>Bestellnummer: <strong>{{ order.OrderID | replace('ORDE_','') }}</strong></h3>
+            <hr>
+        </div>
+    </div>
+
+    <!-- Das Formular umschließt alle 3 Spalten und den finalen Button -->
+    <form method="POST" action="{{ url_for('views.update_checkout_details', order_id=order.OrderID) }}">
+
+    <!-- Haupt-Row: Drei Cards nebeneinander (lg-4) -->
+    <div class="row">
+
+        <!-- ============================================== -->
+        <!-- SPALTE 1: 1. Bestellübersicht (Summary) - col-lg-4 -->
+        <!-- ============================================== -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <h4>1. Bestellübersicht</h4>
+
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <strong>Ihre Produkte (Angebot)</strong>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for position in positions %}
+
+                        <!-- KORRIGIERT: Jede Position in ein LI-Element einbetten -->
+                        <li class="list-group-item d-flex justify-content-between lh-sm">
+                            <!-- Linke Seite: Produktname und Menge -->
+                            <div>
+                                <h6 class="my-0">{{ position.ProductName or 'Maßgeschneidertes Produkt' }}</h6>
+                                <hr>
+                                <small class="text-muted">Menge: {{ position.Quantity }}</small>
+                            </div>
+                            <!-- Rechte Seite: Preis -->
+                            <!-- HINWEIS: Hier wurde position.SubTotal für jede Position verwendet,
+                                was falsch sein könnte, wenn SubTotal die Gesamtsumme ist.
+                                Ich verwende position.ProductPrice wie von Ihnen gesetzt. -->
+                            <span style="margin-left: 20px;" class="text-muted">{{ "%.2f"|format(position.ProductPrice) }}€</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <li class="list-group-item d-flex justify-content-between bg-success text-white">
+                    <strong>Gesamtbetrag</strong>
+                    <!-- WICHTIG: Gesamtbetrag sollte außerhalb der Positionen-Schleife berechnet werden.
+                        Ich verwende hier total_amount aus dem Kontext, da SubTotal nur einmal definiert ist. -->
+                    <strong>{{ "%.2f"|format(total_amount) }} €</strong>
+                </li>
+
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- SPALTE 2: 2. Lieferadresse (Address) - col-lg-4 -->
+        <!-- ============================================== -->
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <h4>2. Lieferadresse</h4>
+
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <strong>Lieferadresse auswählen/ändern</strong>
+                </div>
+                <div class="card-body">
+                    <!-- BESTEHENDE ADRESSEN: Hier bleibt die ID, da die JS-Logik sie braucht -->
+                    <div id="existing-addresses">
+                        {% for address in addresses %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input address-radio" type="radio" name="address_id"
+                                id="address_{{ address.AddressID }}" value="{{ address.AddressID }}"
+                                {% if address.AddressID == order.AddressID %}checked{% endif %}
+                                {% if loop.first and not order.AddressID and not order.TempStreet %}checked{% endif %}>
+                            <label class="form-check-label" for="address_{{ address.AddressID }}">
+                                <strong>{{ address.Street }}</strong>, {{ address.ZIPCode }} {{ address.City }} ({{ address.Country }})
+                            </label>
+                        </div>
+                        {% else %}
+                        <p class="text-info">Keine gespeicherten Adressen.</p>
+                        {% endfor %}
+                    </div>
+
+                    <hr>
+
+                    <!-- NEU: Versteckter Radio-Button für die Logik. Wird im JS gecheckt. -->
+                    <input type="radio" name="address_id" value="NEW_ADDRESS" id="address_new_temp" style="display: none;"
+                        {% if order.TempStreet or (not addresses and not order.AddressID) %}checked{% endif %}>
+
+                    <!-- NEU: Button/Link zum Anzeigen der Felder -->
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="show-new-address-btn">
+                        + Neue Adresse hinzufügen
+                    </button>
+
+                    <!-- Eingabefelder für neue Adresse -->
+                    <div id="new-address-fields" class="mt-3 p-3 bg-light rounded-lg border" style="display: none;">
+                        <h6>Neue Adresse eingeben</h6>
+
+                        <div class="mb-2">
+                            <label for="new_street" class="form-label small">Straße und Hausnummer</label>
+                            <input type="text" class="form-control form-control-sm" id="new_street" name="new_street"
+                                value="{{ order.new_street or '' }}" placeholder="Musterstraße 123">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-5 mb-2">
+                                <label for="new_zip_code" class="form-label small">PLZ</label>
+                                <input type="text" class="form-control form-control-sm" id="new_zip_code" name="new_zip_code"
+                                    value="{{ order.new_zip_code or '' }}" placeholder="12345">
+                            </div>
+                            <div class="col-md-7 mb-2">
+                                <label for="new_city" class="form-label small">Ort</label>
+                                <input type="text" class="form-control form-control-sm" id="new_city" name="new_city"
+                                    value="{{ order.new_city or '' }}" placeholder="Musterstadt">
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label for="new_country" class="form-label small">Land</label>
+                            <input type="text" class="form-control form-control-sm" id="new_country" name="new_country"
+                                value="{{ order.new_country or 'Deutschland' }}" placeholder="Deutschland">
+                        </div>
+                        <!-- NEU: Abbrechen Button hinzugefügt -->
+                        <button type="button" class="btn btn-sm btn-outline-secondary w-100 mt-2" id="cancel-new-address-btn">Zurück zur Auswahl</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ============================================== -->
+        <!-- SPALTE 3: 3. Zahlungsmethode (Payment) - col-lg-4 -->
+        <!-- ============================================== -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <h4>3. Zahlungsmethode</h4>
+            <div class="card shadow-sm mb-4 h-100">
+                <div class="card-header bg-light">
+                    <strong>Zahlung auswählen</strong>
+                </div>
+
+                <!-- HIER BEGINNT DIE Z1/Z2/Z3 LOGIK -->
+                <div class="card-body">
+
+                    <!-- ZUSTAND 1: VORAUSWAHL & HINZUFÜGEN-BUTTON -->
+                    <div id="payment-state-z1">
+                        <div id="existing-payments">
+                            {% for method in payment_methods %}
+                            <div class="form-check mb-3 p-3 border rounded">
+                                <input class="form-check-input payment-radio" type="radio" name="payment_id"
+                                    id="payment_{{ method.PaymentID }}" value="{{ method.PaymentID }}"
+                                    {% if method.PaymentID == order.PaymentID or loop.first and not order.PaymentID %}checked{% endif %}
+                                    required>
+                                <label class="form-check-label" for="payment_{{ method.PaymentID }}">
+                                    <strong><span class="icon-symbol">
+                                    {% if method.Method == 'Card' %}💳
+                                    {% elif method.Method == 'PayPal' %}🅿
+                                    {% else %}🏦
+                                    {% endif %}</span> {{ method.Method }}</strong> (Endet auf **{{ method.LastIDDigits }}**{% if method.Expiry %}, bis {{ method.Expiry }}{% endif %})
+                                </label>
+                                <small class="text-muted d-block ms-4">Gespeicherte Zahlungsmethode.</small>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info text-center">
+                                Sie haben keine gespeicherten Zahlungsdaten.
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Link zum Hinzufügen/Verwalten Link (Auslöser für Z2) -->
+                        <div class="d-grid mt-3">
+                            <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="show-new-payment-btn">
+                                + Zahlungsmethode hinzufügen
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ZUSTAND 2: METHODENAUSWAHL & EINGABEMASKE -->
+                    <div id="payment-state-z2" class="mt-4" style="display:none;">
+                        <h6 class="pb-2 border-bottom" style="color: black;">
+                            Neue Methode wählen und Details eingeben
+                        </h6>
+
+                        <!-- Z2 TEIL 1: Auswahl der Zahlungsmethode -->
+                        <div id="method-selection-z2" class="p-3 border rounded bg-light mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input new-payment-type" type="radio" name="new_payment_type_radio" id="radioCard" value="Card" checked>
+                                <label class="form-check-label" for="radioCard">💳 Neue Kreditkarte</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input new-payment-type" type="radio" name="new_payment_type_radio" id="radioPayPal" value="PayPal">
+                                <label class="form-check-label" for="radioPayPal">🅿 Neues PayPal-Konto</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input new-payment-type" type="radio" name="new_payment_type_radio" id="radioWallet" value="Wallet">
+                                <label class="form-check-label" for="radioWallet">💰 Digitales Wallet</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input new-payment-type" type="radio" name="new_payment_type_radio" id="radioInvoice" value="Invoice">
+                                <label class="form-check-label" for="radioInvoice">🧾 Rechnung</label>
+                            </div>
+                        </div>
+
+                        <!-- Z2 TEIL 2: Eingabemasken -->
+                        <div id="new-payment-masks">
+
+                            <!-- Temporärer Radio-Button, der das Backend informiert, dass NEUE DATEN gesendet werden -->
+                            <input class="form-check-input d-none" type="radio" name="payment_id" id="payment_new_temp" value="NEW_PAYMENT">
+
+                            <!-- Card Mask (Standard beim Start von Z2) -->
+                            <div id="CardMask" class="payment-mask p-3 bg-light rounded-lg border">
+                                <h6  style="color: black;">Kartendetails eingeben</h6>
+                                <div class="mb-2"><input type="text" class="form-control form-control-sm" name="new_cardName" placeholder="Name auf Karte"></div>
+                                <div class="mb-2"><input type="text" class="form-control form-control-sm" name="new_cardNumber" placeholder="Kartennummer"></div>
+                                <div class="row">
+                                    <div class="col-6"><input type="text" class="form-control form-control-sm" name="new_cardExpiry" placeholder="MM/JJ"></div>
+                                    <div class="col-6"><input type="text" class="form-control form-control-sm" name="new_cardCVC" placeholder="CVC"></div>
+                                </div>
+                            </div>
+
+                            <!-- PayPal Mask -->
+                            <div id="PayPalMask" class="payment-mask p-3 bg-light rounded-lg border" style="display:none;">
+                                <h6 style="color: black;">PayPal-Kontodaten</h6>
+                                <div class="mb-2"><input type="email" class="form-control form-control-sm" name="new_paypalEmail" placeholder="PayPal E-Mail-Adresse"></div>
+                                <p class="text-muted small mt-2">Die Autorisierung erfolgt im nächsten Schritt.</p>
+                            </div>
+
+                            <!-- Wallet Mask -->
+                            <div id="WalletMask" class="payment-mask p-3 bg-light rounded-lg border" style="display:none;">
+                                <h6 style="color: black;">Wallet-Identifikator</h6>
+                                <div class="mb-2"><input type="text" class="form-control form-control-sm" name="new_walletId" placeholder="Wallet Account ID / Name"></div>
+                                <p class="text-muted small mt-2">Die Verknüpfung erfolgt im nächsten Schritt.</p>
+                            </div>
+
+                            <!-- Invoice Mask -->
+
+                            <div id="InvoiceMask" class="payment-mask p-3 bg-light rounded-lg border" style="display:none;">
+                                <h6 style="color: black;">Kauf auf Rechnung</h6>
+                                <p class="text-muted small mt-2">Bitte Rechnungsaddresse angeben, wenn Rechnungsaddresse von Lieferadresse abweicht!</p>
+                                <label for="new_invoiceStreet" class="form-label small">Straße und Hausnummer</label>
+                                <div class="mb-2"><input type="text" class="form-control form-control-sm" name="new_invoiceStreet" placeholder="Musterstraße 17a"></div>
+                                <label for="new_invoiceZipcode" class="form-label small">PLZ</label>
+                                <div class="mb-2"><input type="text" class="form-control form-control-sm" name="new_invoiceZipcode" placeholder="PLZ"></div>
+                                <label for="new_invoiceCity" class="form-label small">Ort</label>
+                                <div class="mb-2"><input type="text" class="form-control form-control-sm" name="new_invoiceCity" placeholder="Musterstadt"></div>
+                                <label for="new_invoiceCountry" class="form-label small">Land</label>
+                                <div class="mb-2"><input type="text" class="form-control form-control-sm" name="new_invoiceCountry" placeholder="Deutschland"></div>
+
+                            </div>
+
+
+                        </div>
+
+                        <!-- Z3: OK / Abbrechen Buttons -->
+                        <div class="d-flex justify-content-end mt-3 gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="cancel-new-payment-btn-z2">
+                                Abbrechen
+                            </button>
+                            <button type="button" class="btn btn-sm btn-primary" id="confirm-new-payment-btn">
+                                OK
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div> <!-- Ende der 3-Spalten-Row -->
+
+    <!-- Finaler Button: Immer volle Breite unten -->
+    <div class="row mt-4 mx-0">
+        <div class="col-12 px-0">
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-lg btn-primary">
+                    <span class="icon-symbol">🔒</span> Weiter zur Bezahlung ({{ "%.2f"|format(total_amount) }} €)
+                </button>
+            </div>
+            <h6 class="text-center small mt-2">Ihre Bestellung ist verbindlich.</h6>
+        </div>
+    </div>
+
+    </form>
+</div>
+
+<script>
+    /**
+     * Steuert die Sichtbarkeit der Eingabefelder und setzt/entfernt das 'required'-Attribut
+     * und setzt den entsprechenden Radio-Button für die "Neueingabe".
+     * @param {boolean} show - True, um die Felder anzuzeigen, False, um sie zu verbergen.
+     * @param {string} fieldsId - ID des Container-Elements für die neuen Felder (z.B. 'new-address-fields').
+     * @param {string} buttonId - ID des Buttons zum Anzeigen der Felder (z.B. 'show-new-address-btn').
+     * @param {string} tempRadioId - ID des temporären Radio-Buttons für das Backend (z.B. 'address_new_temp').
+     * @param {string} listContainerId - ID des Containers mit der Liste der bestehenden Einträge (z.g. 'existing-addresses').
+     */
+    function toggleNewFields(show, fieldsId, buttonId, tempRadioId, listContainerId) {
+        const fieldsContainer = document.getElementById(fieldsId);
+        const showButton = document.getElementById(buttonId);
+        const tempRadio = document.getElementById(tempRadioId);
+        const listContainer = document.getElementById(listContainerId);
+
+        // Prüft, ob alle notwendigen Elemente vorhanden sind.
+        if (!fieldsContainer || !showButton || !tempRadio || !listContainer) return;
+
+        // Alle Input-Felder (außer Radio-Buttons) in der Sektion "Neueingabe"
+        const inputs = fieldsContainer.querySelectorAll('input:not([type="radio"])');
+        // Alle Radio-Buttons in der Sektion "Bestehende Einträge"
+        const existingRadios = listContainer.querySelectorAll('input[type="radio"]');
+
+        if (show) {
+            // Zustand: Neue Felder anzeigen
+            fieldsContainer.style.display = 'block';
+            showButton.style.display = 'none';
+            listContainer.style.display = 'block';
+
+            // Setzt den temporären Radio-Button, dessen Wert (NEW_ADDRESS) an das Backend geht.
+            tempRadio.checked = true;
+
+            // Setze 'required' auf alle neuen Eingabefelder
+            inputs.forEach(input => input.setAttribute('required', 'required'));
+            // Entferne 'required' von bestehenden Radio-Buttons
+            existingRadios.forEach(radio => radio.removeAttribute('required'));
+
+        } else {
+            // Zustand: Bestehende Liste anzeigen
+            fieldsContainer.style.display = 'none';
+            showButton.style.display = 'block';
+            listContainer.style.display = 'block'; // Bleibt sichtbar
+
+            // Temporären Radio-Button deaktivieren
+            tempRadio.checked = false;
+
+            // Entferne 'required' von allen neuen Eingabefeldern
+            inputs.forEach(input => input.removeAttribute('required'));
+
+            // Setze 'required' auf die bestehenden Radio-Buttons (falls vorhanden), um die Auswahl zu erzwingen
+            if (existingRadios.length > 0) {
+                 existingRadios.forEach(radio => radio.setAttribute('required', 'required'));
+            }
+        }
+    }
+
+    // ==========================================================
+    // NEUE LOGIK FÜR ZAHLUNGSMETHODEN (Z1, Z2, Z3)
+    // ==========================================================
+
+    const PAY_STATES = {
+        STATE_Z1: 1, // Liste der gespeicherten Methoden ist aktiv
+        STATE_Z2: 2, // Auswahlmaske (Radiobuttons + Eingabefelder) ist aktiv
+    };
+
+    let currentPaymentState = PAY_STATES.STATE_Z1; // Startzustand
+
+    /**
+     * Zeigt den korrekten Zustand (Z1 oder Z2) der Zahlungsmethoden-Sektion an
+     * und verwaltet die 'required' Attribute.
+     */
+    function showPaymentState(state) {
+        const z1Container = document.getElementById('payment-state-z1');
+        const z2Container = document.getElementById('payment-state-z2');
+        const existingRadios = document.querySelectorAll('#existing-payments .payment-radio');
+        const tempNewPaymentRadio = document.getElementById('payment_new_temp');
+
+        if (!z1Container || !z2Container) return; // Sicherheitscheck
+
+        currentPaymentState = state;
+
+        if (state === PAY_STATES.STATE_Z1) {
+            // Z1: Bestehende Methoden sind aktiv
+            z1Container.style.display = 'block';
+            z2Container.style.display = 'none';
+
+            // Deaktiviere alle neuen Felder und den temporären Radio-Button
+            tempNewPaymentRadio.checked = false;
+            updateMaskRequiredAttributes(); // Entfernt required von Z2 Feldern
+
+            // Aktiviere bestehende Radiobuttons (um Auswahl zu erzwingen)
+            if (existingRadios.length > 0) {
+                existingRadios.forEach(radio => radio.setAttribute('required', 'required'));
+            }
+
+        } else if (state === PAY_STATES.STATE_Z2) {
+            // Z2: Neueingabe-Maske ist aktiv
+            z1Container.style.display = 'none';
+            z2Container.style.display = 'block';
+
+            // Deaktiviere bestehende Radiobuttons
+            existingRadios.forEach(radio => radio.removeAttribute('required'));
+
+            // Stellt sicher, dass die "Card"-Maske (als Default) sichtbar ist und required hat
+            document.getElementById('radioCard').checked = true;
+            updateMaskRequiredAttributes();
+        }
+    }
+
+    /**
+     * Wechselt die sichtbare Eingabemaske in Z2 und verwaltet die 'required'-Attribute
+     * für die aktuell ausgewählte Maske.
+     */
+    function updateMaskRequiredAttributes() {
+        const masks = document.querySelectorAll('.payment-mask');
+        const selectedRadio = document.querySelector('input[name="new_payment_type_radio"]:checked');
+
+        if (!selectedRadio) return;
+
+        const selectedMethod = selectedRadio.value;
+
+        masks.forEach(mask => {
+            const isSelected = mask.id === selectedMethod + 'Mask';
+            mask.style.display = isSelected ? 'block' : 'none';
+
+            // Setze 'required' nur auf die Input-Felder der AKTUELL ausgewählten Maske
+            mask.querySelectorAll('input:not([type="radio"])').forEach(input => {
+                if (isSelected && currentPaymentState === PAY_STATES.STATE_Z2) {
+                    input.setAttribute('required', 'required');
+                } else {
+                    input.removeAttribute('required');
+                }
+            });
+        });
+    }
+
+    /**
+     * Z3 Logik: Prüft Validierung, simuliert die Speicherung und kehrt zu Z1 zurück.
+     */
+    function handlePaymentConfirmation() {
+        // Wir müssen prüfen, ob die Formularfelder in der aktuellen Z2 Maske valide sind
+        const form = document.querySelector('form');
+
+        // Temporäre Validierung: Setze required auf die Felder der aktuellen Maske
+        updateMaskRequiredAttributes();
+
+        // Prüft, ob das Formular (speziell die required Felder der aktiven Maske) valide ist
+        if (form.checkValidity()) {
+            // --- SIMULIERTE Z3 LOGIK START ---
+
+            // 1. Setze den temporären Radio-Button, dessen Daten das Backend lesen soll (Sicherheitsfrage gelöst!)
+            document.getElementById('payment_new_temp').checked = true;
+
+            // 2. Erfolgsmeldung anzeigen (simuliert, dass die Zahlung als NEU ausgewählt wurde)
+            const paymentCardBody = document.querySelector('#payment-state-z1').closest('.card-body');
+            const oldMsg = document.getElementById('temp-status-msg');
+            if (oldMsg) oldMsg.remove();
+
+            const selectedMethod = document.querySelector('input[name="new_payment_type_radio"]:checked').value;
+            const successHtml = `
+                <div id="temp-status-msg" class="alert alert-success mt-3" role="alert">
+                    ✅ Neue Methode (${selectedMethod}) zur finalen Auswahl hinzugefügt! Bitte mit "Weiter zur Bezahlung" bestätigen.
+                </div>
+            `;
+            paymentCardBody.insertAdjacentHTML('beforeend', successHtml);
+
+            // 3. Zurück zu Z1 wechseln. Da payment_new_temp checked ist, wird das Backend die neuen Daten verwenden.
+            showPaymentState(PAY_STATES.STATE_Z1);
+            document.getElementById('payment_new_temp').checked = true; // Sicherstellen, dass er aktiv bleibt
+
+        } else {
+            // Validierung fehlgeschlagen, Browser zeigt Fehler an
+            form.reportValidity();
+        }
+    }
+
+
+    // ==========================================================
+    // DOMContentLoaded und Event Listener Setup
+    // ==========================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Konfigurationen für Adressen ---
+        const ADDR = {
+            fields: 'new-address-fields',
+            button: 'show-new-address-btn',
+            cancel: 'cancel-new-address-btn',
+            radioTemp: 'address_new_temp',
+            list: 'existing-addresses',
+            listRadio: '.address-radio'
+        };
+
+        // --- INITIALISIERUNG und Listener für ADRESSE (ADDR) ---
+        function initializeState(config) {
+            const tempRadio = document.getElementById(config.radioTemp);
+
+            if (tempRadio && tempRadio.checked) {
+                toggleNewFields(true, config.fields, config.button, config.radioTemp, config.list);
+            } else {
+                toggleNewFields(false, config.fields, config.button, config.radioTemp, config.list);
+            }
+        }
+
+        function setupListeners(config) {
+            const showButton = document.getElementById(config.button);
+            const cancelButton = document.getElementById(config.cancel);
+
+            document.querySelectorAll(`#${config.list} ${config.listRadio}`).forEach(radio => {
+                radio.addEventListener('click', () => toggleNewFields(false, config.fields, config.button, config.radioTemp, config.list));
+            });
+
+            if (showButton) {
+                showButton.addEventListener('click', () => toggleNewFields(true, config.fields, config.button, config.radioTemp, config.list));
+            }
+
+            if (cancelButton) {
+                cancelButton.addEventListener('click', () => {
+                    const firstExistingRadio = document.querySelector(`#${config.list} ${config.listRadio}`);
+                    if (firstExistingRadio) {
+                        firstExistingRadio.checked = true;
+                    }
+                    toggleNewFields(false, config.fields, config.button, config.radioTemp, config.list);
+                });
+            }
+        }
+
+        // Adress-Initialisierung
+        initializeState(ADDR);
+        setupListeners(ADDR);
+
+        // --- Listener für ZAHLUNGSMETHODEN (PAY) ---
+
+        // 1. Listener für den Hinzufügen-Button (Z1 -> Z2)
+        const showNewPaymentBtn = document.getElementById('show-new-payment-btn');
+        if (showNewPaymentBtn) {
+            showNewPaymentBtn.addEventListener('click', () => {
+                showPaymentState(PAY_STATES.STATE_Z2);
+            });
+        }
+
+        // 2. Listener für den Abbrechen-Button (Z2 -> Z1)
+        const cancelNewPaymentBtn = document.getElementById('cancel-new-payment-btn-z2');
+        if (cancelNewPaymentBtn) {
+            cancelNewPaymentBtn.addEventListener('click', () => {
+                // Setzt den zuerst gespeicherten Radio-Button wieder auf checked (falls vorhanden)
+                const firstExistingRadio = document.querySelector('#existing-payments .payment-radio');
+                if (firstExistingRadio) {
+                    firstExistingRadio.checked = true;
+                }
+                showPaymentState(PAY_STATES.STATE_Z1);
+            });
+        }
+
+        // 3. Listener für den OK/Bestätigen-Button (Z2 -> Z3 -> Z1)
+        const confirmNewPaymentBtn = document.getElementById('confirm-new-payment-btn');
+        if (confirmNewPaymentBtn) {
+            confirmNewPaymentBtn.addEventListener('click', handlePaymentConfirmation);
+        }
+
+        // 4. Listener für die Radio-Buttons in Z2 (Wechselt Eingabemaske)
+        document.querySelectorAll('.new-payment-type').forEach(radio => {
+            radio.addEventListener('change', updateMaskRequiredAttributes);
+        });
+
+        // 5. Listener für bestehende Zahlungs-Radio-Buttons (Setzt Zustand auf Z1 und wählt Methode)
+        document.querySelectorAll('#existing-payments .payment-radio').forEach(radio => {
+            radio.addEventListener('click', () => {
+                // Wenn man eine bestehende Methode wählt, kehrt man zu Z1 zurück
+                showPaymentState(PAY_STATES.STATE_Z1);
+            });
+        });
+    });
+</script>
+{% endblock %}

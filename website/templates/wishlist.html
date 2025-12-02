@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3DButler | {%block title%}  Wunschliste {%endblock%}</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+    <style>
+        body {
+             color: #000;
+             background: linear-gradient(to right, rgb(134, 44, 44), rgb(131, 131, 131), rgb(233, 99, 99));
+             font-family: Arial, Helvetica, sans-serif;
+        }
+        h2{
+            color: rgb(255, 255, 255);
+            text-shadow: 0 0 28px rgba(164, 0, 0, 0.9);
+            position:fixed;
+            top: 2%;
+            left: 2%;
+        }
+         .container {
+             display: flex;
+             flex-wrap: wrap;
+             justify-content: center;
+         }
+
+         .card {
+
+             width: 18rem;
+             background-color: rgba(158, 138, 138, 0.756);
+             color: #ffffff;
+             margin: 10px;
+             box-shadow: 0 8px 18px rgba(0, 0, 0, 0.8);
+             border-radius: 10px;
+
+         }
+
+         .card img {
+
+             width: 100%;
+             height: auto;
+             transform: translateX(-5%);
+             transform: rotate(4deg);
+             box-shadow: 0 8px 18px rgba(0, 0, 0, 0.8);
+             border-radius: 10px;
+         }
+
+         .card-body {
+             padding: 1rem;
+             text-align: center;
+         }
+
+         .btn {
+             background-color: #a90b0b;
+             color: rgb(255, 221, 221);
+             padding: 10px 20px;
+             text-align: center;
+             border: none;
+             cursor: pointer;
+         }
+         .total-amount{
+            background-color:rgba(0, 0, 0, 0.1);
+            border-style:dashed;
+            text-decoration: none;
+            margin: 2%;
+            font-size:x-large;
+            padding: 10px;
+
+            color: rgb(0, 0, 0);
+            position:fixed;
+            bottom: 12%;
+            right: 2%;
+
+         }
+         #total_amount_value{
+            color: #ff9999;
+            font-size: xx-large;
+         }
+         .btn-checkout{
+            background-color: #ff9999;
+            text-decoration: none;
+            margin: 2%;
+            font-size: larger;
+            padding: 10px;
+            border-radius: 4%;
+            border: 2px solid black;
+            color: rgb(0, 0, 0);
+            position:fixed;
+            bottom: 5%;
+            right: 2%;
+         }
+         .btn-backwards{
+            transform: scale(60%);
+            position:fixed;
+            top: 2%;
+            left: 0%;
+            transition: transform 0.3s, opacity 0.3s; /* Added for animation */
+         }
+         .btn:hover {
+             opacity: 0.8;
+         }
+         .btn-checkout:hover {
+             opacity: 0.5;
+         }
+         .btn-backwards:hover{
+            transform: scale(80%); /* Makes the image stick out */
+            opacity: 0.8; /* Slightly reduce opacity for effect */
+         }
+    </style>
+</head>
+<body>
+    <h2>Wunschliste</h2>
+
+    <div class="container">
+
+        {% for item in items %}
+        <div class="col-md-4" style="margin: 10px;">
+            <div class="card">
+                <img class="card-img-top" src="{{ url_for('static', filename='images/' ~ item[2]) }}" alt="{{ item[0] }}">
+                <div class="card-body">
+                    <p class="card-text">{{ item[0] }}</p>
+                    <p class="card-text">Stückpreis: €{{ item[1] }}</p>
+
+                    <a href="{{ url_for('views.product_detail', product_id=item[4]) }}" class="btn btn-primary">
+                        Details
+                    </a>
+                    <form action="{{ url_for('views.delete_wishlist_product', product_id=item[4]) }}" method="POST">
+                        <button type="submit" class="btn btn-primary">Löschen</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div>
+        <a href="{{ url_for('views.home') }}" class="btn-backwards">
+            <img src="{{ url_for('static', filename='icons/back.png') }}" alt="Back to Home">
+        </a>
+        </div>
+
+</body>
+</html>

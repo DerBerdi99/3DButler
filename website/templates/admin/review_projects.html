@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Projektbegutachtung: Übersicht{% endblock %}
+
+{% block body %}
+
+<div class="container text-center">
+    <h1 class="mb-4 text-primary">Admin Project Page</h1>
+    <div class="row justify-content-center" style="margin: 10px;">
+      <div class="col-md-6">
+        <div class="list-group">
+
+            <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action">
+                <i class="products-plates" aria-hidden="true"></i>
+                <span class="link-name">Zum Shop (Kundenansicht)</span>
+            </a>
+
+            <a href="{{ url_for('admin_views.review_projects') }}" class="list-group-item list-group-item-action list-group-item-warning">
+                <i class="products-palisades" aria-hidden="true"></i>
+                <span class="link-name">PROJEKTE BEGUTACHTEN (Review-Queue)</span>
+            </a>
+
+            <a href="{{ url_for('admin_views.user_management') }}" class="list-group-item list-group-item-action">
+                <i class="products-parking"></i>
+                <span class="link-name">Benutzerverwaltung</span>
+            </a>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12 text-center mb-4">
+            <h3>{{ title }}</h3>
+
+            <p class="site-description">Filterung nach Status:</p>
+
+                <div class="btn-group mb-3 flex-wrap" role="group">
+                    <a href="{{ url_for('admin_views.review_projects') }}"
+                       class="btn {% if not current_filter %}btn-primary{% else %}btn-outline-primary{% endif %} m-1">
+                        Standard-Queue
+                    </a>
+
+                    {% for status in available_statuses %}
+                    {% set button_class = 'btn-success' if status == current_filter else 'btn-outline-success' %}
+
+                    <a href="{{ url_for('admin_views.review_projects', status=status) }}"
+                       class="btn {{ button_class }} m-1">
+                        {{ status | replace('_', ' ') }}
+                    </a>
+
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+        <!-- 1. ÄUSSEREN CONTAINER STARTEN (Passt sich der gesamten Breite an) -->
+        <div class="container-fluid">
+            <!-- 2. ÄUSSERE ROW STARTEN (Benötigt für das Grid-System) -->
+            <div class="row">
+            <!-- 3. HIER ERFOLGT DIE VERSCHIEBUNG UND BREITENBEGRENZUNG -->
+            <!-- col-lg-12: 12 Spalten der Breite -->
+                <div class="col-12 col-lg-12">
+            {% if projects %}
+                <div class="row">
+
+
+            {% for project in projects %}
+                    <div class="col-12 col-md-6 col-lg-4 mb-4">
+
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body d-flex flex-column">
+
+                            <h5 class="card-title text-primary">{{ project.ProjectName | default('Unbenanntes Projekt') }}</h5>
+
+                            <button class="btn btn-sm btn-danger float-end delete-btn" data-project-id="{{ project.ProjectID }}"title="Projekt löschen"style="position: absolute; top: 10px; right: 10px;">
+
+                                &#x2715;  <!--deleteButton-->
+
+                            </button>
+                            {% if project.AdminMessagesSent and project.AdminMessagesSent > 0 %}
+                                <span title="{{ project.AdminMessagesSent }} Nachrichten gesendet">
+                                   <p>Admin-Feedback gesendet  &#10004; ({{ project.AdminMessagesSent }})</p>
+                                </span>
+                            {% endif %}
+
+                            <p class="card-text mb-1">
+                                <strong>ID:</strong> {{ project.ProjectID | truncate(15) }}
+                            </p>
+                            <p class="card-text mb-1">
+                                <strong>Kunde:</strong> {{ project.CustomerName | truncate(15) }}
+                            </p>
+                            <p class="card-text mb-1">
+                                <strong>Status:</strong> <span class="badge bg-warning">{{ project.Status }}</span>
+                            </p>
+                            <p class="card-text mb-3">
+                                <strong>Material:</strong> {{ project.MaterialType | default('Nicht angegeben') }}
+                            </p>
+                            {# Button nur anzeigen, wenn der Status WAITING_FOR_QUOTE ist #}
+                            {% if project.Status == 'WAITING_FOR_QUOTE' %}
+                                <a href="{{ url_for('admin_views.review_final_quote', project_id=project.ProjectID) }}"
+                                class="btn btn-sm btn-success mt-auto">
+                                    Add Quote
+                                </a>
+                            {% endif %}
+
+                            <a href="{{ url_for('admin_views.project_details', project_id=project.ProjectID) }}" class="btn btn-sm btn-info mt-2">
+                                Details & Bearbeiten
+                            </a>
+
+                            </div>
+                        </div>
+
+                    </div>
+                {% endfor %}
+                {% else %}
+            <h3 class= "text-center text-muted text-white-50">Keine Projekte in dieser Ansicht gefunden.</h3>
+            </div>
+            {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const projectId = this.getAttribute('data-project-id');
+            const projectName = this.closest('.card-body').querySelector('.card-title').textContent.trim();
+
+            // Bestätigungsdialog anzeigen
+            if (confirm(`Sind Sie sicher, dass Sie das Projekt "${projectName}" (ID: ${projectId}) löschen möchten?`)) {
+
+                // Formular dynamisch erstellen (für POST Request)
+                const form = document.createElement('form');
+                form.method = 'POST';
+                // WICHTIG: Verwenden der Flask-Route
+                form.action = "{{ url_for('admin_views.delete_project_route', project_id='0') }}".replace('0', projectId);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+});
+</script>
+
+
+{% endblock %}

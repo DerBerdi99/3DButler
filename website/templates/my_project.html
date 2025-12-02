@@ -1,0 +1,408 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Projekt: {{ project.ProjectName }}{% endblock %}
+
+{% block header %}
+<style>
+/* CSS für den Status-Header */
+.stepcontainer{max-width:800px;margin:0 auto;background-color:#ffffff;padding:15px;border-radius:12px;box-shadow:0 10px 15px rgba(0,0,0,.1);text-align:center}
+h4{font-size:18px;font-weight:bold;color:#370987;margin:0}
+p.status-text{font-size:14px;color:#555;margin-top:5px;margin-bottom:0}
+@keyframes subtle-bounce{0%,50%{transform:scale(1);opacity:.8}100%{transform:scale(1);opacity:1}}
+.animate-attention{animation:subtle-bounce 1s ease-out 2}
+
+/* Zusätzliches CSS für den Nachrichten-Log */
+.message-container {
+    /* Änderung: max-height anstelle von height, um sich dem Inhalt anzupassen,
+       aber bei zu vielen Nachrichten scrollbar zu bleiben. */
+    max-height: 500px;
+    overflow-y: auto;
+    background-color: #f8f9fa; /* Hellgrauer Hintergrund für den Chat */
+    padding: 15px;
+    border-radius: 8px;
+}
+.message-bubble {
+    max-width: 80%;
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    border-radius: 18px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+.admin-message {
+    background-color: #e2e6ea; /* Hellgrau für Admin */
+    color: #212529;
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+}
+.user-message {
+    background-color: #370987; /* Dunkelblau für User (passt zur Primary-Farbe) */
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+}
+.timestamp {
+    font-size: 10px;
+    margin-top: 3px;
+    opacity: 0.7;
+}
+</style>
+<div class="stepcontainer">
+
+    {# Robuste Logik für die Statusmeldung im Header (Unabhängig vom Chat) #}
+    {% if project.Status == 'PROJECT_COMPLETED' %}
+        <h4 class="text-success">Projektstatus: {{ project.Status }}</h4>
+        <p class="status-text">Schritt 4 von 4: Ihr Projekt wurde abgeschlossen und die Bestellung ist fertig.</p>
+    {% elif project.Status == 'QUOTED_AWAITING_CUSTOMER' %}
+        <h4 class="text-warning animate-attention">Projektstatus: {{ project.Status }}</h4>
+        <p class="status-text">Schritt 3 von 4: Ihr Angebot ist fertig. Bitte prüfen und die Bestellung abschließen.</p>
+    {% else %}
+        <h4 class="text-primary">Projektstatus: {{ project.Status }}</h4>
+        <p class="status-text">Schritt 2 von 4: Ihre Anfrage wird geprüft. Bitte warten Sie auf das fertige Angebot.</p>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block cart_icon %}{% endblock %}
+{% block wishlist_icon %}{% endblock %}
+
+{% block body %}
+
+    {# HINWEIS: Es wird davon ausgegangen, dass 'messages' vom Backend (Jinja-Kontext) bereitgestellt wird. #}
+
+<div class="container mt-4">
+    <h2>Details: {{ project.ProjectName }}</h2>
+
+    <div class="row">
+
+        {# Linke Spalte: Status und Upload CTA (4/12) #}
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    Projektinformationen
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ project.ProjectName }}</p>
+                    <p><strong>Status:</strong>
+                        <span class="badge {{
+                            'bg-warning' if project.Status == 'UNDER_REVIEW' else (
+                                'bg-success' if project.Status in ['QUOTED_AWAITING_CUSTOMER', 'ORDER_STARTED', 'PROJECT_COMPLETED'] else (
+                                    'bg-danger' if project.Status == 'CANCELLED' else 'bg-secondary'
+                                )
+                            )
+                        }}">
+                            {{ project.Status }}
+                        </span>
+                    </p>
+                    <p><strong>Erstellt am:</strong> {{ project.DateAdded or 'N/A' }}</p>
+                    <hr>
+                    <p class="text-muted small">{{ project.ProjectDescription }}</p>
+                    <hr>
+
+
+                    {# LOGIK FÜR BESTELL-CTA BEI ANGEBOT (NEU IMPLEMENTIERT) #}
+                    <!-- Annahme: Der Status ist in project.status gespeichert und lautet 'quoted' -->
+                    {% if project.Status == 'QUOTED_AWAITING_CUSTOMER' %}
+                    <div class="p-6 rounded-xl shadow-lg bg-yellow-50 border border-yellow-300 mb-6 transition duration-300 hover:shadow-xl">
+                        <h5 class="text-xl font-bold text-yellow-800 mb-2 flex items-center space-x-2">
+                            <!-- Icon für den Kassenbereich -->
+                            <h3> 📫 </h3>
+                            <span>Ihr verbindliches Angebot liegt vor!</span>
+                        </h5>
+                        <p class="mb-4 text-gray-700">
+                            Bitte überprüfen Sie das Angebot. Durch Klicken auf den Button wird die Bestellung ausgelöst.
+                        </p>
+                        <!-- FORMULAR, DAS DIE Funktion start_order_from_quote AUFRUFT -->
+                        <form method="POST" action="{{ url_for('views.start_order_from_quote', project_id=project.ProjectID) }}">
+                            <button style="background-color: darkcyan;" type="submit" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-[1.01]">
+                                <span class="flex items-center justify-center space-x-2 text-lg">
+                                    <span><h5>Zur Kasse gehen & Bestellung starten</h5></span>
+                                    <h3> ✅ </h3>
+                                </span>
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                    {# LOGIK FÜR DATEIUPLOAD-CTA BEI ANFORDERUNG #}
+                    {% if show_success_checkmark %}
+
+                    <span id="uploadStatusText" style="font-weight: 600;">Dateien nachgereicht.</span>
+
+                    <h3 class="text-primary fw-bold">&thinsp; ✓ </h3>
+
+
+                    {% elif show_file_upload_cta %}
+                    <!-- Container für die Upload-Aufforderung -->
+                    <div id="uploadCtaContainer" class="border p-4 rounded-3 shadow-sm bg-light">
+                        <div id="initialCta">
+                            <h5 class="text-dark mb-2 d-flex align-items-center">
+                                <h5>📁</h5> Dateien nachreichen
+                            </h5>
+                            <p class="mb-3 small text-muted">
+                                Der Administrator hat zusätzliche Unterlagen angefordert, um Ihr Projekt bearbeiten zu können. Bitte laden Sie die fehlenden Dokumente über den Button hoch.
+                            </p>
+                            <button id="fileUploadButton" type="button" class="btn btn-primary w-100"
+                                data-bs-toggle="modal" data-bs-target="#fileUploadModal"
+                                style="font-weight: 600;">
+                                <h4>⬆</h4> Jetzt hochladen
+                            </button>
+                        </div>
+
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Rechte Spalte: PROJEKT-KOMMUNIKATION (8/12) - Zeigt alle Nachrichten aus 'messages' #}
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    Projekt-Nachrichten & Kommunikation
+                </div>
+                <div class="card-body p-0">
+                    <div class="message-container">
+                        {% for message in messages %}
+                            {# Bestimmt die Ausrichtung und Farbe basierend auf dem Absender #}
+                            {% set is_admin = message.SenderType == 'Admin' %}
+
+                            <div class="d-flex {{ 'justify-content-start' if is_admin else 'justify-content-end' }}">
+                                <div class="message-bubble {{ 'admin-message' if is_admin else 'user-message' }} shadow-sm">
+                                    {{ message.MessageText }}
+                                    <div class="timestamp {{ 'text-dark' if is_admin else 'text-white' }}">
+                                        {{ message.SenderType }} - {{ message.Timestamp | default('Datum N/A') }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted p-5">
+                                   <h1>📪</h1>
+                                   <br>
+                                <h5>Noch keine Nachrichten für dieses Projekt vorhanden.</h5>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {# 2. Nachrichten-Eingabeformular #}
+                    <div class="p-3 border-top bg-light">
+                        <form id="messageForm" method="POST" action="/send_message/{{ project.ProjectID }}" class="d-flex" onsubmit="disableSubmitButton(event)">
+
+                            {# HINWEIS: Hier muss Ihr Backend ein CSRF-Token einfügen, falls verwendet #}
+
+                            <input type="text"
+                                class="form-control me-2"
+                                id="messageText"
+                                name="messageText"
+                                placeholder="Nachricht an den Administrator senden..."
+                                required
+                                maxlength="500">
+
+                            <button type="submit" class="btn btn-primary" id="sendMessageBtn">
+                                <h5>📨</h5>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div> {# Ende: row #}
+
+    {# ---------------------------------------------------------------------------------------------------------------- #}
+    {# 2. Modal-Struktur für den Upload #}
+    {# ---------------------------------------------------------------------------------------------------------------- #}
+    <div class="modal fade" id="fileUploadModal" tabindex="-1" aria-labelledby="fileUploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>📁</h5>
+                    <h4 class="modal-title" id="fileUploadModalLabel">Dateien hochladen (Max. 5 Dateien)</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadForm" onsubmit="uploadFiles(event)">
+                        <div class="mb-3">
+                            <label for="files" class="form-label">Wählen Sie Ihre Dateien aus:</label>
+                            <!-- 'multiple' Attribut erlaubt mehrere Dateien -->
+                            <input class="form-control" type="file" id="files" name="files" multiple required>
+                            <small class="form-text text-muted">Es sind maximal 5 Dateien erlaubt. Das Nachreichen setzt die Upload-Anforderung des Administrators zurück.</small>
+                        </div>
+                        <div id="fileCountError" class="alert alert-danger d-none" role="alert">
+                            Bitte wählen Sie maximal 5 Dateien aus.
+                        </div>
+                        <div id="uploadErrorAlert" class="alert alert-danger d-none" role="alert">
+                            Ein Fehler ist aufgetreten.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" form="uploadForm" class="btn btn-primary" id="submitUploadBtn">
+                        <span id="submitText">Upload starten</span>
+                        <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div> {# Ende: container mt-4 #}
+
+{# ---------------------------------------------------------------------------------------------------------------- #}
+{# 3. JavaScript-Logik #}
+{# ---------------------------------------------------------------------------------------------------------------- #}
+<script type="text/javascript">
+    // Konfigurieren Sie die maximale Anzahl von Dateien
+    const MAX_FILES = 5;
+
+    // WICHTIG: Die Projekt-ID wird korrekt aus Jinja übernommen
+    const PROJECT_ID = "{{ project.ProjectID }}";
+
+    function disableSubmitButton(event) {
+        const btn = document.getElementById('sendMessageBtn');
+        const input = document.getElementById('messageText');
+
+        if (input.value.trim() === "") {
+            // Verhindert das Senden, wenn das Feld leer ist
+            event.preventDefault();
+            return;
+        }
+
+        // Deaktiviert den Button und zeigt den Ladezustand an
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
+        // Die Form wird gesendet und der Server muss redirecten, um den Reload zu erzwingen.
+    }
+    /**
+     * Zeigt die Erfolgsmeldung an und versteckt die ursprüngliche CTA-Box.
+     * @param {number} fileCount - Die Anzahl der hochgeladenen Dateien.
+     */
+    function showSuccessStatus(fileCount) {
+        // CTA-Box ausblenden
+        const initialCta = document.getElementById('initialCta');
+        if (initialCta) {
+            initialCta.classList.add('d-none');
+        }
+
+        // Erfolgsmeldung anzeigen
+        const statusElement = document.getElementById('uploadStatus');
+        statusElement.querySelector('#uploadStatusText').textContent = `${fileCount} Dateien erfolgreich hochgeladen.`;
+        statusElement.classList.remove('d-none');
+    }
+
+    /**
+    * Die Hauptfunktion zum Hochladen der Dateien (jetzt mit echtem Fetch-Request).
+    * @param {Event} event - Das Formular-Submit-Event.
+    */
+    async function uploadFiles(event) {
+        event.preventDefault();
+
+        const filesInput = document.getElementById('files');
+        const files = filesInput.files;
+        const submitBtn = document.getElementById('submitUploadBtn');
+        const submitText = document.getElementById('submitText');
+        const spinner = document.getElementById('spinner');
+        const fileCountError = document.getElementById('fileCountError');
+        const uploadErrorAlert = document.getElementById('uploadErrorAlert'); // Das neue Element
+
+        // Verstecke alle vorherigen Fehler
+        fileCountError.classList.add('d-none');
+        uploadErrorAlert.classList.add('d-none');
+
+        // 1. Validierung der Dateianzahl
+        if (files.length === 0) {
+            console.error('Upload Fehler: Bitte wählen Sie mindestens eine Datei aus.');
+            return;
+        }
+        if (files.length > MAX_FILES) {
+            fileCountError.classList.remove('d-none');
+            return;
+        }
+
+        // 2. UI auf "Laden" umstellen
+        submitBtn.disabled = true;
+        submitText.textContent = 'Lädt hoch...';
+        spinner.classList.remove('d-none');
+
+        // Erstellen des FormData-Objekts
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) {
+            if (files[i]) {
+                // Der Name 'files' muss dem erwarteten Feldnamen auf Serverseite entsprechen
+                formData.append('files', files[i]);
+            }
+        }
+
+        const uploadUrl = `/upload_files/${PROJECT_ID}`;
+
+        try {
+            // ECHTER FETCH-REQUEST zum Server
+            const response = await fetch(uploadUrl, {
+                method: 'POST',
+                body: formData,
+                // Wichtig: Content-Type nicht setzen, da FormData das korrekt handhabt
+            });
+
+            if (response.ok) {
+                // Bei Erfolg: Modal schließen
+                const modalElement = document.getElementById('fileUploadModal');
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                    }
+                } else {
+                    // Fallback, falls Bootstrap JS nicht geladen ist
+                    modalElement.classList.remove('show');
+                    modalElement.style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                }
+
+                // Erfolgsstatus anzeigen
+                showSuccessStatus(files.length);
+
+            } else {
+                // Fehler, wenn der Serverstatuscode 4xx oder 5xx ist
+                const errorText = await response.text();
+                console.error('Upload fehlgeschlagen:', response.status, errorText);
+                uploadErrorAlert.textContent = `Upload fehlgeschlagen: Serverfehler (${response.status}). Bitte wenden Sie sich an den Support.`;
+                uploadErrorAlert.classList.remove('d-none');
+            }
+
+
+        } catch (error) {
+            // Fehler, der bei Netzwerkproblemen (z.B. Offline) auftritt
+            console.error('Netzwerk- oder Verarbeitungsfehler:', error);
+            uploadErrorAlert.textContent = 'Netzwerkfehler beim Hochladen. Bitte überprüfen Sie Ihre Verbindung.';
+            uploadErrorAlert.classList.remove('d-none');
+        } finally {
+            // UI zurücksetzen
+            submitBtn.disabled = false;
+            submitText.textContent = 'Upload starten';
+            spinner.classList.add('d-none');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalElement = document.getElementById('fileUploadModal');
+        if (modalElement) {
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                const filesInput = document.getElementById('files');
+                if (filesInput) {
+                    filesInput.value = '';
+                }
+                // Fehler beim Schließen des Modals zurücksetzen
+                document.getElementById('fileCountError').classList.add('d-none');
+                document.getElementById('uploadErrorAlert').classList.add('d-none');
+            });
+        }
+
+        const msgInput = document.getElementById('messageText');
+        if (msgInput) {
+             msgInput.focus();
+        }
+    });
+</script>
+{% endblock %}

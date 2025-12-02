@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %} Admin Dashboard {% endblock %}
+
+{% block body %}
+
+<div class="container text-center">
+    <h1 class="mb-4 text-primary">Admin-Kontrollzentrum</h1>
+
+    <div class="row justify-content-center" style="margin: 10px;">
+      <div class="col-md-6">
+        <div class="list-group">
+
+            <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action">
+                <i class="products-plates" aria-hidden="true"></i>
+                <span class="link-name">Zum Shop (Kundenansicht)</span>
+            </a>
+
+            <a href="{{ url_for('admin_views.review_projects') }}" class="list-group-item list-group-item-action list-group-item-warning">
+                <i class="products-palisades" aria-hidden="true"></i>
+                <span class="link-name">PROJEKTE BEGUTACHTEN (Review-Queue)</span>
+            </a>
+
+            <a href="{{ url_for('admin_views.user_management') }}" class="list-group-item list-group-item-action">
+                <i class="products-parking"></i>
+                <span class="link-name">Benutzerverwaltung</span>
+            </a>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 40px;">
+        <div class="col-12">
+            <h2>Unsere Produkte (Admin-Vorschau)</h2>
+            <div class="d-flex justify-content-center flex-wrap">
+
+                <div class="card" style="width: 18rem; margin: 10px;">
+                    <img class="card-img-top" src="{{ url_for('static', filename='images/P001.png') }}" alt="ALMOSTBLACK">
+                    <div class="card-body">
+                        <h5 class="card-title">Tätowier-Sprühflaschenhalterung</h5>
+                        <p class="card-text">Maße: 40x10x4cm , Material: ABS, Farbe: Schwarz ,Maker: Peter Petersen .</p>
+                        <a href="{{ url_for('views.product_detail', product_id='bcdf7063-3e63-4045-b2ec-6d710a706c61') }}" class="btn-details">Details</a>
+                    </div>
+                </div>
+
+                <div class="card" style="width: 18rem; margin: 10px;">
+                    <img class="card-img-top" src="{{ url_for('static', filename='images/P002.png') }}" alt="CRIMSONRED">
+                    <div class="card-body">
+                        <h5 class="card-title">Diffusor-LED Kombi</h5>
+                        <p class="card-text">Maße: 30x30x15cm , Material: Silk PLA , Farbe: Rot , Maker: Anders Anderssen.</p>
+                        <a href="{{ url_for('views.product_detail', product_id='b3efca71-fe88-4af9-9f22-ceb4b94f9edd') }}" class="btn-details">Details</a>
+                    </div>
+                </div>
+                <div class="card" style="width: 18rem; margin: 10px;">
+                    <img class="card-img-top" src="{{ url_for('static', filename='images/P003.png') }}" alt="LUNATICBLUE">
+                    <div class="card-body">
+                        <h5 class="card-title">Products.Name</h5>
+                        <p class="card-text">Products.Description , Products.Color, Projects.UserID </p>
+                        <a href="{{ url_for('views.product_detail', product_id='b623b740-5eb3-42e1-825e-d8b582b94f12') }}" class="btn-details">Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

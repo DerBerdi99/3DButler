@@ -1,0 +1,440 @@
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<style>
+
+    h5{
+        background-color: rgba(56, 91, 185, 0.742);
+    }
+</style>
+{% extends 'base.html' %}
+
+{# Suchleiste ausblenden #}
+{% block header %}
+<style>
+
+    .stepcontainer {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        padding: 10px;
+        border-radius: 12px;
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    h4 {
+        font-size: 18px;
+        font-weight: bold;
+        color: #370987;
+    }
+
+    /* Animation */
+    @keyframes subtle-bounce {
+        0%, 50% { transform: scale(1); opacity: 0.1; }
+        50%, 100% { transform: scale(1.05); opacity: 0.8; }
+
+    }
+    .animate-attention {
+        animation: subtle-bounce 1s ease-out 2; /* Läuft nur zweinmal */
+    }
+</style>
+<div class="stepcontainer">
+     <h4 class="animate-attention"> Schritt 1 von 4 : Projekt anlegen </h4>
+</div>
+{% endblock %}
+
+{# Warenkorb Icon ausblenden #}
+{% block cart_icon %}
+{% endblock %}
+
+{# Wishlist ausblenden #}
+{% block wishlist_icon %}
+{% endblock %}
+
+
+{% block title %} Projekt starten {% endblock %}
+
+{% block body %}
+{% if session.get('is_admin') != 1 %}
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+      <div class="col " style="margin: 13px;">
+        <div class="list-group text-center" >
+
+            <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action">
+                <i class="shop-link" aria-hidden="true"></i>
+                <span class="link-name">Shop</span>
+            </a>
+            <a href="{{ url_for('views.start_project') }}" class="list-group-item list-group-item-action">
+                <i class="project-link" aria-hidden="true"></i>
+                <span class="link-name">Projekt starten</span>
+            </a>
+            <a href="{{ url_for('views.my_reviews') }}" class="list-group-item list-group-item-action">
+                <i class="reviews-link"></i>
+                <span class="link-name">Meine Reviews</span>
+            </a>
+            <a href="{{ url_for('views.my_orders') }}" class="list-group-item list-group-item-action">
+                <i class="orders-link"></i>
+                <span class="link-name">Meine Bestellungen</span>
+            </a>
+
+        </div>
+      </div>
+
+{% endif %}
+
+<div class="container text-center">
+    <h2>Lade deine Dateien hoch und erhalte ein Review!</h2>
+
+    <form method="POST" action="{{ url_for('views.start_project') }}" enctype="multipart/form-data">
+
+        <div class="row mb-4 text-left">
+            <div class="col-md-6 mb-3">
+                <h5 for="project_name_input">Projektname *</h5>
+                <input type="text"
+                       class="form-control"
+                       id="project_name_input"
+                       name="project_name"
+                       required
+                       placeholder="Z.B. Halterung für Drohnen-Kamera V2"
+                       value="{{ project_name if project_name is defined else '' }}">
+                <br>
+                <h5 for="requestet_quantity">Stückzahl *</h5>
+                <input type="number" step="1" min="1" class="form-control" id="requestet_quantity_input"
+                name="requestet_quantity"
+                value="{{ requestet_quantity or 1 }}"
+                required
+                oninput="this.value = Math.max(1, Math.floor(this.value || 1));">
+                <h6>Diese Angabe ist verbindlich. Die gewählte Stückzahl beeinflusst den Gesamtpreis erheblich!</h6>
+            </div>
+            <div class="col-md-6">
+                <h5 for="description_input">Beschreibung des Vorhabens *</h5>
+                <textarea class="form-control"
+                          id="description_input"
+                          name="description"
+                          rows="5"
+                          required
+                          placeholder="Zweck, Anforderungen, Komplexität...">{{ description if description is defined else '' }}</textarea>
+            </div>
+              <h6> mit * markierte Eingabefelder sind Pflichtfelder</h6>
+        </div>
+
+        <div class="card p-4 mb-4 text-left">
+            <h5>Benötigte Materialien / Fertigungsart *</h5>
+            <small class="text-muted mb-3">Wähle mindestens eine Option, die auf dein Projekt zutrifft.</small>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input material-check" type="checkbox" id="check_plastic" name="check_plastic"
+                               {% if check_plastic is defined and check_plastic %}checked{% endif %}>
+                        <label class="form-check-label" for="check_plastic">
+                            Kunststoff (3D-Druck)
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input material-check" type="checkbox" id="check_metal" name="check_metal"
+                               {% if check_metal is defined and check_metal %}checked{% endif %}>
+                        <label class="form-check-label" for="check_metal">
+                            Metall- oder CNC-Teile
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input material-check" type="checkbox" id="check_zukaufteile" name="check_zukaufteile"
+                               {% if check_zukaufteile is defined and check_zukaufteile %}checked{% endif %}>
+                        <label class="form-check-label" for="check_zukaufteile">
+                            Zusätzliche Komponenten / Zukaufteile
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-3">
+
+            <div id="material_selection_container">
+                <div id="material_plastic_selection" class="mb-3" style="display:none;">
+                    <label for="selected_plastic_type" class="form-label small text-muted">Gewünschter Kunststoff-Typ (optional)</label>
+                    <select class="form-control" id="selected_plastic_type" name="selected_plastic_type">
+                        <option value="">-- Keine Angabe --</option>
+                        <option value="PLA" {% if selected_plastic_type == 'PLA' %}selected{% endif %}>Standard PLA</option>
+                        <option value="ABS" {% if selected_plastic_type == 'ABS' %}selected{% endif %}>ABS (Hitzebeständig)</option>
+                        <option value="TPE" {% if selected_plastic_type == 'TPE' %}selected{% endif %}>Flexibles TPE</option>
+                    </select>
+                </div>
+
+                <div id="material_metal_selection" class="mb-3" style="display:none;">
+                    <label for="selected_metal_type" class="form-label small text-muted">Gewünschter Metall-/CNC-Typ (optional)</label>
+                    <select class="form-control" id="selected_metal_type" name="selected_metal_type">
+                        <option value="">-- Keine Angabe --</option>
+                        <option value="ALUMINUM" {% if selected_metal_type == 'ALUMINUM' %}selected{% endif %}>Aluminium (CNC)</option>
+                        <option value="STEEL" {% if selected_metal_type == 'STEEL' %}selected{% endif %}>Edelstahl</option>
+                    </select>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="file-upload-zone my-4 p-5 border border-dashed rounded-lg bg-light text-muted">
+
+            <h5> Technische Zeichnungen / 3D-Meshes / CAD-Files / STLs hochladen *</h5>
+
+            <input type="file" name="file_upload" id="file_input" hidden multiple>
+
+            <p>
+                <strong>Drag and drop here or select files</strong>
+                <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('file_input').click()">Select files</button>
+            </p>
+            <small class="d-block">
+                Filesize &lt; 2MB. Supported formats: .stl, .step, .obj, .3mf.
+            </small>
+            <div id="file-list" class="mt-2"></div>
+        </div>
+
+        <div class="alert alert-info small text-left mt-4" role="alert">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="complianceCheck" required>
+                <label class="form-check-label" for="complianceCheck">
+                    You do agree that you have read and understand our content policy... Your files are strictly confidential.
+                </label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-lg mt-3" disabled id="upload_submit">Projektdaten hochladen & Review starten</button>
+
+
+
+    </form>
+
+    <div class="d-flex justify-content-center mt-3 mb-5">
+
+    {% if current_project_id is not defined or not current_project_id %}
+
+        <a href="{{ url_for('views.my_reviews') }}"
+           class="btn btn-outline-secondary"
+           onclick="return confirm('Möchten Sie die Erstellung wirklich abbrechen? Alle eingegebenen Daten gehen verloren.')">
+            <b>X</b> Abbrechen
+        </a>
+
+    {% else %}
+        {% set allowed_statuses = ['UNDER_REVIEW', 'INCOMPLETE_DATA'] %}
+
+        {% if current_project_status in allowed_statuses %}
+
+            <button type="button"
+                    class="btn btn-outline-danger btn-lg ml-3"
+                    onclick="if(confirm('WICHTIG! Dieses Projekt wird unwiderruflich gelöscht. Fortfahren?')) { document.getElementById('delete_form').submit(); }">
+                <i class="fas fa-times-circle"></i> Projekt löschen
+            </button>
+
+        {% else %}
+             <span class="ml-3 text-warning align-self-center">Löschen nicht mehr möglich.</span>
+        {% endif %}
+    {% endif %}
+
+</div>
+
+{% if current_project_id is defined and current_project_id %}
+    <form id="delete_form"
+          method="POST"
+          action="{{ url_for('views.delete_project_route', project_id=current_project_id) }}"
+          style="display:none;">
+    </form>
+{% endif %}
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('file_input');
+        const fileListContainer = document.getElementById('file-list');
+        const submitButton = document.getElementById('upload_submit');
+        const complianceCheck = document.getElementById('complianceCheck');
+
+        const projectNameInput = document.getElementById('project_name_input');
+        const descriptionInput = document.getElementById('description_input');
+
+        const checkPlastic = document.getElementById('check_plastic');
+        const checkMetal = document.getElementById('check_metal');
+        const plasticSelectionDiv = document.getElementById('material_plastic_selection');
+        const metalSelectionDiv = document.getElementById('material_metal_selection');
+        const zukaufCheck = document.getElementById('check_zukaufteile');
+
+        const dropZone = document.querySelector('.file-upload-zone');
+
+        let selectedFiles = null;
+        const MAX_TOTAL_SIZE_MB = 2;
+        const MAX_TOTAL_SIZE_BYTES = MAX_TOTAL_SIZE_MB * 1024 * 1024;
+
+        function updateSubmitButton() {
+            let isFileSelected = selectedFiles && selectedFiles.length > 0;
+
+            let totalSize = 0;
+            if (isFileSelected) {
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    totalSize += selectedFiles[i].size;
+                }
+            }
+            const isSizeValid = totalSize <= MAX_TOTAL_SIZE_BYTES;
+
+            const isFormValid = complianceCheck.checked &&
+                                isFileSelected &&
+                                isSizeValid &&
+                                projectNameInput.value.trim().length > 0 &&
+                                descriptionInput.value.trim().length > 0;
+
+            submitButton.disabled = !isFormValid;
+        }
+
+        function renderFileList() {
+            fileListContainer.innerHTML = '';
+
+            if (selectedFiles && selectedFiles.length > 0) {
+                let totalSize = 0;
+                const list = document.createElement('ul');
+                list.className = 'list-unstyled mt-2 small';
+
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    totalSize += file.size;
+
+                    const item = document.createElement('li');
+                    item.className = 'd-flex justify-content-between align-items-center p-2 mt-1 border rounded';
+                    item.setAttribute('data-index', i);
+
+                    item.innerHTML = `
+                        <span>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                        <button type="button" class="btn btn-sm btn-outline-danger delete-file-btn">Löschen</button>
+                    `;
+                    list.appendChild(item);
+                }
+
+                fileListContainer.appendChild(list);
+
+                const sizeWarning = totalSize > MAX_TOTAL_SIZE_BYTES ? ' text-danger' : ' text-info';
+                fileListContainer.insertAdjacentHTML('beforeend', `<p class="small${sizeWarning} mt-2">Gesamt: ${selectedFiles.length} Datei(en), ${(totalSize / 1024 / 1024).toFixed(2)} MB</p>`);
+
+            } else {
+                fileListContainer.innerHTML = '<small>Noch keine Datei ausgewählt.</small>';
+            }
+            updateSubmitButton();
+        }
+
+        function processFiles(files) {
+            // Dies ist für den 'change' Listener (manuelle Auswahl):
+            // Hier soll die alte Liste ersetzt werden!
+            const dataTransfer = new DataTransfer();
+            for (let i = 0; i < files.length; i++) {
+                dataTransfer.items.add(files[i]);
+            }
+            fileInput.files = dataTransfer.files;
+            selectedFiles = fileInput.files;
+            renderFileList();
+        }
+
+        function validateZukaufteile() {
+            const isManufacturingSelected = checkPlastic.checked || checkMetal.checked;
+
+            if (zukaufCheck.checked && !isManufacturingSelected) {
+                zukaufCheck.checked = false;
+                alert("Zukaufteile können nur zusammen mit Kunststoff (3D-Druck) oder Metall-/CNC-Teilen ausgewählt werden, da sonst kein Fertigungsauftrag vorliegt.");
+            }
+        }
+
+        function updateMaterialSelection() {
+            plasticSelectionDiv.style.display = checkPlastic.checked ? 'block' : 'none';
+            metalSelectionDiv.style.display = checkMetal.checked ? 'block' : 'none';
+        }
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-primary', 'bg-white');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-primary', 'bg-white');
+        });
+
+dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-primary', 'bg-white');
+
+            // NEU: DataTransfer-Objekt erstellen, das alte und neue Dateien kombiniert
+            const dataTransfer = new DataTransfer();
+            const newFiles = e.dataTransfer.files;
+
+            // 1. Alte Dateien hinzufügen (falls vorhanden)
+            if (selectedFiles) {
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    dataTransfer.items.add(selectedFiles[i]);
+                }
+            }
+
+            // 2. Neue (gedroppte) Dateien hinzufügen
+            for (let i = 0; i < newFiles.length; i++) {
+                // Hier könnten Sie Duplikat-Prüfungen einbauen, falls nötig
+                dataTransfer.items.add(newFiles[i]);
+            }
+
+            // 3. Input und globale Variable aktualisieren und rendern
+            fileInput.files = dataTransfer.files;
+            selectedFiles = fileInput.files;
+            renderFileList();
+        });
+
+        // ACHTUNG: Die 'processFiles' Funktion muss dann für den 'change'-Listener
+        // (manuelle Auswahl) angepasst werden, um die gesamte Liste zu überschreiben,
+        // oder Sie verwenden die obige Logik für beide Events, wenn Sie die
+        // Möglichkeit haben wollen, auch manuell Dateien hinzuzufügen.
+
+        // WICHTIG: Die ursprüngliche 'processFiles' muss so korrigiert werden,
+        // dass sie die Dateien im 'change'-Listener RICHTIG ÜBERSCHREIBT.
+        // Die Logik für 'change' soll die alte Liste ersetzen.
+
+        // Wir belassen die 'change' Logik in 'processFiles' für das Überschreiben,
+        // und die 'drop' Logik für das Hinzufügen.
+
+
+
+
+        fileInput.addEventListener('change', (e) => {
+            processFiles(e.target.files);
+        });
+
+        fileListContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-file-btn')) {
+                const listItem = e.target.closest('li');
+                const indexToDelete = parseInt(listItem.getAttribute('data-index'));
+
+                const dataTransfer = new DataTransfer();
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    if (i !== indexToDelete) {
+                        dataTransfer.items.add(selectedFiles[i]);
+                    }
+                }
+
+                fileInput.files = dataTransfer.files;
+                selectedFiles = fileInput.files;
+                renderFileList();
+            }
+        });
+
+        projectNameInput.addEventListener('input', updateSubmitButton);
+        descriptionInput.addEventListener('input', updateSubmitButton);
+        complianceCheck.addEventListener('change', updateSubmitButton);
+
+        checkPlastic.addEventListener('change', validateZukaufteile);
+        checkMetal.addEventListener('change', validateZukaufteile);
+        zukaufCheck.addEventListener('change', validateZukaufteile);
+
+        checkPlastic.addEventListener('change', updateMaterialSelection);
+        checkMetal.addEventListener('change', updateMaterialSelection);
+
+        validateZukaufteile();
+        updateMaterialSelection();
+        renderFileList();
+    });
+</script>
+
+{% endblock %}

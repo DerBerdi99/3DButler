@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container mt-4">
+    <h1>Bestelldetails für Bestellung {{ order.OrderID }}</h1>
+    <p class="p-site-description">Hier finden Sie die Details zu Ihrer Bestellung.</p>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Bestellstatus:
+                <span class="badge
+                    {% if order.OrderStatus == 'ORDER_FINALIZED' %}bg-warning
+                    {% elif order.OrderStatus == 'PAID' %}bg-success
+                    {% elif order.OrderStatus == 'CANCELLED' %}bg-danger
+                    {% else %}bg-secondary{% endif %}">
+                    {{ order.OrderStatus | replace('_', ' ') }}
+                </span>
+            </h5>
+            <p class="card-text"><strong>Bestelldatum:</strong> {{ order.OrderDate }}</p>
+            <p class="card-text"><strong>Stückzahl:</strong> {{ orderpositions.Quantity }}</p>
+            <p class="card-text"><strong>Gesamtbetrag:</strong> {{ order.OrderAmount }} €</p>
+            <p class="card-text"><strong>Lieferadresse:</strong> {{ address.Street }}, {{ address.City }}, {{ address.Zipcode }}, {{ address.Country }}</p>
+            <p class="card-text"><strong>Zahlungsmethode:</strong> {{ payment.Method }}</p>
+        </div>
+    </div>
+    <div class="text-center">
+        <a href="{{ url_for('views.my_orders') }}" class="btn btn-primary">Zurück zu meinen Bestellungen</a>
+    </div>
+</div>
+{% endblock %}
+<style>
+    /* ----------------------------------------------------------------- */
+    /* MODIFIED STYLES (Angepasst für Zentrierung und Layout) */
+    .container {
+        max-width: 900px;
+    }
+    .card {
+        margin-bottom: 20px;
+    }
+    .card-body {
+        padding: 20px;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .btn {
+        display: inline-block;
+        margin: 10px;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #004085;
+    }
+    /* ----------------------------------------------------------------- */
+    /* BUTTON STYLES (Unverändert) */
+    button, input[type=submit] {
+        background-color: #04AA6D;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        cursor: pointer;
+        width: 30%; /* Beschränken Sie die Breite der Schaltflächen */
+        border-radius: 8px;
+        transition: background-color 0.3s;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin: 10px auto; /* Zentrieren Sie die Schaltflächen */
+    }
+    button:hover, input[type=submit]:hover {
+        background-color: #038d58;
+    }
+    /* ----------------------------------------------------------------- */

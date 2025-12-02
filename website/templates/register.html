@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3DButler | {%block title%}  Registrieren {%endblock%}</title>
+    <style>
+        body {
+            color: #000;
+            background: linear-gradient(to right, #263238, #BDBDBD, #1A237E);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .icon-container {
+            position: relative;
+            text-align: center;
+            margin-top: 20px; /* Add some space from the top */
+        }
+
+        .Icon {
+            width: 10%;
+            height: auto;
+            display: inline-block;
+            border: none;
+            box-sizing: border-box;
+            color: #263238;
+            transition: transform 0.3s, opacity 0.3s; /* Added for animation */
+        }
+
+        .Icon:hover {
+            transform: scale(1.1); /* Makes the image stick out */
+            opacity: 0.8; /* Slightly reduce opacity for effect */
+        }
+
+        .Icon:hover::after {
+            content: 'Go to Home';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+
+        .text, .password {
+            color: #f1f1f1;
+        }
+
+        /* Full-width input fields - now 30% width and stacked */
+        input[type=text], input[type=password], input[type=email], input[type=tel] {
+            width: 30%; /* 30% width */
+            margin: 8px auto; /* Auto margins for centering */
+            display: block; /* Stack elements */
+            padding: 12px 20px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        #street-address {
+            width: 183px; /* Adjust as needed */
+            margin: 10px auto;
+            display: inline-block; /* Keep this for the container itself */
+            padding: 14px 20px;
+        }
+
+        #street-name {
+            width: 383px; /* Adjust as needed */
+            margin: 8px auto;
+            display: inline-block; /* Keep this for the container itself */
+            padding: 14px 20px;
+        }
+
+        /* Set a style for all buttons */
+        button {
+            background-color: #04AA6D;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px auto; /* Auto margins for centering */
+            display: block; /* Stack elements */
+            border: none;
+            cursor: pointer;
+            width: 30%; /* 30% width */
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: normal;
+        }
+
+        /* ... (media query) */
+    </style>
+</head>
+<body style="background-color: #1A237E;">
+
+    <div class="icon-container">
+        <a href="{{ url_for('views.home') }}" class="Icon-link">
+            <img class="Icon" src="{{url_for('static',filename='icons/3dbutler.png')}}" alt="Home Icon">
+        </a>
+    </div>
+
+    <div id="id01" class="modal">
+        <h2 title="Login Form">
+            <form class="modal-content" action="/send" method="POST">
+
+
+                <div class="container">
+
+                    <input type="text" id="username" placeholder="Username" name="username" required>
+                    <input type="text" id="firstname" placeholder="Vorname" name="firstname" required>
+                    <input type="text" id="lastname" placeholder="Nachname" name="lastname" required>
+                    <label for="gender">Geschlecht</label>
+                    <select id="gender" name="gender">
+                        <option value="" selected disabled>Bitte auswählen</option>
+                        <option value="M">Männlich</option>
+                        <option value="W">Weiblich</option>
+                        <option value="N">Keine Angabe</option>
+                    </select>
+
+                    <input type="password" id="password" placeholder="Enter Password" name="password" required>
+                    <input type="password" id="passwordvalidation" placeholder="Validate Password" name="passwordvalidation" required>
+                    <input type="email" id="email" placeholder="Email" name="email" required>
+                    <input type="tel" id="phone" placeholder="Telefonnummer" name="phone" required>
+                    <input type="text" id="zipcode" placeholder="Postleitzahl" name="zipcode" required>
+                    <input type="text" id="street-name" placeholder="Straße" name="street-name" required>
+                    <input type="text" id="street-address" placeholder="Nr." name="street-number" required>
+                    <input type="text" id="city" placeholder="Stadt" name="city" required>
+                    <input type="text" id="country" placeholder="Land" name="country" required>
+
+
+                    <button type="submit">Registrieren</button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+
+
+</body>
+</html>
