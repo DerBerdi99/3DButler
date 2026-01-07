@@ -1,32 +1,8 @@
-{% extends "base.html" %}
-{% block body %}
-<div class="container mt-4">
-    <h1>Bestelldetails für Bestellung {{ order.OrderID }}</h1>
-    <p class="p-site-description">Hier finden Sie die Details zu Ihrer Bestellung.</p>
+{% extends 'base.html' %}
 
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-            <h5 class="card-title">Bestellstatus:
-                <span class="badge
-                    {% if order.OrderStatus == 'ORDER_FINALIZED' %}bg-warning
-                    {% elif order.OrderStatus == 'PAID' %}bg-success
-                    {% elif order.OrderStatus == 'CANCELLED' %}bg-danger
-                    {% else %}bg-secondary{% endif %}">
-                    {{ order.OrderStatus | replace('_', ' ') }}
-                </span>
-            </h5>
-            <p class="card-text"><strong>Bestelldatum:</strong> {{ order.OrderDate }}</p>
-            <p class="card-text"><strong>Stückzahl:</strong> {{ orderpositions.Quantity }}</p>
-            <p class="card-text"><strong>Gesamtbetrag:</strong> {{ order.OrderAmount }} €</p>
-            <p class="card-text"><strong>Lieferadresse:</strong> {{ address.Street }}, {{ address.City }}, {{ address.Zipcode }}, {{ address.Country }}</p>
-            <p class="card-text"><strong>Zahlungsmethode:</strong> {{ payment.Method }}</p>
-        </div>
-    </div>
-    <div class="text-center">
-        <a href="{{ url_for('views.my_orders') }}" class="btn btn-primary">Zurück zu meinen Bestellungen</a>
-    </div>
-</div>
-{% endblock %}
+{% block title %}Bestelldetails{% endblock %}
+
+{% block extra_styles %}
 <style>
     /* ----------------------------------------------------------------- */
     /* MODIFIED STYLES (Angepasst für Zentrierung und Layout) */
@@ -72,3 +48,35 @@
         background-color: #038d58;
     }
     /* ----------------------------------------------------------------- */
+</style>
+{% endblock %}
+
+{% block body %}
+
+<div class="container mt-4">
+    <h1>Bestelldetails für Bestellung {{ order.OrderID }}</h1>
+    <p class="p-site-description">Hier finden Sie die Details zu Ihrer Bestellung.</p>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Bestellstatus:
+                <span class="badge
+                    {% if order.OrderStatus == 'ORDER_FINALIZED' %}bg-warning
+                    {% elif order.OrderStatus == 'PAID' %}bg-success
+                    {% elif order.OrderStatus == 'CANCELLED' %}bg-danger
+                    {% else %}bg-secondary{% endif %}">
+                    {{ order.OrderStatus | replace('_', ' ') }}
+                </span>
+            </h5>
+            <p class="card-text"><strong>Bestelldatum:</strong> {{ order.OrderDate }}</p>
+            <p class="card-text"><strong>Stückzahl:</strong> {{ orderpositions.Quantity }}</p>
+            <p class="card-text"><strong>Gesamtbetrag:</strong> {{ order.OrderAmount }} €</p>
+            <p class="card-text"><strong>Lieferadresse:</strong> {{ address.Street }}, {{ address.City }}, {{ address.Zipcode }}, {{ address.Country }}</p>
+            <p class="card-text"><strong>Zahlungsmethode:</strong> {{ payment.Method }}</p>
+        </div>
+    </div>
+    <div class="text-center">
+        <a href="{{ url_for('views.my_orders') }}" class="btn btn-primary">Zurück zu meinen Bestellungen</a>
+    </div>
+</div>
+{% endblock %}

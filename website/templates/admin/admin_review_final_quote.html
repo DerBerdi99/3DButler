@@ -1,0 +1,289 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Quote finalisieren{% endblock %}
+
+{% block extra_styles %}
+    {{ super() }}
+    <!-- Optional: CSS für das Icon im Button, da Font Awesome nicht immer global verfügbar ist -->
+    <style>
+        .icon-folder-open:before {
+            content: "\f07b"; /* Unicode für Folder Open in Font Awesome 6 Free */
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            margin-right: 0.5rem;
+        }
+    </style>
+{% endblock %}
+
+{% block header %}
+
+{% endblock %}
+
+{% block wishlist_icon %}
+
+{% endblock %}
+
+{% block cart_icon %}
+
+{% endblock %}
+
+{% block body %}
+
+    <div class="container mt-4">
+        <h2><strong>{{ title }}</strong> (Material: {{ project.MaterialType }})</h2>
+
+        <div class="mt-3">
+            {% if not project.VolumeCM3 %}  <!--eine prüfung für alle 5 werte, weil werden nur gemeinsam übergeben-->
+                <div class="alert alert-warning border-warning shadow-sm d-flex align-items-center" role="alert">
+                    <div class="me-3 fs-3">⚠️</div>
+                    <div>
+                        <strong>Blueprint liegt nicht vor!</strong> Die technischen Basisdaten (Slicer-Werte) wurden noch nicht erfasst. 
+                        <br>
+                        <button class="btn btn-sm add-mes-btn" data-project-id="{{ project.ProjectID }}" title="Projekt ins MES laden">
+                            ZUR FERTIGUNGSSTEUERUNG <!--MESLoadingButton-->
+
+                        </button>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-success border-success shadow-sm d-flex align-items-center" role="alert">
+                    <div class="me-3 fs-3">✅</div>
+                    <div>
+                        <strong>Berechnungsgrundlage vorhanden:</strong> Slicer-Daten wurden erfolgreich aus dem Manufacturing übernommen.
+                        <small class="d-block text-muted">
+                            V: {{ project.VolumeCM3 }}cm³ | M: {{ project.EstimatedMaterialG }}g | T: {{ project.PrintTimeMin }}min | Material: {{ project.MaterialID }} | Druckprofil: {{ project.ProfileID }} 
+                        </small>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="alert alert-info mt-3">
+            <strong>Status:</strong> {{ project.Status | replace('_', ' ') }}
+        </div>
+
+        <div class="card p-4 mb-4 shadow-sm" id="calculation-basis-card">
+            <h5>Berechnungsgrundlage (Ad-hoc) 📊</h5>
+
+            <form method="POST" action="{{ url_for('admin_views.review_final_quote', project_id=project.ProjectID) }}">
+                <input type="hidden" name="form_type" value="calculation">
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="volume_cm3" class="form-label">Volumen (cm³)</label>
+                            <input type="number" step="0.01" class="form-control" id="volume_cm3" name="volume_cm3" 
+                                   value="{{ project.VolumeCM3 or calculation_data.volume_cm3 }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="material_g" class="form-label">Materialverbrauch (g)</label>
+                            <input type="number" step="0.1" class="form-control" id="material_g" name="material_g" 
+                                   value="{{ project.EstimatedMaterialG or calculation_data.material_g }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="print_time_min" class="form-label">Druckzeit (Minuten)</label>
+                            <input type="number" class="form-control" id="print_time_min" name="print_time_min" 
+                                   value="{{ project.PrintTimeMin or calculation_data.print_time_min }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="profile_id" class="form-label">Druckprofil</label>
+                            <select class="form-select" id="profile_id" name="profile_id">
+                                {% for profile in print_profiles %}
+                                    <option value="{{ profile.ProfileID }}" 
+                                        {% if profile.ProfileID == project.ProfileID or profile.ProfileID == calculation_data.profile_id %}selected{% endif %}>
+                                        {{ profile.ProfileName }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="material_name_calc" class="form-label">Material (genaue Art)</label>
+                            <select class="form-select" id="material_name_calc" name="material_name_calc">
+                                {% for material in materials %}
+                                    <option value="{{ material.MaterialName }}" 
+                                        {% if material.MaterialName == material.MaterialName or material.MaterialName == calculation_data.material_name %}selected{% endif %}>
+                                        {{ material.MaterialName }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-info w-100">
+                            Preis ad-hoc berechnen
+                        </button>
+                    </div>
+            </form>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin_views.review_final_quote', project_id=project.ProjectID) }}" enctype="multipart/form-data">
+            <input type="hidden" name="form_type" value="save">
+            <div class="row">
+
+                <div class="col-md-6">
+                    <div class="card p-4 mb-4 shadow-sm h-100">
+                        <h5>Angebotsdetails</h5>
+
+                        <div class="mb-3">
+                            <label for="quote_price" class="form-label">Finaler Angebotspreis (€)</label>
+                            <input type="number" step="0.01" min="0.01" class="form-control" id="quote_price"
+                                   name="quote_price" value="{{ suggested_price }}" required>
+                            <small class="form-text text-muted">Vorgeschlagener Preis: {{ suggested_price }} €</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="product_name" class="form-label">Produktname (für den Shop)</label>
+                            <input type="text" class="form-control" id="product_name"
+                                   name="product_name" value="{{ project.ProjectName | replace(' ', '') }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="category_name" class="form-label">Produktkategorie</label>
+                            <select class="form-select" id="category_name" name="category_name" required>
+                                <option value="" disabled>Wählen Sie eine Kategorie</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat }}">{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <h5 class="mt-4">Bildzuordnung</h5>
+                        <div class="mb-3">
+                            <label for="produktbild_pfad" class="form-label small">Produktbild (Pfad)</label>
+                            <input type="text" 
+                                   class="form-control bg-light font-mono text-sm" 
+                                   id="produktbild_pfad"
+                                   name="image_url" 
+                                   value="product_images/{{ project.ProjectName | replace(' ', '') | trim }}.png" readonly>
+                            <small class="form-text text-muted">Auto-generiert aus Produktname.</small>
+                        </div>
+
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" value="on" id="IsShopReady" name="IsShopReady">
+                            <label class="form-check-label fw-bold" for="IsShopReady">
+                                Produkt für den Shop freigeben
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card p-4 mb-4 shadow-sm h-100">
+                        <h5>Interne Details (Final)</h5>
+
+                        <div class="mb-3">
+                            <label for="weight" class="form-label">Gewicht (g)</label>
+                            <input type="number" step="0.1" class="form-control" id="weight"
+                                   name="weight" value="{{ project.EstimatedMaterialG or 0.0 }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="print_time" class="form-label">Druckzeit (Minuten)</label>
+                            <input type="number" class="form-control" id="print_time"
+                                   name="print_time" value="{{ project.PrintTimeMin or 0 }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Produktbeschreibung</label>
+                            <textarea class="form-control" id="description" name="description" rows="5" required>Basierend auf dem Kundenprojekt {{ project.ProjectName }}. Ein hochpräziser 3D-Druck.</textarea>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <input type="hidden" name="volume_cm3" value="{{ project.VolumeCM3 or calculation_data.volume_cm3 }}">
+            <input type="hidden" name="material_g" value="{{ project.EstimatedMaterialG or calculation_data.material_g }}">
+
+            <button type="submit" class="btn btn-lg btn-primary w-100 mt-3" 
+                {% if not project.VolumeCM3 %} disabled title="Bitte zuerst Blueprint im Manufacturing erstellen" {% endif %}>
+                Angebot erstellen & zur Kundenprüfung freigeben
+            </button>
+            <a href="{{ url_for('admin_views.review_projects') }}" class="btn btn-secondary mt-2 w-100">Abbrechen</a>
+
+        </form>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        /**
+         * Generiert den Standard-Bildpfad (product_images/Produktname.png), 
+         * basierend auf der strikten Konvention, dass der Dateiname dem Produktnamen entspricht.
+         *
+         * Es wird nur getrimmt, um führende/abschließende Leerzeichen zu entfernen.
+         *
+         * @param {string} productName - Der aktuelle Produktname.
+         * @returns {Object} Ein Objekt mit dem vollen Pfad und dem erwarteten Dateinamen.
+         */
+
+function generateDefaultImagePath(productName) {
+    if (!productName) return { fullPath: '', expectedFilename: '' };
+    const filename = `${productName.trim()}.png`;
+    return {
+        fullPath: `product_images/${filename}`,
+        expectedFilename: filename
+    };
+}
+
+function updateImagePath() {
+    const productNameInput = document.getElementById('produktname');
+    const imagePathInput = document.getElementById('produktbild_pfad');
+    const expectedFilenameElement = document.getElementById('expectedFilename');
+
+    if (productNameInput && imagePathInput && expectedFilenameElement) {
+        const productName = productNameInput.value || '';
+        const generatedPath = generateDefaultImagePath(productName);
+        imagePathInput.value = generatedPath.fullPath;
+        expectedFilenameElement.textContent = generatedPath.expectedFilename;
+    }
+}
+
+// 2. Initialisierung
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialer Check für Bildpfade
+    updateImagePath();
+    
+    // Selektiere alle MES-Buttons
+    const mesButtons = document.querySelectorAll('.add-mes-btn');
+
+    mesButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault(); // Sicherheitshalber Standard-Link/Button-Verhalten stoppen
+
+            const projectId = this.getAttribute('data-project-id');
+            
+            // FEHLERQUELLE GEFIXT: 
+            // Wir suchen den Namen jetzt sicher. Wenn closest('.card-body') fehlschlägt,
+            // nehmen wir einen Standardwert, anstatt das Skript crashen zu lassen.
+            const cardBody = this.closest('.card-body') || this.closest('.container') || document;
+            const titleElement = cardBody.querySelector('.card-title') || cardBody.querySelector('h1') || cardBody.querySelector('h5');
+            const projectName = titleElement ? titleElement.textContent.trim() : "dieses Projekt";
+
+            // Bestätigungsdialog
+            if (confirm(`Projekt "${projectName}" (ID: ${projectId}) in die Fertigungssteuerung laden?`)) {
+                
+                const form = document.createElement('form');
+                form.method = 'POST';
+                
+                // Flask-URL Platzhalter-Logik
+                const urlTemplate = "{{ url_for('admin_views.load_project_to_mes', project_id='PLACEHOLDER') }}";
+                form.action = urlTemplate.replace('PLACEHOLDER', projectId);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+
+    const productNameInput = document.getElementById('produktname');
+    if (productNameInput) {
+        productNameInput.addEventListener('input', updateImagePath);
+    }
+});
+    </script>
+{% endblock %}

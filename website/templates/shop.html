@@ -1,62 +1,233 @@
-<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
-
 {% extends 'base.html' %}
 
 {% block title %} Shop {% endblock %}
 
+{% block header %}
+<form class="d-flex" role="search" action="{{ url_for('views.shop') }}" method="GET">
+    <input class="form-control me-2" name="search" type="search" placeholder="Suchen..." value="{{ request.args.get('search', '') }}">
+    <button class="search-btn" type="submit">Search</button>
+</form>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .h4{
+        color: #fff;
+        font-weight: 700;
+    }
+    .product-card {
+        background: linear-gradient(135deg, rgba(76, 172, 175, 0.1), rgba(172, 76, 175, 0.05));
+        border: 2px solid #236280;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgb(168, 168, 168);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+        margin: 15px;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(255, 255, 255, 0.692);
+    }
+
+    .product-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 0;
+    }
+
+    .product-title {
+        color: #fff;
+        font-weight: 700;
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+    }
+
+    .product-price {
+        color: #1ff;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 10px 0;
+    }
+
+    .product-stock {
+        color: #ffffff;
+        background: linear-gradient(135deg, #1A237E,#262a5a);
+        padding: 8px 12px;
+        border-radius: 8px;
+        display: inline-block;
+        font-weight: 500;
+        margin: 10px 0;
+    }
+
+    .product-stock.low-stock {
+        background: linear-gradient(135deg, #FF6B6B, #EE5A52);
+    }
+
+    .btn-details {
+        background: linear-gradient(135deg, #1A237E, #262a5a);
+        color: #fff;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(252, 252, 252, 0.507);
+    }
+
+    .btn-details:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px #3f66a180;
+        background: linear-gradient(135deg, #bdbdbd, #fff);
+        color: #818181;
+        text-decoration: none;
+    }
+
+    .no-products {
+        text-align: center;
+        color: #666;
+        font-size: 1.2rem;
+        margin: 50px 0;
+    }
+    .list-group{
+        position: relative;
+        left:0px;
+    }
+ 
+</style>
+{% endblock %}
+
 {% block body %}
 
+<div class="container-fluid mt-3">
+    <div class="row"> 
 
-<div class="container text-center">
-    <div class="row" >
-
-{% if session.get('is_admin') != 1 %}
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-      <div class="col " style="margin: 13px;">
-        <div class="list-group text-center" >
-
-            <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action">
-                <i class="shop-link" aria-hidden="true"></i>
-                <span class="link-name">Shop</span>
-            </a>
-            <a href="{{ url_for('views.start_project') }}" class="list-group-item list-group-item-action">
-                <i class="project-link" aria-hidden="true"></i>
-                <span class="link-name">Projekt starten</span>
-            </a>
-            <a href="{{ url_for('views.my_reviews') }}" class="list-group-item list-group-item-action">
-                <i class="reviews-link"></i>
-                <span class="link-name">Meine Reviews</span>
-            </a>
-            <a href="{{ url_for('views.my_orders') }}" class="list-group-item list-group-item-action">
-                <i class="orders-link"></i>
-                <span class="link-name">Meine Bestellungen</span>
-            </a>
-
-        </div>
-      </div>
-
-{% endif %}
-
-<div class="container">
-    <h2>Unsere Produkte</h2>
-    <div class="row justify-content-center">
-        {% for product in products %}
-        <div class="col-md-4" style="margin: 10px;">
-            <div class="card" style="width: 18rem; background-color: rgba(158, 138, 138, 0.756); color: #ffffff;">
-                <img class="card-img-top" src="{{ url_for('static', filename='images/' ~ product[11]) }}" alt="{{ product[11] }}" style="transform: translateX(-5%); transform: rotate(4deg); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.8);border-radius: 10px;">
-                <div class="card-body">
-                    <h5 class="card-title">Name: {{ product[4] }}</h5>
-                    <h5>{{ product[5] }}</h5>
-                    <h5 class="card-text">Auf Lager {{ product[9] }}</h5>
-
-                    <a href="{{ url_for('views.product_detail', product_id=product[0]) }}" class="btn btn-primary">
-                        Details</a>
-
-                </div>
+        {# 1. LINKSEITIGE SIDEBAR: NAVIGATION + FILTER (col-md-3 col-lg-2) #}
+        {% if session.get('is_admin') != 1 %}
+        <div class="col-md-3 col-lg-2 px-0"> 
+            
+            {# 1.1. Vertikale Navigation (LIST GROUP) #}
+            <div class="list-group mb-4">
+                <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action">
+                    <i class="shop-link" aria-hidden="true"></i>
+                    <span class="link-name">Shop</span>
+                </a>
+                <a href="{{ url_for('views.start_project') }}" class="list-group-item list-group-item-action">
+                    <i class="project-link" aria-hidden="true"></i>
+                    <span class="link-name">Projekt starten</span>
+                </a>
+                <a href="{{ url_for('views.my_reviews') }}" class="list-group-item list-group-item-action">
+                    <i class="reviews-link"></i>
+                    <span class="link-name">Meine Reviews</span>
+                </a>
+                <a href="{{ url_for('views.my_orders') }}" class="list-group-item list-group-item-action">
+                    <i class="orders-link"></i>
+                    <span class="link-name">Meine Bestellungen</span>
+                </a>
             </div>
+            
+            {# 1.2. Filteroptionen (FORM) #}
+            <form method="GET" action="{{ url_for('views.shop') }}" id="shop-filter-form">
+                
+                <h4 class="mb-3">Shop-Filter</h4>
+
+                <div class="card p-3 mb-4 shadow-sm">
+                    <h6 class="card-title mb-0">Suchergebnisse 📊</h6>
+                    <p class="card-text small mt-1">
+                        Zeige **{{ current_results_count | default(0) }}** von **{{ total_results_count | default(0) }}** Produkten
+                    </p>
+                </div>
+
+                <div class="card p-3 mb-4 shadow-sm">
+                    <h6 class="card-title mb-2">Kategorien</h6>
+                    {% for category in categories  %}
+                        <div class="form-check">
+                            <input class="form-check-input filter-checkbox" type="checkbox" 
+                                   value="{{ category }}" id="category-{{ loop.index }}" 
+                                   name="category[]" {{ 'checked' if category in selected_categories }}>
+                            <label class="form-check-label" for="category-{{ loop.index }}">
+                                {{ category | replace('_', ' ') }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="card p-3 mb-4 shadow-sm">
+                    <h6 class="card-title mb-2">Material</h6>
+                    {% for material in materials %}
+                        <div class="form-check">
+                            <input class="form-check-input filter-checkbox" type="checkbox" 
+                                   value="{{ material }}" id="material-{{ loop.index }}" 
+                                   name="material[]" {{ 'checked' if material in selected_materials }}>
+                            <label class="form-check-label" for="material-{{ loop.index }}">
+                                {{ material }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100 mb-3">Filter anwenden</button>
+                
+            </form>
+
         </div>
-        {% endfor %}
+        {% endif %}
+
+        {# 2. RECHTSSEITIGER PRODUKT-HAUPTBEREICH (col-md-9/12 col-lg-10/12) #}
+        <div class="col-md-{% if session.get('is_admin') != 1 %}9{% else %}12{% endif %} col-lg-{% if session.get('is_admin') != 1 %}10{% else %}12{% endif %}">
+            
+        
+            {% if products %}
+            <div class="row justify-content-start"> 
+                {% for product in products %}
+                <div class="col-md-6 col-lg-4 col-xl-3"> 
+                    <div class="card product-card">
+        
+                        {# Product Image #}
+                        {% if product.ImagePath %}
+                        <img class="card-img-top product-image"
+                             src="{{ url_for('static', filename= product.ImagePath) }}"
+                             alt="Produktbild von {{ product.ProductName }}">
+                        {% else %}
+                        <img class="card-img-top product-image"
+                             src="{{ url_for('static', filename='images/default-product.png') }}"
+                             alt="Produktbild von {{ product.ProductName }}">
+                        {% endif %}
+        
+                        <div class="card-body">
+                            <h5 class="card-title product-title">{{ product.ProductName }}</h5>
+        
+                            {% if product.ProductPrice is not none %}
+                            <div class="product-price">€{{ product.ProductPrice }}</div>
+                            {% else %}
+                            <div class="product-price">Preis auf Anfrage</div>
+                            {% endif %}
+                            
+                            <div class="product-stock {% if product.StockQuantity < 5 %}low-stock{% endif %}">
+                                📦 {{ product.StockQuantity }} verfügbar
+                            </div>
+        
+                            <a href="{{ url_for('views.product_detail', product_id=product.ProductID) }}" class="btn-details">
+                                🔍 Details ansehen
+                            </a>
+        
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-products">
+                <h3>🚫 Keine Produkte verfügbar</h3>
+                <p>Derzeit sind keine Produkte im Shop verfügbar. Bitte ändern Sie Ihre Filter oder kommen Sie später wieder.</p>
+            </div>
+            {% endif %}
+        </div>
+        {# ENDE PRODUKT-HAUPTBEREICH #}
+        
     </div>
 </div>
 {% endblock %}

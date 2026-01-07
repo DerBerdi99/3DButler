@@ -1,10 +1,203 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>How to start a new Project</title>
-</head>
-<body>
-    <!-- Content goes here -->
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %} What we make - Material & Technik {% endblock %}
+
+{% block extra_styles %}
+<style>
+/* Der subtile Global-Shimmer aus dem vorherigen Schritt */
+body { position: relative; overflow-x: hidden; }
+body::before {
+    content: ""; position: fixed; top: 0; left: -150%; width: 100%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(128, 216, 255, 0.04) 40%, rgba(255, 255, 255, 0.08) 50%, rgba(128, 216, 255, 0.04) 60%, transparent);
+    z-index: -1; transform: skewX(-25deg); animation: global-shimmer 12s infinite; pointer-events: none;
+}
+@keyframes global-shimmer { 0% { left: -150%; } 30% { left: 150%; } 100% { left: 150%; } }
+/* Material Cards */
+.material-card {
+    background: rgba(38, 50, 56, 0.9);
+    border-left: 5px solid #0078a0;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+.material-card:hover {
+    border-left-color: #80d8ff;
+    background: rgba(38, 50, 56, 1);
+    transform: translateX(10px);
+}
+.tech-badge {
+    background: #1A237E;
+    color: #80d8ff;
+    font-weight: bold;
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+.pro-tip {
+    background: rgba(128, 216, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 3px solid #80d8ff;
+    color: #80d8ff;
+    font-style: italic;
+}
+.cyber-shimmer {
+position: absolute;
+top: 0;
+left: -100%;
+width: 50%;
+height: 100%;
+background: linear-gradient(
+    to right,
+    transparent,
+    rgba(128, 216, 255, 0.4),
+    transparent
+);
+transform: skewX(-25deg);
+transition: none;
+}
+.btn-cyber-industrial {
+    position: relative;
+    display: inline-block;
+    padding: 15px 40px;
+    font-weight: 800;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #80d8ff; /* Dein Hellblau */
+    text-decoration: none;
+    /* Metallischer Hintergrund */
+    background: linear-gradient(145deg, #263238, #455a64);
+    border: 2px solid #0078a0;
+    border-radius: 5px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 120, 160, 0.4), inset 0 0 10px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+/* Hover-Effekt: Der Glanz schießt durch */
+.btn-cyber-industrial:hover .cyber-shimmer {
+    animation: shimmer-sweep 0.6s ease;
+}
+
+@keyframes shimmer-sweep {
+    100% { left: 150%; }
+}
+.cyber-glitch-effect {
+    position: relative;
+    display: inline-block;
+    color: #80d8ff; /* Dein Hellblau */
+}
+
+/* Erzeugt die farbigen Ebenen für den Glitch */
+.cyber-glitch-effect::before,
+.cyber-glitch-effect::after {
+    content: attr(data-text); /* Erfordert data-text="TEXT" im HTML */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+}
+
+.cyber-glitch-effect::before {
+    color: #ff00c1; /* Magenta Offset */
+    z-index: -1;
+    animation: glitch-anim-1 2s infinite linear alternate-reverse;
+}
+
+.cyber-glitch-effect::after {
+    color: #00fff9; /* Cyan Offset */
+    z-index: -2;
+    animation: glitch-anim-2 2s infinite linear alternate-reverse;
+}
+
+/* Keyframes für die horizontalen "Schnitt"-Verschiebungen */
+@keyframes glitch-anim-1 {
+    0% { clip-path: inset(20% 0 30% 0); transform: translate(-2px, 0); }
+    20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }
+    40% { clip-path: inset(40% 0 50% 0); transform: translate(-1px, 1px); }
+    60% { clip-path: inset(80% 0 5% 0); transform: translate(1px, -1px); }
+    80% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 1px); }
+    100% { clip-path: inset(30% 0 20% 0); transform: translate(2px, 0); }
+}
+
+@keyframes glitch-anim-2 {
+    0% { clip-path: inset(15% 0 35% 0); transform: translate(2px, 0); }
+    25% { clip-path: inset(55% 0 15% 0); transform: translate(-2px, 1px); }
+    50% { clip-path: inset(35% 0 45% 0); transform: translate(1px, -1px); }
+    75% { clip-path: inset(75% 0 10% 0); transform: translate(-1px, 1px); }
+    100% { clip-path: inset(25% 0 25% 0); transform: translate(2px, 0); }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container my-5 text-light">
+    
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold" style="color: #80d8ff;">Unsere Werkstatt, dein Vorsprung.</h1>
+        <p class="lead">Vom FDM-Präzisionsdruck bis zur Zerspanung – wir kombinieren Nerd-Expertise mit industriellen Standards.</p>
+    </div>
+
+    <div class="row g-5 mb-5">
+        <div class="col-lg-6">
+            <h2 class="mb-4"><i class="bi bi-printer"></i> 3D-Druck (FDM/FFF)</h2>
+            <p>Wir drucken nicht einfach nur. Wir optimieren Schichthöhen, Infill-Muster und Wandstärken für maximale Belastbarkeit. Unsere Maschinen sind auf technische Filamente kalibriert.</p>
+            
+            <div class="material-card p-4 mb-3">
+                <span class="tech-badge">PLA / PLA+</span>
+                <h5 class="mt-2 text-white">Der Allrounder</h5>
+                <p class="small text-secondary">Ideal für: Deko, Prototypen, Gehäuse ohne thermische Last.<br>
+                <strong>Vorteil:</strong> Günstig, extrem detailreich, riesige Farbauswahl.</p>
+            </div>
+
+            <div class="material-card p-4 mb-3">
+                <span class="tech-badge">ABS / ASA</span>
+                <h5 class="mt-2 text-white">Technik & Outdoor</h5>
+                <p class="small text-secondary">Ideal für: Funktionsteile, KFZ-Interieur, Außenanwendungen.<br>
+                <strong>Vorteil:</strong> Hitzebeständig (bis ~95°C), ASA ist UV-fest (bleicht nicht aus).</p>
+            </div>
+
+            <div class="material-card p-4 mb-3">
+                <span class="tech-badge">Nylon-GF / CF</span>
+                <h5 class="mt-2 text-white">Die Heavy-Duty Klasse</h5>
+                <p class="small text-secondary">Ideal für: Werkzeuge, Halterungen, mechanische Belastung.<br>
+                <strong>Vorteil:</strong> Glas- oder Kohlefaserverstärkt. Schlagzäh wie ABS, aber steifer.</p>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <h2 class="mb-4"><i class="bi bi-tools"></i> Konventionelle Fertigung</h2>
+            <p>Wenn Kunststoff an seine Grenzen stößt, greifen wir zum Metall. Unsere Manufaktur wächst stetig um spanende und fügende Verfahren.</p>
+            
+            <div class="material-card p-4 mb-3">
+                <span class="tech-badge">Drehen (Zerspanung)</span>
+                <h5 class="mt-2 text-white">Präzision in Metall</h5>
+                <p class="small text-secondary">Materialien: Aluminium, Edelstahl, Automatenstahl.<br>
+                Ideal für: Bolzen, Wellen, Achsen, rotationssymmetrische Bauteile.</p>
+            </div>
+
+            <div class="material-card p-4 mb-3">
+                <span class="tech-badge">Schweißen & Schmieden</span>
+                <h5 class="mt-2 text-white">Stahlverarbeitung</h5>
+                <p class="small text-secondary">Einfache Konstruktionsschweißungen (MAG/WIG) und Schmiedearbeiten auf Anfrage möglich. Wir verbinden 3D-Druck-Elemente oft mit massiven Stahlrahmen.</p>
+            </div>
+
+            <div class="pro-tip mt-4">
+                <strong><i class="bi bi-lightbulb"></i> Butler-Tipp:</strong> Du bist unsicher? Sende uns deine Skizze. Oft ist eine Kombination aus 3D-gedrucktem Halter und gedrehtem Metallbolzen die wirtschaftlichste Lösung (Hybrid-Fertigung).
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5 p-5" style="background: rgba(0, 120, 160, 0.1); border-radius: 20px;">
+        <h3>Bereit für die Umsetzung?</h3>
+        <p>Starte jetzt dein eigenes Projekt!</p>
+        <a href="{{ url_for('views.start_project') }}" class="btn-cyber-industrial mt-3">
+           <span class="cyber-glitch-effect">Projekt anfragen</span>
+            <span class="cyber-shimmer"></span>
+        </a>
+    </div>
+
+</div>
+{% endblock %}

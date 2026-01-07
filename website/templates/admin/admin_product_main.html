@@ -1,0 +1,38 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Shopartikel verwalten{% endblock %}
+
+{% block wishlist_icon %}
+
+{% endblock %}
+
+{% block cart_icon %}
+
+{% endblock %}
+
+{% block admin_navbar %}
+    
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <h1>Shopartikel verwalten (Admin View)</h1>
+
+    <div class="row">
+        <div class="col-lg-7">
+            {% include 'admin/admin_product_backlog.html' %}
+        </div>
+
+        <div class="col-lg-5">
+            <div class="row">
+                <div class="col-12 mb-4">
+                    {% include 'admin/admin_product_viewer.html' %}
+                </div>
+                <div class="col-12">
+                    {% include 'admin/admin_product_scoring.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

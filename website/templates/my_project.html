@@ -3,7 +3,7 @@
 
 {% block title %}Projekt: {{ project.ProjectName }}{% endblock %}
 
-{% block header %}
+{% block extra_styles %}
 <style>
 /* CSS für den Status-Header */
 .stepcontainer{max-width:800px;margin:0 auto;background-color:#ffffff;padding:15px;border-radius:12px;box-shadow:0 10px 15px rgba(0,0,0,.1);text-align:center}
@@ -48,6 +48,10 @@ p.status-text{font-size:14px;color:#555;margin-top:5px;margin-bottom:0}
     opacity: 0.7;
 }
 </style>
+
+{% endblock %}
+
+{% block header %}
 <div class="stepcontainer">
 
     {# Robuste Logik für die Statusmeldung im Header (Unabhängig vom Chat) #}

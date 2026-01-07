@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
+
 {% block title %}Checkout für Bestellung {{ order.OrderID }}{% endblock %}
 
-{# Suchleiste ausblenden #}
-{% block header %}
+{% block extra_styles %}
 
 <style>
     .stepcontainer {
@@ -39,11 +39,13 @@
         animation: subtle-bounce 1s ease-out 2; /* Läuft nur zweinmal */
     }
 </style>
+
+{% endblock %}
+{% block header %}
 <div class="stepcontainer">
     <h4 class="animate-attention"> Schritt 3 von 4 : Bestelldetails prüfen </h4>
 </div>
 {% endblock %}
-
 {# Warenkorb Icon ausblenden #}
 {% block cart_icon %}
 {% endblock %}
@@ -332,6 +334,10 @@
 
     </form>
 </div>
+
+{% endblock %}
+
+{% block scripts %}
 
 <script>
     /**

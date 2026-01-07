@@ -1,33 +1,31 @@
-{% extends 'base.html' %}
+{% extends 'admin/admin_base.html' %}
 
 {% block title %}Projektbegutachtung: Übersicht{% endblock %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+{% block wishlist_icon %}
+
+{% endblock %}
+
+{% block cart_icon %}
+
+{% endblock %}
 
 {% block body %}
 
 <div class="container text-center">
     <h1 class="mb-4 text-primary">Admin Project Page</h1>
-    <div class="row justify-content-center" style="margin: 10px;">
-      <div class="col-md-6">
-        <div class="list-group">
 
-            <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action">
-                <i class="products-plates" aria-hidden="true"></i>
-                <span class="link-name">Zum Shop (Kundenansicht)</span>
-            </a>
-
-            <a href="{{ url_for('admin_views.review_projects') }}" class="list-group-item list-group-item-action list-group-item-warning">
-                <i class="products-palisades" aria-hidden="true"></i>
-                <span class="link-name">PROJEKTE BEGUTACHTEN (Review-Queue)</span>
-            </a>
-
-            <a href="{{ url_for('admin_views.user_management') }}" class="list-group-item list-group-item-action">
-                <i class="products-parking"></i>
-                <span class="link-name">Benutzerverwaltung</span>
-            </a>
-
-        </div>
-      </div>
-    </div>
 
     <div class="container mt-5">
         <div class="row">
@@ -74,9 +72,14 @@
 
                             <h5 class="card-title text-primary">{{ project.ProjectName | default('Unbenanntes Projekt') }}</h5>
 
-                            <button class="btn btn-sm btn-danger float-end delete-btn" data-project-id="{{ project.ProjectID }}"title="Projekt löschen"style="position: absolute; top: 10px; right: 10px;">
+                            <button class="btn btn-sm delete-btn" data-project-id="{{ project.ProjectID }}"title="Projekt löschen"style="position: absolute; top: 10px; right: 10px;">
 
                                 &#x2715;  <!--deleteButton-->
+
+                            </button>
+                            <button class="btn btn-sm add-mes-btn" data-project-id="{{ project.ProjectID }}"title="Projekt ins MES laden"style="position: absolute; top: 50px; right: 10px;">
+
+                                &#x1F3ED;  <!--MESLoadingButton-->
 
                             </button>
                             {% if project.AdminMessagesSent and project.AdminMessagesSent > 0 %}
@@ -125,9 +128,13 @@
 
     </div>
 
+{% endblock %}
+
+{% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
     const deleteButtons = document.querySelectorAll('.delete-btn');
+    const mesButtons = document.querySelectorAll('.add-mes-btn');
 
     deleteButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -142,6 +149,25 @@
                 form.method = 'POST';
                 // WICHTIG: Verwenden der Flask-Route
                 form.action = "{{ url_for('admin_views.delete_project_route', project_id='0') }}".replace('0', projectId);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+    mesButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const projectId = this.getAttribute('data-project-id');
+            const projectName = this.closest('.card-body').querySelector('.card-title').textContent.trim();
+
+            // Bestätigungsdialog anzeigen
+            if (confirm(`Möchten Sie das Projekt "${projectName}" (ID: ${projectId}) ins MES laden?`)) {
+
+                // Formular dynamisch erstellen (für POST Request)
+                const form = document.createElement('form');
+                form.method = 'POST';
+                // WICHTIG: Verwenden der Flask-Route
+                form.action = "{{ url_for('admin_views.load_project_to_mes', project_id='0') }}".replace('0', projectId);
 
                 document.body.appendChild(form);
                 form.submit();

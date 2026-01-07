@@ -1,0 +1,84 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Bestelldetails: {{ order.OrderID[-8:] }}{% endblock %}
+
+{% block wishlist_icon %}
+
+{% endblock %}
+
+{% block cart_icon %}
+
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Details zu Order #{{ order.OrderID[-8:] }}</h2>
+        <a href="{{ url_for('admin_views.manage_orders') }}" class="btn btn-secondary">Zurück zur Übersicht</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">Versandadresse</div>
+                <div class="card-body">
+                    {% if address %}
+                        <p><strong>{{ address.FirstName }} {{ address.LastName }}</strong><br>
+                        {{ address.Street }} {{ address.HouseNumber }}<br>
+                        {{ address.ZipCode }} {{ address.City }}<br>
+                        {{ address.Country }}</p>
+                    {% else %}
+                        <p class="text-danger">Keine Adresse gefunden.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">Bestellinfos</div>
+                <div class="card-body">
+                    <p><strong>Status:</strong> {{ order.OrderStatus }}</p>
+                    <p><strong>Datum:</strong> {{ order.OrderDate }}</p>
+                    <p><strong>Gesamtbetrag:</strong> {{ (order.OrderAmount / 100) | round(2) }} €</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">Bestellte Positionen</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produkt / Projekt</th>
+                                <th>Menge</th>
+                                <th class="text-end">Preis (Einzel)</th>
+                                <th class="text-end">Summe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pos in positions %}
+                            <tr>
+                                <td>
+                                    {{ pos.ProductName or "Individuelles Projekt" }}<br>
+                                    <small class="text-muted">Typ: {{ pos.ProductType }}</small>
+                                </td>
+                                <td>{{ pos.Quantity }}</td>
+                                <td class="text-end">{{ (pos.PricePerUnit / 100) | round(2) }} €</td>
+                                <td class="text-end">{{ (pos.PricePerUnit * pos.Quantity / 100) | round(2) }} €</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-group-divider">
+                            <tr class="fw-bold">
+                                <td colspan="3" class="text-end">Gesamtbetrag:</td>
+                                <td class="text-end text-primary">{{ (order.OrderAmount / 100) | round(2) }} €</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

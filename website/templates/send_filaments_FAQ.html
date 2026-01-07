@@ -1,10 +1,186 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>How to start a new Project</title>
-</head>
-<body>
-    <!-- Content goes here -->
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %} Filament-Einsendung - FAQ {% endblock %}
+
+{% block extra_styles %}
+<style>
+/* Global Shimmer Integration */
+body { position: relative; overflow-x: hidden; }
+body::before {
+    content: ""; position: fixed; top: 0; left: -150%; width: 100%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(128, 216, 255, 0.04) 40%, rgba(255, 255, 255, 0.08) 50%, rgba(128, 216, 255, 0.04) 60%, transparent);
+    z-index: -1; transform: skewX(-25deg); animation: global-shimmer 12s infinite; pointer-events: none;
+}
+@keyframes global-shimmer { 0% { left: -150%; } 30% { left: 150%; } 100% { left: 150%; } }
+.shipping-box {
+    background: rgba(38, 50, 56, 0.9);
+    border: 2px solid #0078a0;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.process-step {
+    border-bottom: 1px solid rgba(128, 216, 255, 0.2);
+    padding: 20px 0;
+}
+.process-step:last-child { border-bottom: none; }
+.warning-box {
+    background: rgba(211, 47, 47, 0.1);
+    border-left: 5px solid #d32f2f;
+    padding: 20px;
+    margin: 30px 0;
+    color: #ff8a80;
+}
+.info-icon {
+    font-size: 2rem;
+    color: #80d8ff;
+    margin-bottom: 15px;
+}
+.cyber-shimmer {
+position: absolute;
+top: 0;
+left: -100%;
+width: 50%;
+height: 100%;
+background: linear-gradient(
+    to right,
+    transparent,
+    rgba(128, 216, 255, 0.4),
+    transparent
+);
+transform: skewX(-25deg);
+transition: none;
+}
+.btn-cyber-industrial {
+    position: relative;
+    display: inline-block;
+    padding: 15px 40px;
+    font-weight: 800;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #80d8ff; /* Dein Hellblau */
+    text-decoration: none;
+    /* Metallischer Hintergrund */
+    background: linear-gradient(145deg, #263238, #455a64);
+    border: 2px solid #0078a0;
+    border-radius: 5px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 120, 160, 0.4), inset 0 0 10px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+/* Hover-Effekt: Der Glanz schießt durch */
+.btn-cyber-industrial:hover .cyber-shimmer {
+    animation: shimmer-sweep 0.6s ease;
+}
+
+@keyframes shimmer-sweep {
+    100% { left: 150%; }
+}
+.cyber-glitch-effect {
+    position: relative;
+    display: inline-block;
+    color: #80d8ff; /* Dein Hellblau */
+}
+
+/* Erzeugt die farbigen Ebenen für den Glitch */
+.cyber-glitch-effect::before,
+.cyber-glitch-effect::after {
+    content: attr(data-text); /* Erfordert data-text="TEXT" im HTML */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+}
+
+.cyber-glitch-effect::before {
+    color: #ff00c1; /* Magenta Offset */
+    z-index: -1;
+    animation: glitch-anim-1 2s infinite linear alternate-reverse;
+}
+
+.cyber-glitch-effect::after {
+    color: #00fff9; /* Cyan Offset */
+    z-index: -2;
+    animation: glitch-anim-2 2s infinite linear alternate-reverse;
+}
+
+/* Keyframes für die horizontalen "Schnitt"-Verschiebungen */
+@keyframes glitch-anim-1 {
+    0% { clip-path: inset(20% 0 30% 0); transform: translate(-2px, 0); }
+    20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }
+    40% { clip-path: inset(40% 0 50% 0); transform: translate(-1px, 1px); }
+    60% { clip-path: inset(80% 0 5% 0); transform: translate(1px, -1px); }
+    80% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 1px); }
+    100% { clip-path: inset(30% 0 20% 0); transform: translate(2px, 0); }
+}
+
+@keyframes glitch-anim-2 {
+    0% { clip-path: inset(15% 0 35% 0); transform: translate(2px, 0); }
+    25% { clip-path: inset(55% 0 15% 0); transform: translate(-2px, 1px); }
+    50% { clip-path: inset(35% 0 45% 0); transform: translate(1px, -1px); }
+    75% { clip-path: inset(75% 0 10% 0); transform: translate(-1px, 1px); }
+    100% { clip-path: inset(25% 0 25% 0); transform: translate(2px, 0); }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container my-5 text-light">
+    
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold" style="color: #80d8ff;">Dein Material, unser Service.</h1>
+        <p class="lead">Du hast ein spezielles Filament oder möchtest Restbestände aufbrauchen? Wir verarbeiten es für dich.</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8 shipping-box">
+            
+            <h3 class="mb-4 text-primary"> Der Ablauf der Einsendung</h3>
+            
+            <div class="process-step">
+                <h5>1. Projektanfrage stellen</h5>
+                <p class="small">Wähle beim Projektstart die Option "Eigene Materialien". Gib Hersteller und Materialtyp (z.B. <em>Extrudr Bio-Preston</em>) präzise an.</p>
+            </div>
+
+            <div class="process-step">
+                <h5>2. Versand & Kennzeichnung</h5>
+                <p class="small">Nach unserer Bestätigung sendest du die Spule gut verpackt (idealerweise mit Trockenmittel) an unsere Werkstatt. <strong>Wichtig:</strong> Lege einen Zettel mit deiner Projektnummer bei.</p>
+            </div>
+
+            <div class="process-step">
+                <h5>3. Wareneingang & Prüfung</h5>
+                <p class="small">Wir wiegen das Material und prüfen es auf Trockenheit und Beschaffenheit. Sollte das Material zu feucht sein, trocknen wir es in unserem Industrieofen vor (Service-Gebühr beachten).</p>
+            </div>
+
+            <div class="process-step">
+                <h5>4. Produktion & Rückversand</h5>
+                <p class="small">Wir drucken dein Teil. Übrig gebliebenes Filament senden wir auf Wunsch mit dem fertigen Objekt zurück oder lagern es für Folgeprojekte ein.</p>
+            </div>
+
+            <div class="warning-box">
+                <h5 class="text-danger fw-bold"><i class="bi bi-exclamation-triangle"></i> Haftungsausschluss</h5>
+                <p class="small mb-0">Bei Fremdmaterialien können wir keine Garantie für die finale Oberflächengüte oder Schichthaftung übernehmen, da wir keinen Einfluss auf die Lagerung und Qualität des gelieferten Filaments haben. Sollte das Filament während des Drucks reißen oder die Düse verstopfen, behalten wir uns vor, den Mehraufwand in Rechnung zu stellen.</p>
+            </div>
+
+            <div class="mt-4 p-3 rounded bg-dark border border-secondary">
+                <h5 class="text-info">Welche Spulen passen?</h5>
+                <p class="small mb-0">Wir verarbeiten Standardspulen (1kg / 2.3kg) mit einem Außendurchmesser von bis zu 300mm. Achte darauf, dass das Filament <strong>sauber gewickelt</strong> ist.</p>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <p>Gib im Projektformular unter Materialien "eigenes Filament" an.</p>
+        <a href="{{ url_for('views.start_project') }}" class="btn-cyber-industrial mt-3">
+            <span class="cyber-glitch-effect">Jetzt Projekt starten</span>
+            <span class="cyber-shimmer"></span>
+        </a>
+    </div>
+
+</div>
+{% endblock %}

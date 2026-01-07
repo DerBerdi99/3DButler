@@ -1,0 +1,80 @@
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">🛒 Product Backlog</h6>
+    </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <button class="btn btn-sm btn-outline-secondary">Sort ASC/DESC</button>
+                <input type="text" placeholder="Filter Q" class="form-control-sm d-inline-block w-auto">
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm m-0">
+                    <li class="page-item disabled"><a class="page-link" href="#">&lt;&lt;</a></li>
+                    <li class="page-item disabled"><a class="page-link" href="#">&lt;</a></li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">&gt;</a></li>
+                    <li class="page-item"><a class="page-link" href="#">&gt;&gt;</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-hover" id="productBacklogTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Erstellt am</th>
+                        <th>Ersteller</th>
+                        <th>Kategorie</th>
+                        <th>Materialtyp</th>
+                        <th>Status</th>
+                        <th>Aktion</th>
+                        <th>Löschen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products_for_review %}
+                    <tr {% if product.IsShopVisible == 1 %}class="table-success"{% endif %}>
+                        <td>{{ product.ProductName }}</td>
+                        <td>{{ product.CreatedAt[:10] }}</td>
+                        <td>{{ product.CreatorName }}</td>
+                        <td>{{ product.Category }}</td>
+                        <td>{{ product.MaterialType }}</td>
+                        <td>
+                            {% if product.IsShopVisible == 1 %}
+                                <span class="badge bg-success">LIVE</span>
+                            {% elif product.IsShopReady == 0 %}
+                                <span class="badge bg-danger">LOCKED</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">REVIEW</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin_views.manage_products') }}" style="display:inline;">
+                                <input type="hidden" name="selected_product_id" value="{{ product.ProductID }}">
+                                <button type="submit" class="btn btn-sm btn-info">
+                                    Betrachten
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin_views.delete_product') }}"
+                                  onsubmit="return confirm('Produkt wirklich löschen? Dieser Vorgang ist endgültig!');"
+                                  style="display:inline;">
+                                <input type="hidden" name="product_id" value="{{ product.ProductID }}">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    ✖
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not products_for_review %}
+                        <tr><td colspan="7" class="text-center">Keine Produkte zur Prüfung vorhanden.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

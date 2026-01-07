@@ -1,14 +1,6 @@
-<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
-<style>
-
-    h5{
-        background-color: rgba(56, 91, 185, 0.742);
-    }
-</style>
 {% extends 'base.html' %}
 
-{# Suchleiste ausblenden #}
-{% block header %}
+{% block extra_styles %}
 <style>
 
     .stepcontainer {
@@ -25,7 +17,9 @@
         font-weight: bold;
         color: #370987;
     }
-
+    h5{
+        background-color: rgba(56, 91, 185, 0.742);
+    }
     /* Animation */
     @keyframes subtle-bounce {
         0%, 50% { transform: scale(1); opacity: 0.1; }
@@ -36,6 +30,9 @@
         animation: subtle-bounce 1s ease-out 2; /* Läuft nur zweinmal */
     }
 </style>
+{% endblock %}
+
+{% block header %}
 <div class="stepcontainer">
      <h4 class="animate-attention"> Schritt 1 von 4 : Projekt anlegen </h4>
 </div>
@@ -244,6 +241,10 @@
 {% endif %}
 
 </div>
+
+{% endblock %}
+
+{% block scripts %}
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

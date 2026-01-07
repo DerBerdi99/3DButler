@@ -1,6 +1,6 @@
-{% extends "base.html" %}
-{% block body %}
+{% extends 'base.html' %}
 
+{% block extra_styles %}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>3DButler | {%block title%} Payment {%endblock%}</title>
 <style>
@@ -120,6 +120,10 @@
     }
 </style>
 
+{% endblock %}
+
+{% block body %}
+
 <body style="background-color: #8d403cdb;">
     <div class="form-container">
 
@@ -175,6 +179,9 @@
         </form>
     </div>
 
+{% endblock %}
+
+{% block scripts %}
 <script>
     // JavaScript-Logik zur Steuerung der Sichtbarkeit, 'required'- und 'disabled'-Attribute
 

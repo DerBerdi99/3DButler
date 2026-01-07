@@ -1,15 +1,9 @@
 import os
-import sqlite3
 import uuid
+import hashlib
+import sqlite3
 import bcrypt
 from datetime import datetime, timedelta
-import hashlib
-import os
-import sqlite3
-import uuid
-import bcrypt
-from datetime import datetime, timedelta
-import hashlib
 
 class UserManager:
     def __init__(self):

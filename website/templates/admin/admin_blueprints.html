@@ -1,0 +1,65 @@
+<div class="row">
+    {% if blueprints_list %}
+        {% for bp in blueprints_list %}
+        <div class="col-12 col-md-6 col-lg-4 mb-4 text-start">
+            <div class="card shadow-sm h-100 border-0 position-relative">
+                <button class="btn btn-sm delete-btn" 
+                        data-blueprint-id="{{ bp.BlueprintID }}" 
+                        data-delete-url="{{ url_for('admin_views.delete_blueprint', blueprint_id=bp.BlueprintID) }}"
+                        style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                    &#x2715;
+                </button>
+
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title text-primary">{{ bp.ProjectName }}</h5>
+                    <p class="small text-muted mb-1">ID: {{ bp.ProjectID | truncate(15) }}</p>
+                    <p class="small mb-2">
+                        <strong>Status:</strong> 
+                        <span class="badge {% if bp.BlueprintStatus == 'INITIALIZED' %}bg-info{% else %}bg-success{% endif %}">
+                            {{ bp.BlueprintStatus }}
+                        </span>
+                        <span class="float-end" style="font-size: larger;">
+                            {{ '🔵' if bp.bom_exists else '⚫' }}
+                        </span>
+                    </p>
+                    
+                    <div class="mt-auto">
+                        <button class="btn btn-primary w-100 mt-2" 
+                                type="button"
+                                data-blueprint-id="{{ bp.BlueprintID }}"
+                                data-project-id="{{ bp.ProjectID }}"
+                                data-project-name="{{ bp.ProjectName }}"
+                                data-volume="{{ bp.VolumeCM3 or '' }}"
+                                data-weight="{{ bp.EstimatedMaterialG or '' }}"
+                                data-time="{{ bp.PrintTimeMin or '' }}"
+                                data-profile="{{ bp.ProfileID or '' }}"
+                                data-material="{{ bp.MaterialID or '' }}"
+                                onclick="openManufacturingViewer(this)">
+                            Blueprint bearbeiten
+                        </button>
+                        
+                        <button class="btn btn-cyber-industrial w-100 mt-2" 
+                                type="button"
+                                data-project-id="{{ bp.ProjectID }}"
+                                data-project-name="{{ bp.ProjectName }}"
+                                onclick="openBOMWorkbench(this)">
+                            <span class="fa-solid fa-file-lines {{ 'text-info' if bp.bom_exists else 'text-secondary' }}"> 
+                                BOM {{ '(vorhanden)' if bp.bom_exists else '(nicht vorhanden)' }}
+                            </span>
+                        </button>
+                        
+                        <a href="{{ url_for('admin_views.project_details', project_id=bp.ProjectID) }}" 
+                           class="btn btn-sm btn-outline-info w-100 mt-2">
+                            Details einsehen
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12 text-center mt-5">
+            <h2 class="text-muted">Keine Projekte in der Fertigung gefunden.</h2>
+        </div>
+    {% endif %}
+</div>

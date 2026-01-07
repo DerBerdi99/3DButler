@@ -1,3 +1,45 @@
+/* Den bestehenden Background der base.html beibehalten und Schimmer drüberlegen */
+body {
+    position: relative;
+    overflow-x: hidden; /* Verhindert Scrollbars durch den Schimmer */
+}
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: -150%; /* Startet weit außerhalb */
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        120deg,
+        transparent,
+        rgba(128, 216, 255, 0.04) 40%, /* Extrem subtiles Hellblau */
+        rgba(255, 255, 255, 0.08) 50%, /* Kurzer Glanz-Peak */
+        rgba(128, 216, 255, 0.04) 60%,
+        transparent
+    );
+    z-index: -1; /* Hinter dem Inhalt, aber über dem Background-Gradienten */
+    transform: skewX(-25deg);
+    animation: global-shimmer 12s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    pointer-events: none; /* Klicks gehen durch den Schimmer durch */
+}
+/* Erlaubt Interaktion mit dem Hintergrund, wenn das Modal offen ist */
+body.modal-open {
+    overflow: auto !important;
+    padding-right: 0 !important;
+}
+@keyframes global-shimmer {
+    0% {
+        left: -150%;
+    }
+    30% {
+        left: 150%; /* Schimmer wandert durch */
+    }
+    100% {
+        left: 150%; /* Lange Pause, bis der nächste Schimmer kommt */
+    }
+}
+
 h1{
 
 
@@ -235,6 +277,7 @@ border-radius:3px 0 0 3px;
 .next:hover img {
     filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.6));
 }
+
 .fade{
 animation-name: fade;
 animation-duration: 6s;
@@ -254,6 +297,36 @@ left:0px;
 .list-group-item{
     padding-top: 20px; /* Adjust as needed */
     padding-bottom: 20px; /* Adjust as needed */
+}
+/* Basis für alle Nav-Items */
+.nav-custom-item {
+    background-color: #ffffff;
+    color: #1A237E; /* Hauptblau für den Text */
+    border: 1px solid #BDBDBD !important;
+    border-left: 5px solid #1A237E !important; /* Dunkelblau für Standard */
+    margin-bottom: 8px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 500;
+}
+
+/* Subtile Unterscheidung für die "Wartungs/Steuerungs"-Items */
+.nav-custom-item.item-priority {
+    border-left-color: #0078a0 !important; /* Petrol für Review/Fertigung */
+    background-color: #BDBDBD; /* Ganz zarter Petrol-Schimmer */
+}
+
+/* Hover-Effekt für beide Typen */
+.nav-custom-item:hover {
+    background-color: #1A237E !important;
+    color: #ffffff !important;
+    transform: translateX(8px);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Wenn ein Item aktiv ist (optional für JS-Ansteuerung) */
+.nav-custom-item.active {
+    background-color: #BDBDBD;
+    border-left-color: #0078a0 !important;
 }
 .rotate-1 {
     transform: rotate(-2deg);
@@ -304,4 +377,461 @@ left:0px;
     border-radius: 10px;
     display: inline-block;
     text-align: center;
+}
+
+/* --- Header Monitor Admin Base Html --- */
+.header-monitor-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Hintergrund: Mittleres Grau passend zum Blau-Verlauf */
+    background: #2c3e50; 
+    color: #ecf0f1;
+    padding: 0 25px;
+    height: 100px;
+    /* Border-Radius an allen Ecken */
+    border-radius: 10px;
+    border-bottom: 2px solid #3498db;
+    font-family: 'Segoe UI', sans-serif;
+    box-sizing: border-box;
+    margin: 10px; /* Kleiner Abstand zum Rand für den Radius-Effekt */
+}
+
+/* --- Links: Job Meta --- */
+.job-meta {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 180px;
+}
+
+.job-meta .label {
+    font-size: 0.7rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.job-meta .value {
+    font-size: 1.1rem;
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- Mitte: Massive Progress Area --- */
+.job-progress-center {
+    flex: 5; /* Nimmt den meisten Platz ein */
+    display: flex;
+    flex-direction: column;
+    padding: 0 50px;
+}
+
+.execution-group {
+    width: 100%;
+}
+
+.progress-stats-wrapper {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 1rem;
+    color: #00d4ff;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 16px;
+    background: #34495e; /* Etwas dunkleres Grau für den Slot */
+    border-radius: 10px; /* Radius konsistent halten */
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.progress-bar {
+    height: 100%;
+    /* Übergang Blau zu Grau (dein gewünschter Verlauf) */
+    background: linear-gradient(90deg, #1a597e 0%, #876b9e 100%);
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+    transition: width 0.5s ease;
+}
+
+/* Controls unter dem Balken */
+.execution-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin-top: 10px;
+}
+
+.btn-start, .btn-stop {
+    border: none;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 10px; /* Konsistenter Radius */
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.85rem;
+    background: #3498db; /* Einheitliches Blau als Basis */
+    transition: background 0.3s, transform 0.1s;
+    min-width: 100px;
+}
+
+.btn-stop {
+    background: #e74c3c !important;
+}
+.btn-stop:active, .btn-stop.active {
+    background: #c0392b !important;
+    transform: scale(0.95);
+}
+
+.btn-start:hover, .btn-stop:hover {
+    filter: brightness(1.1);
+}
+.btn-start:active, .btn-start.active {
+    background: #27ae60 !important;
+    transform: scale(0.95);
+}
+.btn-bom-link {
+    color: #3498db;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border: 2px solid #3498db;
+    padding: 4px 12px;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+
+.btn-bom-link:hover {
+    background: #3498db;
+    color: #2c3e50;
+}
+
+/* --- Rechts: Navigation & Ticker --- */
+.view-navigation {
+    flex: 1.5;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    border-left: 1px solid #333;
+    padding-left: 20px;
+}
+
+.header-log-ticker {
+    flex: 1.5;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 15px;
+    height: 100%;
+}
+
+.header-log-ticker ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.header-log-ticker li {
+    font-family: 'Consolas', 'Monaco', monospace; /* Feste Breite für Zeitstempel */
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: #bdc3c7; /* Helles Grau */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* Status-Präfixe hervorheben */
+.header-log-ticker li::first-line {
+    color: #ecf0f1;
+}
+
+/* Optional: Farbige Akzente für die Kürzel */
+.header-log-ticker li:contains("OK:") { color: #2ecc71; } /* Nur falls JS-gestützt, sonst über Klassen */
+
+.nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-controls button {
+    background: transparent;
+    border: 1px solid #444;
+    color: #fff;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 3px;
+}
+
+.nav-controls button:hover { background: #333; }
+
+.job-index {
+    font-size: 0.85rem;
+    color: #aaa;
+    min-width: 80px;
+    text-align: center;
+}
+
+.bom-workbench-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    max-height: 500px;
+    background: #212529; /* Dark Look */
+    border: 1px solid #3d444b;
+    border-radius: 8px;
+    z-index: 1060;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel-body {
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.bom-part-row input {
+    background: #2b3035 !important;
+    border-color: #495057 !important;
+    color: white !important;
+}
+/* Verhindert, dass das Modal den gesamten Bildschirm für Klicks sperrt */
+#bomWorkbench {
+    pointer-events: none;
+    z-index: 1040 !important; /* Höher als Standard Offcanvas (1045) */
+    background: none !important;
+}
+#bomWorkbench .modal-dialog {
+    pointer-events: all;
+    margin: 0; /* Wichtig für das freie Draggen */
+}
+/* Der Content muss Klicks wieder annehmen */
+#bomWorkbench .modal-content {
+    pointer-events: all;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+/* Erzwingt Klickbarkeit für alle Inputs in der Workbench, egal was offen ist */
+#bomWorkbench input, 
+#bomWorkbench select, 
+#bomWorkbench button {
+    pointer-events: all !important;
+    position: relative;
+    z-index: 1061;
+}
+/* Sidebar Z-Index sicherstellen */
+.sidebar, #offcanvasRight {
+    z-index: 1060 !important;
+}
+/* Cursor-Hinweis für das Verschieben */
+#bomModalHeader {
+    user-select: none;
+}
+/* Die Checkbox im Grundzustand */
+.part-is-bought {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+    background-color: #2b3035 !important;
+    border: 2px solid #495057 !important;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    outline: none;
+}
+
+/* Der Zustand wenn ANGEHAKT */
+.part-is-bought:checked {
+    background-color: #0dcaf0 !important; /* Dein Hellblau */
+    border-color: #0dcaf0 !important;
+}
+
+/* Der Haken als weißes 'L' (CSS-Konstruktion) */
+.part-is-bought:checked::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 6px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+    display: block;
+}
+/* Label hell und deutlich */
+.form-check-label {
+    color: #adb5bd !important; /* Helles Grau */
+    cursor: pointer;
+    padding-left: 0.5rem;
+    user-select: none;
+}
+
+/* Falls das Label durch das Modal-Layout "verschluckt" wird */
+.form-check {
+    display: flex;
+    align-items: center;
+    min-height: 1.5rem;
+}
+
+/* Fokus-Farbe für die Box im Dark Mode */
+.form-check-input:checked {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+}
+
+/* Sorgt dafür, dass die Box im uncheck-Zustand auf dunklem Grund sichtbar bleibt */
+.form-check-input {
+    background-color: #2b3035;
+    border: 1px solid #495057;
+}
+
+/* Animation für das Offcanvas-Panel (rechts die klappbare Bar) abschalten */
+#manufacturingViewer {
+    transition: none !important;
+}
+
+/* Verhindert das verzögerte Einblenden des dunklen Hintergrunds */
+.offcanvas-backdrop.fade {
+    transition: none !important;
+    opacity: 0.5 !important; /* Sofortige Deckkraft */
+}
+/* Placeholder hell genug machen */
+.part-name::placeholder, 
+.part-weight::placeholder, 
+.part-time::placeholder {
+    color: #adb5bd !important; /* Helles Grau */
+    opacity: 0.6;
+}
+
+/* Container für ein Bauteil */
+.bom-part-item {
+    display: flex;
+    flex-wrap: wrap; /* Erlaubt Umbruch bei Platzmangel */
+    gap: 10px;
+    align-items: flex-end;
+    transition: border-color 0.2s;
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Die Gruppen innerhalb der Zeile */
+.part-group {
+    flex: 1 1 150px; /* Wachsen, schrumpfen, Basis-Breite 150px */
+    min-width: 120px;
+}
+
+/* Spezifische Breiten für kleine Felder */
+.group-qty { flex: 0 0 70px; min-width: 70px; }
+.group-time { flex: 0 0 90px; min-width: 90px; }
+.group-check { flex: 0 0 auto; min-width: 80px; align-self: center; padding-top: 15px; }
+.group-actions { flex: 0 0 auto; align-self: flex-end; }
+
+/* Styling-Korrektur für die Inputs */
+.bom-part-item label {
+    font-size: 0.7rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bom-part-item:hover {
+    border-color: #0dcaf0 !important;
+}
+
+/* Fokus-Zustand für Eingaben */
+.bom-part-item input:focus, 
+.bom-part-item select:focus {
+    border-color: #0dcaf0 !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+}
+.border-dashed {
+    border-style: dashed !important;
+    opacity: 0.6;
+}
+.border-dashed:hover {
+    opacity: 1;
+}
+/* Resize Handle am rechten Rand */
+#bomWorkbench .modal-content {
+    position: relative;
+    overflow: hidden; /* Verhindert Content-Überlauf beim Verkleinern */
+}
+
+.resize-handle-e {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 10px;
+    height: 100%;
+    cursor: e-resize;
+    z-index: 9999;
+}
+
+/* Optional: Optisches Feedback beim Hover */
+.resize-handle-e:hover {
+    background: rgba(13, 202, 240, 0.2);
+}
+
+/* Damit das Modal nicht zu schmal wird */
+#draggableModal {
+    min-width: 500px;
+    max-width: 95vw !important; /* Fast volle Bildschirmbreite möglich */
+}
+
+.bom-part-row:hover {
+    background-color: rgba(13, 202, 240, 0.08) !important;
+    border-color: #0dcaf0 !important;
+    transition: all 0.2s ease;
+}
+
+/*  softe transition für das reflow */
+/* Der sanfte Wipe-Effekt für den Container */
+@keyframes softWipe {
+    0% { 
+        clip-path: inset(0 0 100% 0);
+        opacity: 0.6;
+    }
+    100% { 
+        clip-path: inset(0 0 0 0);
+        opacity: 1;
+    }
+}
+
+.section-scan {
+    position: relative;
+    animation: softWipe 0.5s ease-out forwards;
+}
+
+/* Die dezente Lichtkante */
+.section-scan::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    background: linear-gradient(to bottom, rgba(13, 110, 253, 0.4), transparent);
+    border-top: 2px solid rgba(13, 110, 253, 0.6);
+    z-index: 10;
+    /* Die Linie fährt synchron mit dem clip-path nach unten */
+    animation: scanLineDown 0.5s ease-out forwards;
+}
+
+@keyframes scanLineDown {
+    0% { top: 0; }
+    100% { top: 100%; }
 }

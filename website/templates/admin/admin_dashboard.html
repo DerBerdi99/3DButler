@@ -1,6 +1,14 @@
-{% extends 'base.html' %}
+{% extends 'admin/admin_base.html' %}
 
 {% block title %} Admin Dashboard {% endblock %}
+
+{% block wishlist_icon %}
+
+{% endblock %}
+
+{% block cart_icon %}
+
+{% endblock %}
 
 {% block body %}
 
@@ -8,26 +16,7 @@
     <h1 class="mb-4 text-primary">Admin-Kontrollzentrum</h1>
 
     <div class="row justify-content-center" style="margin: 10px;">
-      <div class="col-md-6">
-        <div class="list-group">
 
-            <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action">
-                <i class="products-plates" aria-hidden="true"></i>
-                <span class="link-name">Zum Shop (Kundenansicht)</span>
-            </a>
-
-            <a href="{{ url_for('admin_views.review_projects') }}" class="list-group-item list-group-item-action list-group-item-warning">
-                <i class="products-palisades" aria-hidden="true"></i>
-                <span class="link-name">PROJEKTE BEGUTACHTEN (Review-Queue)</span>
-            </a>
-
-            <a href="{{ url_for('admin_views.user_management') }}" class="list-group-item list-group-item-action">
-                <i class="products-parking"></i>
-                <span class="link-name">Benutzerverwaltung</span>
-            </a>
-
-        </div>
-      </div>
     </div>
 
     <div class="row" style="margin-top: 40px;">

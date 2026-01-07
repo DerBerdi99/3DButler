@@ -1,31 +1,8 @@
 {% extends 'base.html' %}
+
 {% block title %}Meine Bestellungen{% endblock %}
-{% block body %}
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-      <div class="col " style="margin: 13px;">
-        <div class="list-group text-center" >
-
-            <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action">
-                <i class="shop-link" aria-hidden="true"></i>
-                <span class="link-name">Shop</span>
-            </a>
-            <a href="{{ url_for('views.start_project') }}" class="list-group-item list-group-item-action">
-                <i class="project-link" aria-hidden="true"></i>
-                <span class="link-name">Projekt starten</span>
-            </a>
-            <a href="{{ url_for('views.my_reviews') }}" class="list-group-item list-group-item-action">
-                <i class="reviews-link"></i>
-                <span class="link-name">Meine Reviews</span>
-            </a>
-            <a href="{{ url_for('views.my_orders') }}" class="list-group-item list-group-item-action">
-                <i class="orders-link"></i>
-                <span class="link-name">Meine Bestellungen</span>
-            </a>
-
-        </div>
-      </div>
+{% block extra_styles %}
 
 <style>
     .form-container {
@@ -74,6 +51,36 @@
     /* ----------------------------------------------------------------- */
     /* MODIFIED STYLES (Angepasst für Zentrierung und Layout) */
 </style>
+
+{% endblock %}
+
+{% block body %}
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+      <div class="col " style="margin: 13px;">
+        <div class="list-group text-center" >
+
+            <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action">
+                <i class="shop-link" aria-hidden="true"></i>
+                <span class="link-name">Shop</span>
+            </a>
+            <a href="{{ url_for('views.start_project') }}" class="list-group-item list-group-item-action">
+                <i class="project-link" aria-hidden="true"></i>
+                <span class="link-name">Projekt starten</span>
+            </a>
+            <a href="{{ url_for('views.my_reviews') }}" class="list-group-item list-group-item-action">
+                <i class="reviews-link"></i>
+                <span class="link-name">Meine Reviews</span>
+            </a>
+            <a href="{{ url_for('views.my_orders') }}" class="list-group-item list-group-item-action">
+                <i class="orders-link"></i>
+                <span class="link-name">Meine Bestellungen</span>
+            </a>
+
+        </div>
+      </div>
+
+
 <div class="container mt-4">
     <h1>Meine Bestellungen ({{ orders|length }} Bestellungen)</h1>
     <p class="p-site-description">Hier finden Sie eine Übersicht über Ihre bisherigen Bestellungen und deren Status.</p>
@@ -109,9 +116,32 @@
                         <p class="card-text text-muted small mt-auto">
                             Gesamtbetrag: {{ order.OrderAmount }} €
                         </p>
-                        <a href="{{ url_for('views.order_detail', order_id=order.OrderID) }}" class="btn btn-sm btn-info mt-3">
-                            Bestelldetails anzeigen
-                        </a>
+                        {% if order.OrderStatus == 'CANCELLED' %}
+                            <p class="card-text text-danger small">
+                                Bestellung wurde storniert.
+                            </p>
+
+                        {% elif order.OrderStatus == 'ORDER_FINALIZED' %}
+                            <p class="card-text text-warning small">
+                                Zahlung ausstehend. Bitte schließen Sie die Zahlung ab.
+                            </p>
+                            <a href="{{ url_for('views.order_detail', order_id=order.OrderID) }}" class="btn btn-sm btn-info mt-3">
+                                Bestelldetails anzeigen
+                            </a>
+                        
+                        {% elif order.OrderStatus == 'DRAFT' %}
+                            <a href="{{ url_for('views.checkout_entry', order_id=order.OrderID) }}" class="btn btn-sm btn-success mt-3 mb-2">
+                                🛒 Zahlung/Adresse fortsetzen
+                            </a>
+                            <a href="{{ url_for('views.order_detail', order_id=order.OrderID) }}" class="btn btn-sm btn-info mt-3">
+                                Bestelldetails anzeigen
+                            </a>
+                        {% else %}
+                            <p class="card-text text-warning small">
+                                Bestellung bezahlt.
+                            </p>
+                        {% endif %}
+                        
                     </div>
                 </div>
             </div>

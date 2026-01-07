@@ -1,10 +1,370 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>How to start a new Project</title>
-</head>
-<body>
-    <!-- Content goes here -->
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %} Projekt starten - FAQ {% endblock %}
+
+{% block extra_styles %}
+<style>
+body {
+    background: linear-gradient(to right, #263238, #BDBDBD, #1A237E);
+    color: #f1f1f1;
+    font-size: 1.1rem; /* Grundschrift etwas größer */
+}
+/* Hero Section */
+.faq-hero {
+    text-align: center;
+    padding: 60px 20px;
+    background: rgba(38, 50, 56, 0.9);
+    border-radius: 0 0 50px 50px;
+    margin-bottom: 50px;
+    border-bottom: 4px solid #0078a0;
+}
+/* Feature Cards */
+.step-card {
+    background: #263238; /* Dunklerer Hintergrund für besseren Kontrast */
+    color: #80d8ff; /* Hellblau statt weiß */
+    border: 2px solid #0078a0;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    height: 100%;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+.step-card h5 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #0078a0; /* Fokus-Blau */
+}
+.step-card p {
+    font-size: 1.15rem;
+    color: #80d8ff; /* Hellblau */
+}
+.step-card:hover {
+    transform: translateY(-10px);
+    background: #1c262b;
+    box-shadow: 0 12px 30px rgba(0,120,160,0.4);
+}
+.step-icon {
+    font-size: 3.5rem;
+    color: #0078a0;
+    margin-bottom: 20px;
+}
+/* Vergleichstabelle */
+.comparison-section {
+    background: #f5f5f5; /* Sehr helles Grau für die Tabelle */
+    color: #263238;
+    border-radius: 25px;
+    padding: 40px;
+    margin: 60px 0;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    border: 1px solid #0078a0;
+}
+.comparison-section h2 {
+    font-size: 2.2rem;
+    margin-bottom: 30px;
+}
+.table {
+    font-size: 1.2rem;
+}
+.table thead th {
+    background-color: #263238;
+    color: #80d8ff; /* Hellblau auf Dunkelgrau */
+    padding: 20px;
+    border: none;
+}
+.highlight-community {
+    background-color: rgba(0, 120, 160, 0.1);
+    font-weight: bold;
+}
+/* Accordion Customization */
+.accordion-button {
+    background-color: #263238;
+    color: #80d8ff;
+    font-size: 1.25rem;
+    padding: 20px;
+}
+.accordion-button:not(.collapsed) {
+    background-color: #0078a0;
+    color: white;
+}
+.accordion-body {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #f1f1f1;
+    font-size: 1.15rem;
+    line-height: 1.6;
+}
+.accordion-item {
+    background: none;
+    border: 1px solid #0078a0;
+    margin-bottom: 15px;
+    border-radius: 12px !important;
+}
+.dark{
+    color:#1A237E;
+}
+.cyber-shimmer {
+position: absolute;
+top: 0;
+left: -100%;
+width: 50%;
+height: 100%;
+background: linear-gradient(
+    to right,
+    transparent,
+    rgba(128, 216, 255, 0.4),
+    transparent
+);
+transform: skewX(-25deg);
+transition: none;
+}
+.btn-cyber-industrial {
+    position: relative;
+    display: inline-block;
+    padding: 15px 40px;
+    font-weight: 800;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #80d8ff; /* Dein Hellblau */
+    text-decoration: none;
+    /* Metallischer Hintergrund */
+    background: linear-gradient(145deg, #263238, #455a64);
+    border: 2px solid #0078a0;
+    border-radius: 5px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 120, 160, 0.4), inset 0 0 10px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+/* Hover-Effekt: Der Glanz schießt durch */
+.btn-cyber-industrial:hover .cyber-shimmer {
+    animation: shimmer-sweep 0.6s ease;
+}
+
+@keyframes shimmer-sweep {
+    100% { left: 150%; }
+}
+.cyber-glitch-effect {
+    position: relative;
+    display: inline-block;
+    color: #80d8ff; /* Dein Hellblau */
+}
+
+/* Erzeugt die farbigen Ebenen für den Glitch */
+.cyber-glitch-effect::before,
+.cyber-glitch-effect::after {
+    content: attr(data-text); /* Erfordert data-text="TEXT" im HTML */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+}
+
+.cyber-glitch-effect::before {
+    color: #ff00c1; /* Magenta Offset */
+    z-index: -1;
+    animation: glitch-anim-1 2s infinite linear alternate-reverse;
+}
+
+.cyber-glitch-effect::after {
+    color: #00fff9; /* Cyan Offset */
+    z-index: -2;
+    animation: glitch-anim-2 2s infinite linear alternate-reverse;
+}
+
+/* Keyframes für die horizontalen "Schnitt"-Verschiebungen */
+@keyframes glitch-anim-1 {
+    0% { clip-path: inset(20% 0 30% 0); transform: translate(-2px, 0); }
+    20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }
+    40% { clip-path: inset(40% 0 50% 0); transform: translate(-1px, 1px); }
+    60% { clip-path: inset(80% 0 5% 0); transform: translate(1px, -1px); }
+    80% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 1px); }
+    100% { clip-path: inset(30% 0 20% 0); transform: translate(2px, 0); }
+}
+
+@keyframes glitch-anim-2 {
+    0% { clip-path: inset(15% 0 35% 0); transform: translate(2px, 0); }
+    25% { clip-path: inset(55% 0 15% 0); transform: translate(-2px, 1px); }
+    50% { clip-path: inset(35% 0 45% 0); transform: translate(1px, -1px); }
+    75% { clip-path: inset(75% 0 10% 0); transform: translate(-1px, 1px); }
+    100% { clip-path: inset(25% 0 25% 0); transform: translate(2px, 0); }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+
+<div class="container my-5">
+    
+    <div class="faq-hero">
+        <h1 class="display-3 fw-bold">Dein 3D-Projekt starten</h1>
+        <p class="lead fs-4">Präzise Fertigung trifft auf Community-Profit. Wähle dein Modell.</p>
+    </div>
+
+    <div class="row g-4 text-center">
+        <div class="col-md-3">
+            <div class="card step-card p-4">
+                <img src="{{ url_for('static', filename='images/upload-files.png') }}" alt="Upload" class="step-mascot-icon">
+                <h5>1. Upload</h5>
+                <p>Sende uns deine CAD-, STL- oder Blender-Files.</p>
+            </div>
+        </div>
+    
+        <div class="col-md-3">
+            <div class="card step-card p-4">
+                <img src="{{ url_for('static', filename='images/production-gear.png') }}" alt="Review" class="step-mascot-icon">
+                <h5>2. Review</h5>
+                <p>Expertenprüfung von Wandstärken und Geometrie.</p>
+            </div>
+        </div>
+    
+        <div class="col-md-3">
+            <div class="card step-card p-4">
+                <img src="{{ url_for('static', filename='images/get-money.png') }}" alt="Royalty" class="step-mascot-icon">
+                <h5>3. Angebot</h5>
+                <p>Transparentes Pricing nach Absprache!</p>
+            </div>
+        </div>
+    
+        <div class="col-md-3">
+            <div class="card step-card p-4">
+                <img src="{{ url_for('static', filename='images/fdm-printer.png') }}" alt="Druck" class="step-mascot-icon">
+                <h5>4. Druck</h5>
+                <p>Industrieller 3D-Druck und Versand.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="comparison-section">
+        <h2 class="text-center dark"><i class="bi bi-shield-shaded"></i> Privat vs. Community</h2>
+        
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mt-4">
+                <thead>
+                    <tr>
+                        <th style="border-top-left-radius: 15px;">Feature</th>
+                        <th>Option A: Privat-Projekt</th>
+                        <th style="border-top-right-radius: 15px; color: #80d8ff;">Option B: Community-Release</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Urheberrecht</strong></td>
+                        <td>Exklusiv bei dir</td>
+                        <td class="highlight-community">Lizenz-Sharing mit 3DButler</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Einnahmen</strong></td>
+                        <td>Keine</td>
+                        <td class="highlight-community text-primary">Lifetime-Provision pro Verkauf</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Kosten</strong></td>
+                        <td>Standard-Tarif</td>
+                        <td class="highlight-community text-success">Vergünstigte Erstherstellung</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-5 pb-5">
+        <h3 class="mb-4 text-center fs-2">Rechtliches & Formate</h3>
+        <div class="accordion" id="faqAccordion">
+            
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                        Welche Datenformate benötigen wir?
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Für den Industriedruck sind <strong>STEP, STL und 3MF</strong> ideal. Wir akzeptieren auch <strong>.blend</strong> Dateien für künstlerische Projekte. Achte auf geschlossene Geometrien (manifold).
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                        Widerrufsrecht bei Individualfertigung
+                    </button>
+                </h2>
+                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Gemäß <strong>§ 312g Abs. 2 Nr. 1 BGB</strong> besteht kein Widerrufsrecht für Waren, die nach Kundenspezifikation angefertigt werden. Sobald der Druckprozess gestartet ist, ist eine Stornierung ausgeschlossen.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRoyalty">
+                        Wie hoch ist meine Gewinnbeteiligung (Profit-Share)?
+                    </button>
+                </h2>
+                <div id="collapseRoyalty" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Als Standard-Vergütung erhältst du eine <strong>Royalty von 10% auf den Netto-Verkaufspreis</strong> jedes Mal, wenn ein Kunde dein Design im 3DButler-Shop bestellt. 
+                        <br><br>
+                        <strong>Performance-Modell:</strong> Wir behalten uns vor, diese Rate in Absprache mit dir anzupassen. Produkte, die eine außergewöhnlich hohe Marktresonanz zeigen oder komplexe technische Reviews erfordern, können in ihrer Einstufung variieren. Dein Erfolg ist unser Erfolg – je besser dein Design ankommt, desto attraktiver wird die Partnerschaft.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePayout">
+                        Wann und wie erfolgt die Auszahlung?
+                    </button>
+                </h2>
+                <div id="collapsePayout" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Deine gesammelten Royalties werden in deinem Dashboard getrackt. Die Auszahlung erfolgt monatlich, sobald ein Mindestguthaben von 25,00 € erreicht ist. Du kannst wählen, ob du den Betrag als <strong>Gutschrift für eigene Projekte</strong> nutzen oder auf dein hinterlegtes Konto ausgezahlt bekommen möchtest.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIP">
+                        Was passiert, wenn ich kein Urheber des Designs bin?
+                    </button>
+                </h2>
+                <div id="collapseIP" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        <strong>Wichtig:</strong> Mit der Wahl des Community-Releases bestätigst du rechtsverbindlich, dass du der alleinige Urheber bist oder über die notwendigen kommerziellen Lizenzen verfügst. Bei Urheberrechtsverletzungen Dritter erlischt der Anspruch auf Royalties sofort und der User haftet für daraus entstehende Schäden.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+  
+
+            <div class="text-center mt-5">
+                <p>Gib im Projektformular unter Materialien "eigenes Filament" an.</p>
+                <a href="{{ url_for('views.start_project') }}" class="btn-cyber-industrial mt-3">
+                    <span class="cyber-glitch-effect">Jetzt Projekt starten</span>
+                    <span class="cyber-shimmer"></span>
+                </a>
+            </div>
+            <div class="chatbot-container mt-5">
+                <div class="row align-items-center">
+            <div class="col-md-4 text-center">
+                <img src="{{ url_for('static', filename='images/3dbutler-mascot.png') }}" alt="3DButler AI" class="mascot-placeholder">
+            </div>
+            <div class="col-md-8">
+                <div class="chat-bubble">
+                    <h4>Noch Fragen offen?</h4>
+                    <p>Ich bin dein digitaler Butler. Bald helfe ich dir hier in Echtzeit bei allen technischen Details zu deinem Projekt!</p>
+                    <div class="chat-status">
+                        <span class="badge rounded-pill bg-info text-dark">AIML-Bot coming soon</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

@@ -42,6 +42,48 @@
                 {# ----------------------------------------------------------- #}
                 {# START BLOCK: Kopfzeile (Im shop Suchleiste: zum Überschreiben) #}
                 {% block header %}
+                <div class="header-monitor-strip">
+                    <div class="job-meta">
+                        <span class="label">Job</span>
+                        <span class="value">Part_01</span>
+                        <span class="label">Projekt</span>
+                        <span class="value">Projekt_1</span>
+                    </div>
+                
+                    <div class="job-progress-center">
+                        <div class="execution-group">
+                            <div class="progress-stats-wrapper">
+                                <span class="percent">52.4 %</span>
+                                <span class="eta">Rest: 1h 10m</span>
+                            </div>
+                            
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" style="width: 52.4%;"></div>
+                            </div>
+                
+                            <div class="execution-controls">
+                                <a href="#" class="btn-bom-link">BOM</a>
+                                <button class="btn-start">▶ START</button>
+                                <button class="btn-stop">⏹ STOP</button>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="view-navigation">
+                        <div class="header-log-ticker">
+                            <ul>
+                                <li>OK: Print Finished 12/31 21:02</li>
+                                <li>ST: Print Started 01/01 12:14</li>
+                                <li>OK: Print Finished 01/01 17:43</li>
+                            </ul>
+                        </div>
+                        <div class="nav-controls">
+                            <button class="btn-prev">◀</button>
+                            <span class="job-index">Drucker 1/4</span>
+                            <button class="btn-next">▶</button>
+                        </div>
+                    </div>
+                </div>
                 {% endblock %}
                 {# END BLOCK:Kopfzeile #}
                 {# ----------------------------------------------------------- #}
@@ -113,6 +155,8 @@
 
     </nav>
 
+
+    
     {% for message in get_flashed_messages() %}
 
     <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-top: 5px;">
@@ -121,6 +165,37 @@
 
     </div>
     {% endfor %}
+
+    {% block admin_navbar %}
+<div class="col-md-6">
+    <div class="list-group border-0">
+        <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action nav-custom-item">
+            <span class="link-name">Zum Shop (Kundenansicht)</span>
+        </a>
+        
+        <a href="{{ url_for('admin_views.review_projects') }}" class="list-group-item list-group-item-action nav-custom-item item-priority">
+            <span class="link-name">Projekte begutachten (Review-Queue)</span>
+        </a>
+
+        <a href="{{ url_for('admin_views.user_management') }}" class="list-group-item list-group-item-action nav-custom-item">
+            <span class="link-name">Benutzer verwalten</span>
+        </a>
+
+        <a href="{{ url_for('admin_views.manage_products') }}" class="list-group-item list-group-item-action nav-custom-item item-priority">
+            <span class="link-name">Produkte verwalten</span>
+        </a>
+
+        <a href="{{ url_for('admin_views.manage_orders') }}" class="list-group-item list-group-item-action nav-custom-item">
+            <span class="link-name">Bestellungen verwalten</span>
+        </a>
+
+        <a href="{{ url_for('admin_views.manufacturing_control') }}" class="list-group-item list-group-item-action nav-custom-item item-priority">
+            <span class="link-name">Fertigung steuern</span>
+        </a>
+    </div>
+</div>
+    {% endblock %}
+
 
     {% block body %}
 

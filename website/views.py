@@ -1,16 +1,18 @@
 from flask import Blueprint,render_template, flash, session, url_for, redirect, request, abort
 import os
-import sqlite3
 import uuid
 from datetime import datetime
+from .cart_manager import CartManager
 from .project_manager import ProjectManager
+from .product_manager import ProductManager
 from .order_manager import OrderManager
 from .user_manager import UserManager   
 
-DB_PATH  = os.getenv('DB_PATH')
 TEMP_UPLOAD_FOLDER = os.environ.get('UPLOAD_DIR') or os.path.join(os.getcwd(), 'temp_uploads')
 views = Blueprint('views', __name__, template_folder=os.path.join(os.path.dirname(__file__), 'templates'))  # Relative to blueprint file
+cart_manager = CartManager()
 project_manager = ProjectManager() 
+product_manager = ProductManager()
 order_manager = OrderManager()
 user_manager = UserManager()
 
@@ -23,66 +25,73 @@ def allowed_file(filename):
 def home():
     if 'user_id' in session:  # Check if the user is logged in
         username = session['username']
-        return render_template('home.html', logged_in=True, username=username)  # Pass logged_in and username to the template
+        
+        try:
+            # 5 zufällige Produkte für die Slideshow holen
+            slideshow_products = product_manager.get_random_shop_products(count=5)
+        except Exception as e:
+        # Fehlerbehandlung, falls die DB leer ist oder nicht erreicht werden kann
+            slideshow_products = []
+        return render_template('home.html', logged_in=True, username=username, slideshow_products=slideshow_products)  # Pass logged_in and username to the template
     else:
-        return render_template('home.html', logged_in=False) # Important: Pass logged_in as False if user is not logged in
+        try:
+            # 5 zufällige Produkte für die Slideshow holen, nicht eingeloggt -> ohne cta
+            slideshow_products = product_manager.get_random_shop_products(count=5)
+        except Exception:
+        # Fehlerbehandlung, falls die DB leer ist oder nicht erreicht werden kann
+            slideshow_products = []
+        return render_template('home.html', logged_in=False, slideshow_products=slideshow_products) # Important: Pass logged_in as False if user is not logged in
 
-@views.route('/cart')  # Your cart route
+@views.route('/cart')  # Deine Warenkorb-Route
 def cart():
+    """
+    Zeigt den Inhalt des Warenkorbs des angemeldeten Benutzers an.
+    Delegiert die Datenabfrage an den CartManager.
+    """
     if 'user_id' not in session:
-        flash('You must be logged in to view the cart.', 'info')
+        flash('Sie müssen angemeldet sein, um den Warenkorb anzuzeigen.', 'info')
         return redirect(url_for('auth.login'))
 
+    user_id = session['user_id']
+    cart_items = []
+
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        user_id = session['user_id']
-        cursor.execute("""
-            SELECT sc.CartItemID, p.ProductID, p.ProductName, p.ProductDescription, pp.Price, sc.Quantity, p.ProductImage 
-            FROM ShoppingCart sc
-            JOIN Products p ON sc.ProductID = p.ProductID
-            JOIN ProductPrice pp ON p.ProductID = pp.ProductID
-            WHERE sc.UserID = ?
-        """, (user_id,))
-        cart_items = cursor.fetchall()
+        # Delegation der Datenbankabfrage an den Manager
+        cart_items = cart_manager.get_cart_items_for_user(user_id)
         
     except Exception as e:
-        print(f"Error fetching cart items: {e}")
-        flash('An error occurred. Please try again.', 'danger')
-        cart_items = []
-    finally:
-        conn.close()
+        # Fehlerbehandlung für den Manager-Aufruf
+        print(f"Fehler beim Abrufen der Warenkorbartikel: {e}")
+        flash('Ein Fehler beim Laden des Warenkorbs ist aufgetreten. Bitte versuchen Sie es erneut.', 'danger')
+        
+    print(f"Warenkorbartikel: {cart_items}")  # Konsolenausgabe
     
-    print(f"Cart items: {cart_items}")  # just console output
+    # Übergabe der Daten und Rendern des Templates
+    # cart_items enthält nun die Ergebnisse des Managers
     return render_template('cart.html', cart_items=cart_items)
      
     
 @views.route('/products/<product_id>')
 def product_detail(product_id):
-    print(f"product_id (Received): {product_id} (Type: {type(product_id)})")  # Print the received ID
-
+    is_logged_in = 'user_id' in session
+    
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        # Name bleibt gleich, liefert jetzt aber alle nötigen Daten
+        product = product_manager.get_product_by_id(product_id)
 
-        query = """
-            SELECT p.ProductName, p.ProductDescription, p.StockQuantity, pp.Price, p.ProductImage
-            FROM Products p
-            INNER JOIN ProductPrice pp ON p.ProductID = pp.ProductID COLLATE NOCASE
-            WHERE p.ProductID = ? COLLATE NOCASE
-        """
-        cursor.execute(query, (product_id,))  # Use the product_id directly
-        
-
-        product_data = cursor.fetchone()
-        conn.close()
-
-        if product_data:
-            product_name, product_description, stock_quantity, price, product_image = product_data
-            print(f"Product details: {product_name}, {product_description}, {stock_quantity}, {price}, {product_image}")
-            return render_template('product_detail.html', product_name=product_name, product_description=product_description, stock_quantity=stock_quantity, price=price, product_image=product_image,product_id=product_id)
+        if product:
+            return render_template(
+                'product_detail.html', 
+                product_name=product['ProductName'], 
+                product_description=product['ProductDescription'], 
+                stock_quantity=product['StockQuantity'], 
+                price=product['ProductPrice'], 
+                product_image=product['ImagePath'],
+                product_id=product_id,
+                creator_name=product['CreatorName'],
+                logged_in=is_logged_in
+            )
         else:
-            print("Product data is None. No matching product found.")
             flash('Product not found.', 'warning')
             return redirect(url_for('views.home'))
 
@@ -92,254 +101,155 @@ def product_detail(product_id):
         return redirect(url_for('views.home'))
 
 
-@views.route('/add_to_cart/<product_id>', methods=['POST'])  # Add to cart route
+@views.route('/add_to_cart/<product_id>', methods=['POST'])
 def add_to_cart(product_id):
-    if 'user_id' not in session:  # Check if logged in
+    if 'user_id' not in session:
         flash('You must be logged in to add to cart.', 'info')
         return redirect(url_for('auth.login'))
 
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-
-        # Check if the product exists and get price and stock
-        cursor.execute("""
-            SELECT pp.Price, p.StockQuantity 
-            FROM Products p
-            JOIN ProductPrice pp ON p.ProductID = pp.ProductID
-            WHERE p.ProductID = ?
-        """, (product_id,))
-        product_info = cursor.fetchone()
-
-        if product_info:
-            price, stock = product_info
-            quantity = int(request.form.get('quantity', 1))  # Get quantity from form, default is 1
-            if quantity <= 0:
-                flash('Invalid quantity.', 'warning')
-                return redirect(url_for('views.product_detail', product_id=product_id))
-
-            if quantity > stock:
-                flash(f'Only {stock} units of this product are in stock.', 'warning')
-                return redirect(url_for('views.product_detail', product_id=product_id))
-
-            user_id = session['user_id']
-
-            # Add to cart (you'll need a cart mechanism - session, database, etc.)
-            cart = session.get('cart', {})  # Get cart from session or create empty dict
-            if product_id in cart:
-                cart[product_id]['quantity'] += quantity
-            else:
-                cart[product_id] = {'quantity': quantity, 'price': price}
-
-            session['cart'] = cart  # Update the session with the cart
-
-            # Add entry to the ShoppingCart table
-            cursor.execute("""
-                INSERT INTO ShoppingCarts (UserID, ProductID, Quantity)
-                VALUES (?, ?, ?)
-            """, (user_id, product_id, quantity))
-            conn.commit()
-
-            flash('Product added to cart!', 'success')
-            return redirect(url_for('views.product_detail', product_id=product_id))
-
-        else:
-            flash('Product not found.', 'warning')
-            return redirect(url_for('views.shop'))
-
-    except Exception as e:
-        print(f"Error adding to cart: {e}")
-        flash('An error occurred. Please try again.', 'danger')
-        return redirect(url_for('views.shop'))
-
-    finally:
-        conn.close()
-
-@views.route('/cart/delete/<item_id>', methods=['POST'])
-def delete_cart_product(item_id):
-    if 'user_id' not in session:  # Check if logged in
-        flash('You must be logged in to remove cart items.', 'info')
-        return redirect(url_for('auth.login'))
     user_id = session['user_id']
 
     try:
-        conn = sqlite3.connect(DB_PATH)  # Replace with your database file
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+        # 1. Daten validieren
+        product_info = cart_manager.get_product_stock_info(product_id)
+        if not product_info:
+            flash('Product not found.', 'warning')
+            return redirect(url_for('views.shop'))
 
-        # Delete the item from the WishList table based on UserID and ItemID
-        cursor.execute("DELETE FROM ShoppingCarts WHERE UserID = ? AND CartItemID = ?", (user_id, item_id))
-        conn.commit()
-        flash('Item removed from cart.', 'success')
+        quantity = int(request.form.get('quantity', 1))
+        stock = product_info['StockQuantity']
 
-    except sqlite3.Error as e:
-        flash(f'An error occurred: {e}', 'error')
+        if quantity <= 0:
+            flash('Invalid quantity.', 'warning')
+            return redirect(url_for('views.product_detail', product_id=product_id))
 
-    finally:
-        if conn:
-            conn.close()
+        if quantity > stock:
+            flash(f'Only {stock} units in stock.', 'warning')
+            return redirect(url_for('views.product_detail', product_id=product_id))
 
-    return redirect(url_for('views.cart'))   
+        # 2. Operation ausführen
+        cart_manager.add_product_to_cart(user_id, product_id, quantity)
+        
+        flash('Product added to cart!', 'success')
+        return redirect(url_for('views.product_detail', product_id=product_id))
+
+    except Exception as e:
+        print(f"Error in add_to_cart view: {e}")
+        flash('An error occurred.', 'danger')
+        return redirect(url_for('views.shop'))
+
+@views.route('/cart/delete/<product_id>', methods=['POST'])
+def delete_cart_product(product_id):
+    if 'user_id' not in session:
+        flash('You must be logged in to remove cart items.', 'info')
+        return redirect(url_for('auth.login'))
+    
+    user_id = session['user_id']
+
+    try:
+        success = cart_manager.remove_product_from_cart(user_id, product_id)
+        
+        if success:
+            flash('Item removed from cart.', 'success')
+        else:
+            flash('No cart found for the user.', 'warning')
+
+    except Exception as e:
+        print(f"Error in delete_cart_product view: {e}")
+        flash('An error occurred while removing the item.', 'danger')
+
+    return redirect(url_for('views.cart'))
+
+@views.route('/wishlist')
+def wishlist():
+    if 'user_id' not in session:
+        flash('You must be logged in to view your wishlist.', 'info')
+        return redirect(url_for('auth.login'))
+    
+    try:
+        items = cart_manager.get_wishlist_for_user(session['user_id'])
+        return render_template('wishlist.html', items=items)
+    except Exception as e:
+        print(f"Error fetching wishlist: {e}")
+        flash('An error occurred.', 'danger')
+        return redirect(url_for('views.home'))
 
 @views.route('/add_to_wishlist/<product_id>', methods=['POST'])
 def add_to_wishlist(product_id):
     if 'user_id' not in session:
-        flash('You must be logged in to add to cart.', 'info')
+        flash('Please login to use the wishlist.', 'info')
         return redirect(url_for('auth.login'))
-    else:
-        userid = session['user_id']
-        try:
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            cursor.execute("""SELECT Products.ProductDescription,ProductPrice.Price,Products.ProductImage,Products.ProductID FROM Products JOIN ProductPrice ON Products.ProductID = ProductPrice.ProductID WHERE Products.ProductID = ?""", (product_id,))
-            product = cursor.fetchone()
-            if product:
-                articlename, price, image, product_id = product
-                cursor.execute("INSERT INTO WishLists (ArtikelName, Price, UserID, ProductImage, ProductID) VALUES (?, ?, ?, ?, ?)", (articlename, price, userid, image, product_id))
-                conn.commit()
-                flash("Item added to wishlist", "success")
-            else:
-                flash("Product not found.", "danger")
-            cursor.execute("SELECT * FROM WishLists WHERE UserID = ?", (userid,)) #correct tuple.
-            wishlist_items = cursor.fetchall()
-            wishlist_items = [(item[0], item[1], item[2], item[3] ,item[4]) for item in wishlist_items]
-            return render_template('wishlist.html', items=wishlist_items)
-        except sqlite3.Error as e:
-            print(f"Database error: {e}")
-            flash('An error occurred while fetching products.', 'danger')
-            return render_template('error.html'), 500
-        finally:
-            if conn:
-                conn.close()
     
-
-
-@views.route('/wishlist')
-def wishlist():
-    if 'user_id' not in session:  # Check if logged in
-        flash('You must be logged in to go to wishlist.', 'info')
-        return redirect(url_for('auth.login'))
-    else:
-        userid = session['user_id']
-        try:
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            # Fetch all Wishlist items from the database
-            cursor.execute("SELECT * FROM WishLists WHERE UserID = ?",(userid,))
-            wishlist_items = cursor.fetchall()
-            wishlist_items = [(item[0],item[1],item[2],item[3],item[4]) for item in wishlist_items]
-            return render_template('wishlist.html', items=wishlist_items) 
-        except sqlite3.Error as e:
-            print(f"Database error: {e}")
-            flash('An error occurred while fetching products.', 'danger') 
-            return render_template('error.html'), 500  
-
-        finally:
-            if conn:
-                conn.close()
+    
+    try:
+        if cart_manager.add_to_wishlist(session['user_id'], product_id):
+            flash("Item added to wishlist", "success")
+        else:
+            flash("Product not found.", "danger")
+        
+        return redirect(url_for('views.wishlist'))
+    except Exception as e:
+        print(f"Error adding to wishlist: {e}")
+        flash('Database error occurred.', 'danger')
+        return redirect(url_for('views.shop'))
 
 @views.route('/wishlist/delete/<product_id>', methods=['POST'])
 def delete_wishlist_product(product_id):
-    if 'user_id' not in session:  # Check if logged in
+    if 'user_id' not in session:
         flash('You must be logged in to remove wishlist items.', 'info')
         return redirect(url_for('auth.login'))
-    user_id = session['user_id']
-
+    
     try:
-        conn = sqlite3.connect(DB_PATH)  # Replace with your database file
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-
-        # Delete the item from the WishList table based on UserID and ProductID
-        cursor.execute("DELETE FROM WishList WHERE UserID = ? AND ProductID = ?", (user_id, product_id))
-        conn.commit()
+        cart_manager.remove_from_wishlist(session['user_id'], product_id)
         flash('Item removed from wishlist.', 'success')
+    except Exception as e:
+        print(f"Error deleting from wishlist: {e}")
+        flash('An error occurred.', 'danger')
 
-    except sqlite3.Error as e:
-        flash(f'An error occurred: {e}', 'error')
-
-    finally:
-        if conn:
-            conn.close()
-
-    return redirect(url_for('views.wishlist'))   
+    return redirect(url_for('views.wishlist')) 
 
 @views.route('/check_payment', methods=['GET', 'POST'])
 def check_payment():
-    if 'user_id' not in session:  # Check if logged in
-        flash('You must be logged in to  check payment.', 'info')
+    if 'user_id' not in session:
+        flash('You must be logged in.', 'info')
         return redirect(url_for('auth.login'))
     
-    
     user_id = session['user_id']
-    conn = None 
     
-    try:
-        print("ESTABLISH CONN TO PAYMENT")
-        conn = sqlite3.connect(DB_PATH)  
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        print("ESTABLISHED...")
-        if request.method == 'GET':
-            print("METHOD IS GET...SELECT STARTING..")
-            # Prüfen, ob Zahlungsinfo existiert
-            cursor.execute("SELECT * FROM Payments WHERE UserID = ?", (user_id,))
-            payment_info = cursor.fetchone()
-            print("CURSOR FETCHED DATA")
-            if payment_info:
-                print("PAYMENT INFO FULL")
-                # Leitet den Nutzer zur zentralen Checkout-Einstiegsseite weiter
-                return redirect(url_for('views.checkout_entry')) 
-            else:
-                return render_template('payment_form.html')
-        
-        elif request.method == 'POST':
-            print("METHOD IS POST")
-
-            # 1. Die tatsächlich gewählte Methode aus dem Frontend lesen
-            payment_method = request.form.get('payment_method')
-
-            # Initialisierung der Variablen
-            card_number = request.form.get('card_number')
-            expiry = request.form.get('expiry')
-            method_name = payment_method.capitalize()
-            last_digits = ''
-
-            # 2. Bedingte Validierung: Nur wenn Kreditkarte gewählt
-            if payment_method == 'card':
-                if not card_number or not expiry:
-                    flash('Bitte füllen Sie alle Kartenfelder aus.', 'error')
-                    return render_template('payment_form.html') # Passen Sie den Template-Namen an
-
-                last_digits = card_number[-4:] # Letzten 4 Ziffern speichern
-
-            # Wenn PayPal, Wallets oder Rechnung gewählt wurde
-            elif payment_method in ['paypal', 'wallets', 'rechnung']:
-                # Setze Platzhalter für die DB, da keine Kartendaten gesendet wurden
-                expiry = 'N/A'
-                last_digits = ''
-
-            else:
-                flash('Ungültige Zahlungsmethode ausgewählt.', 'error')
-                return render_template('payment_form.html') # Passen Sie den Template-Namen an
-
-            # 3. Speichern in die 'Payments' Tabelle mit der korrekten Methode
-            new_payment_id = 'PAYM_' + str(uuid.uuid4())
-
-            cursor.execute("INSERT INTO Payments (PaymentID, UserID, Method, LastIDDigits, Expiry, IsDefaultMethod) VALUES (?, ?, ?, ?, ?, ?)",
-                           (new_payment_id, user_id, method_name, last_digits, expiry, 1))
-            conn.commit()
-
-            flash('Zahlungsmethode erfolgreich gespeichert.', 'success')
+    # GET: Vorhandene Info prüfen
+    if request.method == 'GET':
+        if order_manager.get_payment_info(user_id):
             return redirect(url_for('views.checkout_entry'))
+        return render_template('payment_form.html')
+    
+    # POST: Neue Info speichern
+    payment_method = request.form.get('payment_method')
+    card_number = request.form.get('card_number')
+    expiry = request.form.get('expiry', 'N/A')
+    last_digits = ''
 
-    except sqlite3.Error as e:
-        flash(f'Database error: {e}', 'error')
+    # Validierungs-Logik
+    if payment_method == 'card':
+        if not card_number or not expiry:
+            flash('Bitte füllen Sie alle Kartenfelder aus.', 'error')
+            return render_template('payment_form.html')
+        last_digits = card_number[-4:]
+    elif payment_method not in ['paypal', 'wallets', 'rechnung']:
+        flash('Ungültige Zahlungsmethode.', 'error')
+        return render_template('payment_form.html')
+
+    try:
+        order_manager.save_payment_info(
+            user_id, 
+            payment_method.capitalize(), 
+            last_digits, 
+            expiry
+        )
+        flash('Zahlungsmethode erfolgreich gespeichert.', 'success')
+        return redirect(url_for('views.checkout_entry'))
+    except Exception as e:
+        flash(f'Fehler beim Speichern: {e}', 'error')
         return redirect(url_for('views.home'))
-            
-    finally:
-        if conn:
-            conn.close()
 
 # -----------------------------------------------------------
 # ROUTE: checkout_entry (UNIFIZIERTER EINSTIEGspunkt)
@@ -347,194 +257,96 @@ def check_payment():
 @views.route('/checkout', methods=["GET"])
 @views.route('/checkout/<order_id>', methods=["GET"])
 def checkout_entry(order_id=None):
-    if 'user_id' not in session:  # Check if logged in
-        flash('You must be logged in to  check payment.', 'info')
+    if 'user_id' not in session:
+        flash('You must be logged in to check payment.', 'info')
         return redirect(url_for('auth.login'))
-    print("checkout_entry Z322")
-    """
-    Zentraler Einstiegspunkt für den Checkout.
-    1. Wenn OrderID vorhanden (Projekt/Quote): Prüft die Order.
-    2. Wenn OrderID NICHT vorhanden (Shop Cart): Erstellt eine neue Draft Order.
-    """
+    
     user_id = session['user_id']
-    conn = None
     
     try:
-
-        conn = sqlite3.connect(DB_PATH)  
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        print("DB VERBIDUNG AUFGEBAUT")
-        # Fall 1: OrderID ist NICHT vorhanden (-> Shop Warenkorb)
+        # Fall 1: Warenkorb -> Order erstellen
         if not order_id:
-    
-            cursor.execute('''
-                           SELECT 
-                           cp.ProductID,
-                           cp.Quantity 
-                           FROM CartPositions cp 
-                           JOIN ShoppingCarts sc on cp.CartID = sc.CartID
-                           WHERE UserID = ?''', (user_id,))
-            cart_items = cursor.fetchall()
-            
-            if not cart_items:
+            data = order_manager.create_order_from_cart(user_id)
+            if not data:
                 flash("Ihr Warenkorb ist leer.", "warning")
                 return redirect(url_for("views.home"))
-
-            # Berechne den Gesamtbetrag und sammle Order-Positionsdaten
-            total_amount = 0
-            order_positions = []
-            
-            for item in cart_items:
-                cursor.execute("SELECT ProductPrice FROM ProductPrices WHERE ProductID = ?", (item['ProductID'],))
-                price_result = cursor.fetchone()
-                
-                if price_result and price_result['ProductPrice'] is not None:
-                    price = int(price_result['ProductPrice']) 
-                    sub_total = price * item['Quantity']
-                    total_amount += sub_total
-                    
-                    # Speichere die Details für die OrderDetails Tabelle
-                    order_positions.append({
-                        'ProductID': item['ProductID'],
-                        'Quantity': item['Quantity'],
-                        'Price': price, # Einzelpreis in Cent
-                        'SubTotal': sub_total # Gesamtpreis der Position in Cent
-                    })
-                else:
-                    flash(f"Preis für Produkt {item['ProductID']} nicht gefunden.", "error")
-                    return redirect(url_for("views.home"))
-            
-            # --- ERSTELLE DIE NEUE DRAFT-ORDER ---
-            order_id = 'ORDE_' + str(uuid.uuid4())
-            order_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            
-            # SourceProjectID = NULL, um Shop-Bestellungen zu kennzeichnen
-            cursor.execute("""
-                INSERT INTO Orders (OrderID, UserID, OrderDate, OrderAmount, OrderStatus, PaymentStatus, SourceProjectID) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (order_id, user_id, order_date, total_amount, 'DRAFT', 'PENDING_PAYMENT', None))
-            
-                 
-            product_type = 'CART_PRODUCT'  # Typ für Shop-Warenkorb-Produkte
-            price_per_unit = 0  # Placeholder, da Preis in OrderPositions gespeichert wird
-            # Fülle die OrderPositions Tabelle
-            for pos in order_positions:
-                position_id = 'POSI_' + str(uuid.uuid4())
-                # Annahme: PositionID wird in OrderPositions automatisch erhöht oder wir generieren sie hier.
-                # Da sie nicht in der DB-Struktur angegeben war, nutzen wir nur OrderID, ProductID, Quantity.
-                price_per_unit = pos['Price']  # Einzelpreis in Cent
-                cursor.execute("""
-                    INSERT INTO OrderPositions (PositionID, OrderID, ProductID, ProductType, Quantity, PricePerUnit) 
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    """, (position_id, order_id, pos['ProductID'],product_type, pos['Quantity'], price_per_unit))
-            
-            conn.commit()
-            
-            # Setze die Positionsdaten direkt in die Order-Variable
-            order_positions_for_template = order_positions
-            order_amount = total_amount
-            source_project_id = None
-
-        # Fall 2: OrderID ist vorhanden (-> Projekt/Quote oder bestehender Draft)
+        # Fall 2: Bestehende Order laden
         else:
-            print("checkout_entry Z401")
-            # Lade bestehende Order-Details
-            cursor.execute("SELECT * FROM Orders WHERE OrderID = ? AND UserID = ?", (order_id, user_id))
-            order_data = cursor.fetchone()
-            
-            if not order_data:
-                flash("Bestellung nicht gefunden oder Zugriff verweigert.", "error")
+            data = order_manager.get_order_with_positions(order_id, user_id)
+            if not data:
+                flash("Bestellung nicht gefunden.", "error")
                 return redirect(url_for("views.home"))
-                
-            order_amount = order_data['OrderAmount']
-            source_project_id = order_data['SourceProjectID']
 
-            # Lade Order-Positionen (OrderDetails) und Preise für das Template
-            cursor.execute("""
-                SELECT op.ProductID, op.Quantity, pp.ProductPrice, p.ProductName
-                FROM OrderPositions op
-                JOIN ProductPrices pp ON op.ProductID = pp.ProductID
-                JOIN Products p ON op.ProductID = p.ProductID
-                WHERE op.OrderID = ?
-                """, (order_id,))
-            
-            order_positions_for_template = []
-            for item in cursor.fetchall():
-                 order_positions_for_template.append({
-                    'ProductName': item['ProductName'],
-                    'Quantity': item['Quantity'],
-                    'ProductPrice': item['ProductPrice'], # Einzelpreis in Cent
-                    'SubTotal': item['ProductPrice'] * item['Quantity']
-                })
-            print("ORDER POS: ", order_positions_for_template)
-        # --- UNIFIZIERTE DATEN FÜR CHECKOUT_DETAILS.HTML LADEN ---
-        
-        # 1. Adressen laden
-        cursor.execute("SELECT * FROM Addresses WHERE UserID = ? ORDER BY IsDefaultShipping DESC", (user_id,))
-        addresses = cursor.fetchall()
+        # Ressourcen für das Template laden (Adressen/Zahlung)
+        addresses, payment_methods = order_manager.get_checkout_resources(user_id)
 
-        # 2. Zahlungsweisen laden
-        cursor.execute("SELECT * FROM Payments WHERE UserID = ? ORDER BY IsDefaultMethod DESC", (user_id,))
-        payment_methods = cursor.fetchall()
-        
         if not addresses:
-             flash("Bitte legen Sie zuerst eine Lieferadresse an.", "info")
-             # Hier müsste zur Add-Address-Seite geleitet werden
-        
+            flash("Bitte legen Sie zuerst eine Lieferadresse an.", "info")
+            return redirect(url_for("views.home"))
         if not payment_methods:
-             flash("Bitte hinterlegen Sie zuerst eine Zahlungsart.", "info")
-             return redirect(url_for("views.check_payment"))
+            flash("Bitte hinterlegen Sie zuerst eine Zahlungsart.", "info")
+            return redirect(url_for("views.home"))
 
-        order_data = dict(order_data)
-        # Order-Daten für das Template zusammenstellen (einheitliches Format)
-        order_for_template = {
-            'OrderID': order_id,
-            'AddressID': order_data.get('AddressID') if order_id else None,
-            'PaymentID': order_data.get('PaymentID') if order_id else None,
-            'SourceProjectID': source_project_id
-        }
-        print("checkout_entry Z457")
+        # Template-Daten aufbereiten
+        order_info = data['order']
+        positions = [{
+            'ProductName': p['ProductName'],
+            'Quantity': p['Quantity'],
+            'ProductPrice': p['PricePerUnit'],
+            'SubTotal': p['PricePerUnit'] * p['Quantity']
+        } for p in data['positions']]
+
         return render_template(
             'checkout_details.html',
-            order=order_for_template,
-            positions=order_positions_for_template,
-            total_amount=order_amount, # Betrag in EUR
+            order=order_info,
+            positions=positions,
+            total_amount=order_info['OrderAmount'],
             addresses=addresses,
             payment_methods=payment_methods,
-            # user=current_user, # Kann entfernt werden, wenn login_required genutzt wird
             title="Checkout Abschließen"
         )
 
-    except sqlite3.Error as e:
-        flash(f"Database error during checkout preparation: {e}", "error")
+    except Exception as e:
+        print(f"Checkout Error: {e}")
+        flash(f"Fehler bei der Checkout-Vorbereitung.", "error")
         return redirect(url_for("views.home"))
-        
-    finally:
-        if conn:
-            conn.close()
 
-@views.route('/shop')  # New route for Steinplatten (Stone Plates)
+@views.route('/shop', methods=['GET', 'POST'])
 def shop():
     logged_in = 'user_id' in session
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+    # 1. Parameter aus dem Request holen
+    search_query = request.args.get('search') or request.form.get('search')
+    selected_categories = request.args.getlist('category[]')
+    selected_materials = request.args.getlist('material[]')
 
-        # Fetch all Steinplatten products from the database  # naja steinplatten ist natürliich nur ein beispiel und jetzt obsolet, späterersetzen durch categorie
-        cursor.execute("SELECT * FROM Products WHERE IsShopReady = 1")  # Assuming you have a 'Category' column
-        all_products = cursor.fetchall()
-        all_products = [(product[11], product[4], product[5],product[9],product[0]) for product in all_products]
-        return render_template('shop.html', products=all_products, logged_in=logged_in)
+    # 2. Dynamische Filter-Optionen für die Sidebar laden
+    filter_options = product_manager.get_filter_options()
+    
+    # 3. Gefilterte Produkte abrufen
+    raw_products = product_manager.get_filtered_products(
+        search_query=search_query,
+        selected_categories=selected_categories,
+        selected_materials=selected_materials
+    )
 
-    except sqlite3.Error as e:
-        print(f"Database error: {e}")
-        flash('An error occurred while fetching products.', 'danger') # Flash the message
-        return render_template('error.html'), 500  # Or redirect to an error page
+    # 4. Mapping (wie in deinem Code, am besten in eine Helper-Funktion im Manager auslagern)
+    products_list = []
+    for p in raw_products:
+        # Hier dein Dictionary-Mapping anwenden...
+        products_list.append(product_manager.map_row_to_dict(p))
 
-    finally:
-        if conn:
-            conn.close()
+    return render_template(
+        'shop.html', 
+        products=products_list,
+        categories=filter_options['categories'],
+        materials=filter_options['materials'],
+        selected_categories=selected_categories,
+        selected_materials=selected_materials,
+        total_results_count=len(products_list),
+        current_results_count=len(products_list), # Später für Pagination relevant
+        logged_in=logged_in
+    )
+
 
 @views.route('/start_project', methods=['GET','POST'])
 def start_project():
@@ -708,58 +520,32 @@ def my_reviews():
 
 @views.route('/send_message/<project_id>', methods=['POST'])
 def send_message(project_id):
-    """
-    Verarbeitet das POST-Formular zum Senden einer neuen Nachricht vom Kunden.
-    
-    :param project_id: Die ID des Projekts, zu dem die Nachricht gehört.
-    """
-    
     # 1. SICHERHEIT: Login-Check
     if 'user_id' not in session:
         flash("Bitte melden Sie sich an, um Ihre Projekte einzusehen.", 'warning')
         return redirect(url_for('auth.login'))
         
-    # 1. Extrahieren der Nachricht aus dem Formular
-    # Der Name 'messageText' kommt vom 'name'-Attribut des HTML-Input-Feldes.
+    # 2. Daten extrahieren und validieren
     message_text = request.form.get('messageText', '').strip()
     
-    # Optional: Prüfen Sie, ob die Nachricht nicht leer ist.
     if not message_text:
-        # Fügen Sie eine Fehlermeldung hinzu (optional)
         flash('Nachricht kann nicht leer sein.', 'danger')
         return redirect(url_for('views.project_detail', project_id=project_id))
     
-    # 2. Ermitteln des Senders (in diesem Fall der Kunde/Benutzer)
-    # HINWEIS: Ersetzen Sie 'User' durch die tatsächliche Logik zur Ermittlung des eingeloggten Benutzers.
-    # Hier verwenden wir den festen Wert 'User', da der Kunde sendet.
-    sender = 'User' 
-    
+    # 3. Logik über ProjectManager ausführen
     try:
-        # Erstellen einer neuen Nachricht User > Admin
-
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-
-        comm_id = 'COMM_' + str(uuid.uuid4())
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-        cursor.execute("""
-            INSERT INTO ProjectMessages (CommID, ProjectID, SenderType, MessageText, Timestamp, IsUnreadAdmin, RequiresFileUpload)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (comm_id, project_id, sender, message_text, timestamp, 1, 0))
-
-        conn.commit()
-        conn.close()
-
-        flash('Nachricht erfolgreich gesendet.', 'success')
+        # project_manager ist global/zentral instanziiert
+        success = project_manager.add_project_message(project_id, message_text, sender_type='User')
         
+        if success:
+            flash('Nachricht erfolgreich gesendet.', 'success')
+        else:
+            raise Exception("Manager returned False")
+            
     except Exception as e:
-        # Fehlerbehandlung: Bei einem Datenbankfehler den Benutzer informieren
-        print(f"Fehler beim Speichern der Nachricht: {e}")
+        print(f"Fehler beim Senden der Nachricht: {e}")
         flash('Fehler beim Senden der Nachricht. Bitte versuchen Sie es später erneut.', 'danger')
         
-    # 4. Weiterleitung zurück zur Detailseite, um die Nachricht sofort anzuzeigen
-    # ('project_detail' ist hier der Name Ihrer View-Funktion für die Detailseite)
     return redirect(url_for('views.project_detail', project_id=project_id))
 
 @views.route('/upload_files/<project_id>', methods=['POST'])
@@ -902,252 +688,32 @@ def start_order_from_quote(project_id):
         flash(f"Ein sehr unerwarteter Fehler ist aufgetreten: {e}", 'danger')
         return redirect(url_for('views.home'))
             
-'''  
-
-@views.route('/test_checkout_design')   #TestView für das Checkout-Design mit Mock-Daten
-def test_checkout_design():
-    if 'user_id' not in session:
-        flash("Bitte melden Sie sich an.", 'warning')
-        return redirect(url_for('auth.login'))
-    current_user = session['user_id']
-    """
-    Rendert das checkout_details.html Template mit Mock-Daten für Design-Tests.
-    Umgeht Datenbank und Bestelllogik.
-    """
-    
-    # --- MOCK-DATEN GENERIEREN ---
-    
-    # 1. Bestell-Objekt (order)
-    # Simuliert eine bereits erstellte Bestellung.
-    mock_order_id = 'ORDER_DESIGN_TEST_12345'
-    order = {
-        'OrderID': mock_order_id,
-        'UserID': 'MOCK_USER_123',
-        # Gesamtbetrag in Cent für 129,99 €
-        'OrderAmount': 12999, 
-        'AddressID': 'ADDR_DEFAULT_MOCK', # Die vorausgewählte Adresse
-        'PaymentID': 'INVOICE_METHOD_ID', # Die vorausgewählte Zahlungsmethode
-        'OrderStatus': 'ORDER_CREATED',
-        'PaymentStatus': 'PENDING_PAYMENT',
-        'SourceProjectID': 'PROJ_MOCK_123'
-    }
-    
-    # 2. Bestellpositionen (positions)
-    positions = [
-        {
-            'PositionID': 'POS_' + str(uuid.uuid4()),
-            'ProductName': 'Propeller-Teil 3000 (Custom)',
-            'Quantity': 1,
-            'Price': 8999, # Preis in Cent (89.99 €)
-            'SubTotal': 8999
-        },
-        {
-            'PositionID': 'POS_' + str(uuid.uuid4()),
-            'ProductName': 'Zukaufteil: Montageschraube V2',
-            'Quantity': 8,
-            'Price': 500, # Preis in Cent (5.00 €)
-            'SubTotal': 4000
-        }
-    ]
-    
-    # 3. Lieferadressen (addresses)
-    addresses = [
-        # Die Standard-Adresse
-        {'AddressID': 'ADDR_DEFAULT_MOCK', 'Street': 'Mockstraße 1', 'City': 'Musterstadt', 'ZIPCode': '12345', 'Country': 'Deutschland', 'IsDefaultShipping': 1},
-        {'AddressID': 'ADDR_OTHER_MOCK', 'Street': 'Testing-Allee 42', 'City': 'Probedorf', 'ZIPCode': '54321', 'Country': 'Österreich', 'IsDefaultShipping': 0},
-    ]
-
-    # 4. Zahlungsmethoden (payment_methods)
-    payment_methods = [
-        # Die hinterlegte Methode
-        {'PaymentID': 'CARD_VISA_MOCK', 'Method': 'Visa', 'LastIDDigits': '4242', 'Expiry': '12/26', 'IsDefaultMethod': 1},
-        {'PaymentID': 'PAYPAL_MOCK', 'Method': 'PayPal', 'LastIDDigits': 'user@mock.com', 'Expiry': 'N/A', 'IsDefaultMethod': 0},
-    ]
-
-    # Gesamtbetrag in EUR konvertieren
-    total_amount_eur = order['OrderAmount'] / 100.0
-    
-    return render_template(
-        'checkout_details.html',
-        order=order,
-        positions=positions,
-        total_amount=total_amount_eur,
-        addresses=addresses,
-        payment_methods=payment_methods,
-        user=current_user, # Optional, falls Ihre base.html user benötigt
-        title="Checkout Design Test"
-    )
-
-'''
 
 @views.route('/checkout/update/<string:order_id>', methods=['POST'])
 def update_checkout_details(order_id):
     if 'user_id' not in session:
-        flash("Bitte melden Sie sich an.", 'warning')
         return redirect(url_for('auth.login'))
         
     user_id = session['user_id']
-    selected_address_id = request.form.get('address_id') #holt die (evtl) neue addresse
-    selected_payment_id = request.form.get('payment_id') #holt die (evtl) neue payment
-    
     order = order_manager.get_order_by_id(order_id)
     
     if not order or order['UserID'] != user_id or order['OrderStatus'] != 'DRAFT':
-        flash("Bestellung ist nicht mehr im Bearbeitungsstatus.", 'danger')
+        flash("Ungültiger Status.", 'danger')
         return redirect(url_for('views.my_reviews'))
-        
-    # Validierung der Auswahl
-    if not selected_address_id or not selected_payment_id:
-        flash("Bitte wählen Sie eine Lieferadresse und eine Zahlungsmethode.", 'warning')
-        return redirect(url_for('views.start_order_from_quote', project_id=order['SourceProjectID']))
-        
-    conn = None 
+
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-
-        # ====================================================================
-        # --- LOGIK 1: ADRESS-HANDLING (unverändert) ---
-        # ...
-        # ====================================================================
-        final_address_id_to_use = selected_address_id
-        if selected_address_id == 'NEW_ADDRESS':
-            new_address_id = f"ADDR_{str(uuid.uuid4())}"
-            final_address_id_to_use = new_address_id
+        success, addr_id, pay_id = order_manager.process_checkout_update(user_id, order_id, request.form)
+        
+        if success:
+            order_manager.finalize_order_details(order_id, addr_id, pay_id)
+            project_manager.finalize_project_details(order['SourceProjectID'])
+            flash("Details gespeichert. Weiter zur Bezahlung.", 'success')
+            return redirect(url_for('views.order_success', order_id=order_id))
             
-            # Validierung der neuen Adresse
-            street = request.form.get('new_street', '').strip()
-            city = request.form.get('new_city', '').strip()
-            zip_code = request.form.get('new_zip_code', '').strip()
-            country = request.form.get('new_country', '').strip()
-            
-            if not all([street, city, zip_code, country]):
-                flash('Bitte füllen Sie alle Adressfelder für die neue Adresse aus.', category='error')
-                return redirect(url_for('views.checkout_entry', order_id=order_id))
-                
-            cursor.execute("""
-                INSERT INTO Addresses (AddressID, UserID, Street, City, Zipcode, Country, IsDefaultShipping) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (new_address_id, str(user_id), street, city, zip_code, country, 0))
-        
-        # ====================================================================
-        # --- LOGIK 2: ZAHLUNGSMETHODEN-HANDLING (FIXED KEY) ---
-        # ====================================================================
-        final_payment_id_to_use = selected_payment_id
-        if selected_payment_id == 'NEW_PAYMENT':
-            new_payment_id = f"PAYM_{str(uuid.uuid4())}"
-            final_payment_id_to_use = new_payment_id
-            
-            # NEU: Liest den Wert aus dem korrekten Feld 'payment_method' des Frontends
-            method_type_raw = request.form.get('new_payment_type_radio', '').strip() 
-            
-            if not method_type_raw:
-                flash('Bitte wählen Sie die Art der neuen Zahlungsmethode (z.B. Kreditkarte oder PayPal).', category='error')
-                return redirect(url_for('views.checkout_entry', order_id=order_id))
-                
-            token = ''
-            last_digits = ''
-            expiry = ''
-            method_type_db = '' # Der Name, der in die DB gespeichert wird
-
-            if method_type_raw == 'Card': # Wert: 'card' (aus <option value="card">)
-                method_type_db = 'Credit Card'
-                
-                # Holen der Kreditkartenfelder
-                token = request.form.get('card_number', '').strip() 
-                last_digits = token[-4:] if token and len(token) >= 4 else '****'
-                expiry = request.form.get('expiry', '').strip()
-                
-                # Spezifische Validierung für Kreditkarten
-                if not all([token, expiry]):
-                    flash('Bitte geben Sie alle Kreditkartendetails ein (Kartennummer und Ablaufdatum).', category='error')
-                    return redirect(url_for('views.checkout_entry', order_id=order_id))
-
-            elif method_type_raw == 'PayPal': # Wert: 'paypal'
-                method_type_db = 'PayPal'
-                # KEINE ZUSÄTZLICHEN FELDER ERFORDERLICH, da dies nur die Option speichert
-                token = 'PAYPAL_SAVED' 
-                last_digits = 'PayPal'
-                expiry = 'N/A'
-                
-            elif method_type_raw == 'Rechnung' or method_type_raw == 'Invoice':
-                # Rechnung / Invoice: optional separate Rechnungsadresse angeben
-                method_type_db = 'Invoice'
-
-                # Lese die Invoice-Mask Felder aus dem Formular
-                inv_street = request.form.get('new_invoiceStreet', '').strip()
-                inv_zip = request.form.get('new_invoiceZipcode', '').strip()
-                inv_city = request.form.get('new_invoiceCity', '').strip()
-                inv_country = request.form.get('new_invoiceCountry', '').strip()
-
-                # Wenn alle Invoice-Felder ausgefüllt sind, lege eine neue Rechnungsadresse an
-                if all([inv_street, inv_zip, inv_city, inv_country]):
-                    billing_address_id = f"ADDR_{str(uuid.uuid4())}"
-                    cursor.execute("""
-                        INSERT INTO Addresses (AddressID, UserID, Street, City, Zipcode, Country, IsDefaultShipping) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                        """, (billing_address_id, str(user_id), inv_street, inv_city, inv_zip, inv_country, 0))
-                    # Speichere die Billing AddressID im Token-Feld der Payment-Zeile, damit sie wiedergefunden werden kann
-                    token = billing_address_id
-                else:
-                    # Keine separate Rechnungsadresse angegeben -> markiere Rechnung ohne separate Adresse
-                    token = 'INVOICE_SAVED'
-
-                last_digits = 'Rechnung'
-                expiry = 'N/A'
-
-            elif method_type_raw == 'Wallet': # Wert: 'wallets'
-                method_type_db = 'Mobile Wallet'
-                # KEINE ZUSÄTZLICHEN FELDER ERFORDERLICH
-                token = 'WALLET_SAVED' 
-                last_digits = 'Wallet'
-                expiry = 'N/A'
-                
-            else:
-                 # Unbekannte Methode
-                flash(f'Unbekannte Zahlungsmethode: {method_type_raw}.', category='error')
-                return redirect(url_for('views.checkout_entry', order_id=order_id))
-                
-            # Neue Zahlungsmethode dauerhaft in die PAYMENTS-Tabelle einfügen
-            cursor.execute("""
-                INSERT INTO Payments (PaymentID, UserID, Method, Token, LastIDDigits, Expiry, IsDefaultMethod) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (new_payment_id, str(user_id), method_type_db, token, last_digits, expiry, 0))
-
-        
-        # ====================================================================
-        # --- LOGIK 3: FINALES UPDATE DER ORDER (unverändert) ---
-        # ====================================================================
-        cursor.execute("""
-            UPDATE Orders 
-            SET AddressID = ?, PaymentID = ?
-            WHERE OrderID = ? AND UserID = ?
-            """, (final_address_id_to_use, final_payment_id_to_use, str(order_id), str(user_id)))
-
-        # Commit und Finalisierung
-        conn.commit()
-        
-        order_manager.finalize_order_details(
-            order_id, 
-            final_address_id_to_use, 
-            final_payment_id_to_use
-        )
-
-        project_manager.finalize_project_details(order['SourceProjectID'])
-        flash("Details gespeichert. Weiter zur Bezahlung.", 'success')
-        
-        # Weiterleitung zur eigentlichen Zahlungsabwicklung
-        return redirect(url_for('views.order_success', order_id=order_id))
-        
     except Exception as e:
-        flash(f"Fehler beim Speichern der Checkout-Details: {e}", 'danger')
-        # ... (Fehlerbehandlung)
-        return redirect(url_for('views.checkout_entry', order_id=order_id))
-    
-    finally:
-        # Datenbankverbindung im Fehlerfall und Erfolgsfall schließen
-        if conn:
-            conn.close()
+        flash(f"Fehler beim Speichern: {e}", 'danger')
+        
+    return redirect(url_for('views.checkout_entry', order_id=order_id))
 
 @views.route('/order/success/<string:order_id>') # NEUE ROUTE
 def order_success(order_id): # NEUE FUNKTIONSNAME

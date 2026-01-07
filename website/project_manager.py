@@ -7,7 +7,7 @@ from datetime import datetime
 # Definieren Sie hier Ihre Konfigurationskonstanten (z.B. Dateipfade, Limits)
 # HINWEIS: Die Klasse wird den UPLOAD_FOLDER nun dynamisch übergeben bekommen,
 # aber wir behalten die Konstante für Fallbacks oder initiale Struktur bei.
-DEFAULT_UPLOAD_FOLDER = 'temp_uploads'
+TEMP_UPLOAD_FOLDER = 'temp_uploads'
 ALLOWED_EXTENSIONS = {'stl', 'step', 'obj', '3mf', 'pdf', 'png', 'jpg', 'jpeg', 'zip'}
 ALLOWED_CANCELLATION_STATUSES = ['UNDER_REVIEW','WAITING_FOR_QUOTE','QUOTED_AWAITING_CUSTOMER']
 
@@ -15,7 +15,7 @@ class ProjectManager:
     def __init__(self):
         self.db_path = os.getenv('DB_PATH')
         # Erstellt den Standardordner, falls er nicht existiert (wichtig für Entwickler-Setup)
-        os.makedirs(DEFAULT_UPLOAD_FOLDER, exist_ok=True)
+        os.makedirs(TEMP_UPLOAD_FOLDER, exist_ok=True)
 
     def _execute_query(self, query, params=(), fetch=False, get_lastrowid=False, fetch_one=False):
         # UNVERÄNDERT: Datenbank-Ausführungslogik
@@ -41,7 +41,9 @@ class ProjectManager:
             return None
 
         except sqlite3.Error as e:
+            print(f"Fehler in _execute_query: {e}")
             if conn:
+                print("Rollback der Transaktion aufgrund eines Fehlers.")
                 conn.rollback()
             raise
         finally:
@@ -328,7 +330,7 @@ class ProjectManager:
             total_files = len(files_to_delete)
 
             for file_path_relative in files_to_delete:
-                full_file_path = os.path.join(DEFAULT_UPLOAD_FOLDER, file_path_relative)
+                full_file_path = os.path.join(TEMP_UPLOAD_FOLDER, file_path_relative)
                 if os.path.exists(full_file_path):
                     # os.remove(full_file_path) kann hier eine Ausnahme werfen
                     os.remove(full_file_path)
@@ -626,6 +628,21 @@ class ProjectManager:
         except Exception as e:
             return False, f"Ein unerwarteter Fehler ist aufgetreten: {e}"
 
+    def add_project_message(self, project_id, message_text, sender_type='User'):
+        """
+        Speichert eine neue Nachricht zu einem Projekt in der Datenbank.
+        """
+        comm_id = 'COMM_' + str(uuid.uuid4())
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        query = """
+            INSERT INTO ProjectMessages (
+                CommID, ProjectID, SenderType, MessageText, Timestamp, IsUnreadAdmin, RequiresFileUpload
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        """
+        # Nutzt die interne execute-Methode deines Managers
+        return self._execute_query(query, (comm_id, project_id, sender_type, message_text, timestamp, 1, 0))
+
     def get_all_unique_statuses(self) -> list[str]:      #für das Status-Filter-Dropdown in admin_views.py
         """Ruft eine Liste aller eindeutigen Status aus der Projects-Tabelle ab."""
         query = "SELECT DISTINCT Status FROM Projects ORDER BY Status"
@@ -833,3 +850,144 @@ class ProjectManager:
         finally:
             if conn:
                 conn.close()
+
+    def load_project_to_mes(self, project_id: str) -> tuple[bool, str]:
+        """
+        Lädt ein Projekt in die MES-Umgebung durch Erstellen eines Blueprint-Datensatzes.
+        """
+        # 1. Projektinformationen abrufen (um Existenz zu prüfen)
+        project = self.get_project_details(project_id)
+        if not project:
+            return False, "Projekt nicht gefunden."
+
+        try:
+            # 2. Prüfen, ob bereits ein Blueprint existiert
+            # Wir nutzen fetch=True und fetch_one=True für eine saubere Abfrage
+            check_query = "SELECT Status FROM Blueprints WHERE ProjectID = ?"
+            existing = self._execute_query(check_query, (project_id,), fetch=True, fetch_one=True)
+
+            if existing:
+                # Da row_factory = sqlite3.Row aktiv ist, Zugriff über Key oder Index
+                return True, f"Projekt bereits im MES vorhanden (Status: {existing['Status']})."
+
+            # 3. Blueprint-Datensatz anlegen
+            blueprint_id = f"BLUE_{str(uuid.uuid4())}"
+            insert_query = """
+                INSERT INTO Blueprints (BlueprintID, ProjectID, Status, CreatedAt, UpdatedAt)
+                VALUES (?, ?, 'INITIALIZED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            """
+
+            print(f"Initialisiere technischen Blueprint für {project_id}...")
+            self._execute_query(insert_query, (blueprint_id, project_id))
+
+            return True, f"Projekt {project_id} erfolgreich in die Fertigungssteuerung geladen."
+
+        except Exception as e:
+            # Das Exception-Handling und Rollback passiert bereits in deiner _execute_query
+            return False, f"Fehler beim Laden in die Fertigungssteuerung: {str(e)}"
+        
+    def get_active_blueprints(self):
+        """
+        Hält alle Projekte bereit, die in die Fertigungssteuerung geladen wurden.
+        Koppelt Blueprint-Daten mit Projekt-Stammdaten.
+        """
+        query = """
+            SELECT 
+                b.BlueprintID, 
+                b.Status as BlueprintStatus, 
+                b.CreatedAt as LoadedAt,
+                u.UserName as CustomerName,
+                p.* 
+            FROM Blueprints b
+            JOIN Projects p ON b.ProjectID = p.ProjectID
+            JOIN Users u ON p.UserID = u.UserID
+            ORDER BY b.CreatedAt DESC
+        """
+        try:
+            # fetch=True um alle aktiven Blueprints zu erhalten
+            return self._execute_query(query, fetch=True)
+        except Exception as e:
+            print(f"Fehler beim Abrufen der Blueprints: {e}")
+            return []
+
+    def delete_blueprint(self, blueprint_id: str) -> tuple[bool, str]:
+        """
+        Löscht einen Blueprint-Datensatz aus der Fertigungssteuerung.
+        """
+        try:
+            delete_query = "DELETE FROM Blueprints WHERE BlueprintID = ?"
+            self._execute_query(delete_query, (blueprint_id,))
+            return True, f"Blueprint {blueprint_id} erfolgreich gelöscht."
+        except Exception as e:
+            return False, f"Fehler beim Löschen des Blueprints: {str(e)}"
+        
+    def update_project_technical_data(self, project_id, volume_cm3, weight_g, print_time_min, profile_id, material_id):
+        """
+        Speichert die finalen technischen Parameter aus dem Manufacturing 
+        direkt im Projekt für die kaufmännische Kalkulation.
+        """
+        query = """
+            UPDATE Projects 
+            SET VolumeCM3 = ?, 
+                EstimatedMaterialG = ?, 
+                PrintTimeMin = ?, 
+                ProfileID = ?, 
+                MaterialID = ?
+            WHERE ProjectID = ?
+        """
+        # Ausführung der Query in deiner DB-Klasse
+        self._execute_query(query, (volume_cm3, weight_g, print_time_min, profile_id, material_id, project_id))
+
+    def update_blueprint_status(self, blueprint_id, new_status):
+        """Aktualisiert rein den Status in der Blueprints-Tabelle."""
+        query = "UPDATE Blueprints SET Status = ? WHERE BlueprintID = ?"
+        return self._execute_query(query, (new_status, blueprint_id))
+
+    
+    def finalize_blueprint(self, project_id, full_path):
+        """Aktualisiert nur den Status des Blueprints und den Pfad zur JSON-Datei."""
+        query = """
+            UPDATE Blueprints 
+            SET BOMPath = ?, 
+                Status = 'BOM_FINISHED',
+                UpdatedAt = CURRENT_TIMESTAMP
+            WHERE ProjectID = ?
+        """
+        return self._execute_query(query, (full_path, project_id))
+    
+    def check_bom_exists(self, project_id):
+        bom_filename = f"BOM_{project_id}.json"
+        return os.path.exists(os.path.join(TEMP_UPLOAD_FOLDER, bom_filename))
+
+    def create_jobs_from_bom(self, project_id, bom_data):
+        """Erzeugt aus den BOM-Daten die einzelnen ProductionJobs im Pool."""
+        parts = bom_data.get('parts', [])
+        
+        # Clean-up: Bestehende QUEUED Jobs für dieses Projekt entfernen (Idempotenz)
+        self._execute_query(
+            "DELETE FROM ProductionJobs WHERE SourceProjectID = ? AND JobStatus = 'QUEUED'",
+            (project_id,)
+        )
+    
+        for part in parts:
+            # Intelligenz: Kaufteile ignorieren
+            if part.get('is_bought') is True:
+                continue
+                
+            qty = int(part.get('quantity', 1))
+            # Für jedes Stück ein separater Job (Kein Multi-Printing)
+            for i in range(qty):
+                job_id = f"JOB-{uuid.uuid4().hex[:8].upper()}"
+                query = """
+                    INSERT INTO ProductionJobs (
+                        JobID, SourceProjectID, JobStatus, Priority, 
+                        CalculatedPrintTimeMin, Notes
+                    ) VALUES (?, ?, 'QUEUED', 3, ?, ?)
+                """
+                params = (
+                    job_id, 
+                    project_id, 
+                    part.get('time'), 
+                    f"{part.get('part_name')} ({i+1}/{qty})"
+                )
+                self._execute_query(query, params)

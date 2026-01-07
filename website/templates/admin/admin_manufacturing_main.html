@@ -1,0 +1,91 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %} Fertigungssteuerung {% endblock %}
+
+{% block cart_icon %}
+
+{% endblock %}
+
+{% block wishlist_icon %}
+
+{% endblock %}
+
+{% block body %}
+<div class="container text-center mt-4">
+    <h1 class="mb-2 text-primary">Manufacturing Control</h1>
+    
+    <div class="d-flex justify-content-center mb-4">
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="rotateSections()">
+            <i class="fa-solid fa-sync"></i> Ansicht rotieren
+        </button>
+    </div>
+
+    <div id="section-wrapper" class="d-flex flex-column">
+        
+        <div id="sec-blueprints" class="m-section mb-5 px-3">
+            <h3 class="text-primary border-bottom pb-2">1. Blueprints (Engineering)</h3>
+            <p class="site-description small text-muted">Technische Datenerfassung und BOM-Erstellung.</p>
+            {% include 'admin/admin_blueprints.html' %}
+        </div>
+
+        <div id="sec-jobs" class="m-section mb-5 px-3">
+            <h3 class="text-success border-bottom pb-2">2. Fertigungsjobs (Pool)</h3>
+            <p class="site-description small text-muted">Warteschlange für die Maschinenbelegung.</p>
+            {% include 'admin/admin_jobs.html' %}
+        </div>
+
+        <div id="sec-printers" class="m-section mb-5 px-3">
+            <h3 class="text-warning border-bottom pb-2">3. Drucker (Live-Status)</h3>
+            <p class="p-4 bg-dark text-muted border rounded border-secondary border-opacity-25">
+                Keine Drucker-Hardware verbunden.
+            </p>
+        </div>
+        
+    </div>
+</div>
+
+<div id="static-modal-container">
+    {% include 'admin/admin_manufacturing_modals.html' %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+function rotateSections() {
+    const wrapper = document.getElementById('section-wrapper');
+    const sections = [
+        document.getElementById('sec-blueprints'),
+        document.getElementById('sec-jobs'),
+        document.getElementById('sec-printers')
+    ];
+
+    // Animation-Klasse vom Wrapper entfernen (für Reset)
+    wrapper.classList.remove('section-scan');
+    
+    // Kurzer Force-Reflow, damit der Browser merkt, dass die Klasse weg ist
+    void wrapper.offsetWidth;
+
+    // Physische Rotation
+    const currentFirst = Array.from(wrapper.children).find(child => sections.includes(child));
+    if (currentFirst) {
+        wrapper.appendChild(currentFirst);
+    }
+
+    // Animation wieder drauf
+    wrapper.classList.add('section-scan');
+}
+
+</script>
+
+<script id="inventory-data" type="application/json">
+    {{ materials_list | default([]) | tojson | safe }}
+</script>
+<script id="profiles-data" type="application/json">
+    {{ print_profiles_list | default([]) | tojson | safe }}
+</script>
+
+<script type="module" src="{{ url_for('static', filename='js/admin_blueprints.js') }}"></script>
+
+{% endblock %}

@@ -1,0 +1,21 @@
+<div class="row g-2">
+    {% for job in jobs_list %}
+    <div class="col-12">
+        <div class="p-2 border rounded bg-dark text-white d-flex align-items-center">
+            
+            <div class="me-3 fw-bold text-success">{{ job.JobID }}</div>
+            <div class="flex-grow-1">
+                <div class="small">{{ job.ProjectName }}</div>
+                <div class="progress" style="height: 8px; background: #444;">
+                    <div class="progress-bar bg-success" 
+     role="progressbar"  
+     aria-valuenow="{{ job.Progress }}">
+</div>
+                </div>
+            </div>
+            <div class="ms-3 small text-muted">{{ job.Progress }}%</div>
+
+        </div>
+    </div>
+    {% endfor %}
+</div>

@@ -1,125 +1,174 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3DButler | {%block title%} Cart {%endblock%}</title>
+{% extends 'base.html' %}
 
-<link rel="stylesheet" href="{{ url_for('static',filename='css/all.min.css') }}">
-<link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
-<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+{% block title %}Cart{% endblock %}
+
+{% block extra_styles %}
+
 <style>
     body {
          color: #000;
-         background: linear-gradient(to right, rgb(134, 44, 44), rgb(131, 131, 131), rgb(233, 99, 99));
-         font-family: Arial, Helvetica, sans-serif;
+         background: linear-gradient(to right, #1A237E, #263238, #1A237E);
     }
-    h2{
-        color: rgb(255, 255, 255);
-        text-shadow: 0 0 28px rgba(164, 0, 0, 0.9);
-        position:fixed;
-        top: 2%;
-        left: 2%;
+    .cart-header {
+        padding: 20px 0;
+        margin-bottom: 30px;
+        text-align: center;
     }
+
      .container {
          display: flex;
          flex-wrap: wrap;
          justify-content: center;
+         gap: 20px;
+         padding: 20px;
+         margin-top: 20px;
      }
 
      .card {
-
          width: 18rem;
-         background-color: rgba(158, 138, 138, 0.756);
+         background-color: rgba(76, 175, 80, 0.1);
+         border: 2px solid #4ca0af;
          color: #ffffff;
-         margin: 10px;
-         box-shadow: 0 8px 18px rgba(0, 0, 0, 0.8);
-         border-radius: 10px;
+         box-shadow: 0 8px 18px rgba(76, 155, 175, 0.2);
+         border-radius: 12px;
+         transition: transform 0.3s, box-shadow 0.3s;
+     }
 
+     .card:hover {
+         transform: translateY(-5px);
+         box-shadow: 0 12px 25px rgba(76, 144, 175, 0.4);
      }
 
      .card img {
-
          width: 100%;
-         height: auto;
-         transform: translateX(-5%);
-         transform: rotate(4deg);
-         box-shadow: 0 8px 18px rgba(0, 0, 0, 0.8);
-         border-radius: 10px;
+         height: 200px;
+         object-fit: cover;
+         border-radius: 10px 10px 0 0;
      }
 
      .card-body {
-         padding: 1rem;
+         padding: 1.5rem;
          text-align: center;
      }
 
+     .card-text {
+         margin: 8px 0;
+         font-size: 0.95rem;
+     }
+
      .btn {
-         background-color: #a90b0b;
-         color: rgb(255, 221, 221);
+         background-color: #5ac1db;
+         color: #ffffff;
          padding: 10px 20px;
          text-align: center;
          border: none;
          cursor: pointer;
+         border-radius: 5px;
+         margin: 5px 2px;
+         transition: background-color 0.3s;
+         font-weight: 600;
+     }
+
+     .btn:hover {
+         background-color: #45a049;
+     }
+     .delete:hover {
+         background-color: #a04545;
      }
      .total-amount{
-        background-color:rgba(0, 0, 0, 0.1);
-        border-style:dashed;
+        background: linear-gradient(135deg, #4c90af, #725afc);
+        border-style: solid;
         text-decoration: none;
-        margin: 2%;
-        font-size:x-large;
-        padding: 10px;
-
-        color: rgb(0, 0, 0);
-        position:fixed;
-        bottom: 12%;
-        right: 2%;
-
+        margin: 20px;
+        font-size: 1.5rem;
+        padding: 20px 30px;
+        color: #ffffff;
+        position: fixed;
+        bottom: 100px;
+        right: 30px;
+        border-radius: 10px;
+        box-shadow: 0 8px 18px rgba(76, 139, 175, 0.3);
+        border: 2px solid #81bfc7;
      }
+
      #total_amount_value{
-        color: #ff9999;
-        font-size: xx-large;
+        color: #c0c0c0;
+        font-size: 2rem;
+        font-weight: bold;
      }
+
      .btn-checkout{
-        background-color: #ff9999;
+        background: linear-gradient(135deg, #4CAF50, #45a049);
         text-decoration: none;
-        margin: 2%;
-        font-size: larger;
-        padding: 10px;
-        border-radius: 4%;
-        border: 2px solid black;
-        color: rgb(0, 0, 0);
-        position:fixed;
-        bottom: 5%;
-        right: 2%;
+        font-size: 1.1rem;
+        padding: 15px 30px;
+        border-radius: 8px;
+        border: 2px solid #1ff;
+        color: #ffffff;
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        transition: transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0 8px 18px rgba(76, 160, 175, 0.3);
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-block;
      }
-     .btn-backwards{
-        transform: scale(60%);
-        position:fixed;
-        top: 2%;
-        left: 0%;
-        transition: transform 0.3s, opacity 0.3s; /* Added for animation */
-     }
-     .btn:hover {
-         opacity: 0.8;
-     }
+
      .btn-checkout:hover {
-         opacity: 0.5;
+         transform: scale(1.05);
+         box-shadow: 0 12px 25px rgba(23, 34, 175, 0.5);
      }
-     .btn-backwards:hover{
-        transform: scale(80%); /* Makes the image stick out */
-        opacity: 0.8; /* Slightly reduce opacity for effect */
+
+     .item-total {
+        color: #81bfc7;
+        font-weight: bold;
+        font-size: 1.1rem;
+     }
+     .cart-header img{
+        scale: 150%;
+        padding-bottom: 10px;
      }
 </style>
-</head>
-<body>
-    <h2>Einkaufswagen</h2>
 
-    <div class="container">
+{% endblock %}
+
+{% block body %}
+
+<div class="col " style="margin: 13px;">
+    <div class="list-group text-center" >
+
+        <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action">
+            <i class="shop-link" aria-hidden="true"></i>
+            <span class="link-name">Shop</span>
+        </a>
+        <a href="{{ url_for('views.start_project') }}" class="list-group-item list-group-item-action">
+            <i class="project-link" aria-hidden="true"></i>
+            <span class="link-name">Projekt starten</span>
+        </a>
+        <a href="{{ url_for('views.my_reviews') }}" class="list-group-item list-group-item-action">
+            <i class="reviews-link"></i>
+            <span class="link-name">Meine Reviews</span>
+        </a>
+        <a href="{{ url_for('views.my_orders') }}" class="list-group-item list-group-item-action">
+            <i class="orders-link"></i>
+            <span class="link-name">Meine Bestellungen</span>
+        </a>
+
+    </div>
+  </div>
+
+<div class="cart-header">
+    <h1><img src="{{ url_for('static', filename='icons/shoppingcart-icon1.png') }}" alt="Shopping Cart" style="height: 2.5rem; margin-right: 10px; vertical-align: middle;"> Einkaufswagen</h1>
+</div>
+
+
+<div class="container">
 
         {% for item in cart_items %}
         <div class="col-md-4" style="margin: 10px;">
             <div class="card">
-                <img class="card-img-top" src="{{ url_for('static', filename='images/' ~ item[6]) }}" alt="{{ item[2] }}">
+                <img class="card-img-top" src="{{ url_for('static', filename=item[6]) }}" alt="{{ item[2] }}">
                 <div class="card-body">
                     <p class="card-text">{{ item[3] }}</p>
                     <p class="card-text">Stückpreis: €{{ item[4] }}</p>
@@ -128,24 +177,20 @@
                     <a href="{{ url_for('views.product_detail', product_id=item[1]) }}" class="btn btn-primary">
                         Details
                     </a>
-                    <form action="{{ url_for('views.delete_cart_product', item_id=item[0]) }}" method="POST">
-                        <button type="submit" class="btn btn-primary">Löschen</button>
+                    <form action="{{ url_for('views.delete_cart_product', product_id=item[1]) }}" method="POST">
+                        <button type="submit" class="btn delete btn-primary">Löschen</button>
                     </form>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
-    <div class="total-amount">
-        Gesamtsumme: €<span id="total_amount_value">0</span>
-    </div>
 
-    <div>
-        <a href="{{ url_for('views.check_payment') }}" class="btn-checkout"> Zur Kasse gehen </a>
-    </div>
-    <a href="{{ url_for('views.home') }}" class="btn-backwards">
-        <img src="{{ url_for('static', filename='icons/back.png') }}" alt="Back to Home">
-    </a>
+<div class="total-amount">
+    💰 Gesamtsumme: €<span id="total_amount_value">0</span>
+</div>
+
+<a href="{{ url_for('views.check_payment') }}" class="btn-checkout">✓ Zur Kasse gehen</a>
     <script>
 
 
@@ -166,5 +211,4 @@
 
         calculateTotal(); // Call the function when the page loads
     </script>
-</body>
-</html>
+{% endblock %}

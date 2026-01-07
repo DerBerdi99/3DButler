@@ -1,0 +1,146 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Bestellverwaltung: Übersicht{% endblock %}
+
+{% block wishlist_icon %}
+
+{% endblock %}
+
+{% block cart_icon %}
+
+{% endblock %}
+
+{% block body %}
+
+<div class="container text-center">
+    <h1 class="mb-4 text-primary">Admin Order Management</h1>
+    
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12 text-center mb-4">
+                <h3>{{ title }}</h3>
+                <p class="site-description">Filterung nach Bestellstatus:</p>
+
+                <div class="btn-group mb-3 flex-wrap" role="group">
+                    <a href="{{ url_for('admin_views.manage_orders') }}"
+                       class="btn {% if not current_filter %}btn-primary{% else %}btn-outline-primary{% endif %} m-1">
+                        Zahlungs-Queue (Standard)
+                    </a>
+
+                    {% for status in available_statuses %}
+                        {% set button_class = 'btn-success' if status == current_filter else 'btn-outline-success' %}
+                        <a href="{{ url_for('admin_views.manage_orders', status=status) }}"
+                           class="btn {{ button_class }} m-1">
+                            {{ status | replace('_', ' ') }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                {% if orders %}
+                    <div class="row">
+                    {% for order in orders %}
+                        <div class="col-12 col-md-6 col-lg-4 mb-4">
+                            <div class="card shadow-sm h-100 border-primary position-relative">
+                                
+                                <button class="btn btn-sm btn-outline-secondary archive-btn" 
+                                        data-order-id="{{ order.OrderID }}" 
+                                        title="Archivieren"
+                                        style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                                    &#128196; </button>
+
+                                <div class="card-body d-flex flex-column text-start">
+                                    <h5 class="card-title text-primary">Order #{{ order.OrderID[-8:] }}</h5>
+                                    
+                                    <p class="card-text mb-1">
+                                        <strong>Kunde:</strong> {{ order.Username or order.UserID }}
+                                    </p>
+                                    <p class="card-text mb-1">
+                                        <strong>Datum:</strong> {{ order.OrderDate }}
+                                    </p>
+                                    <p class="card-text mb-1">
+                                        <strong>Betrag:</strong> {{ (order.OrderAmount / 100) | round(2) }} €
+                                    </p>
+                                    <p class="card-text mb-1">
+                                        <strong>Status:</strong> 
+                                        <span class="badge {% if order.Status == 'PAID' %}bg-success{% elif order.Status == 'PENDING_PAYMENT' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ order.Status }}
+                                        </span>
+                                    </p>
+
+                                    <div class="mt-auto pt-3 d-grid gap-2">
+                                        <form action="{{ url_for('admin_views.manage_orders') }}" method="POST" class="d-grid gap-2">
+                                            <input type="hidden" name="order_id" value="{{ order.OrderID }}">
+                                            
+                                            {% if order.Status == 'ORDER_FINALIZED' %}
+                                                <button type="submit" name="new_status" value="PAID" class="btn btn-sm btn-success">
+                                                    Zahlung erhalten (Set PAID)
+                                                </button>
+                                            {% endif %}
+                                            
+                                            <a href="{{ url_for('admin_views.order_details', order_id=order.OrderID) }}" 
+                                                class="btn btn-sm btn-outline-info">
+                                             Bestelldetails ansehen
+                                            </a>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    </div>
+                {% else %}
+                    <h3 class="text-center text-muted text-white-50">Keine Bestellungen in dieser Ansicht gefunden.</h3>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const archiveButtons = document.querySelectorAll('.archive-btn');
+
+        archiveButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const orderId = this.getAttribute('data-order-id');
+                // Wichtig: Wir suchen das Elternelement der Spalte, um die ganze Karte zu entfernen
+                const colElement = this.closest('.col-12.col-md-6.col-lg-4'); 
+
+                if (confirm(`Bestellung ${orderId} archivieren? Sie wird aus der aktiven Liste entfernt.`)) {
+                    
+                    fetch(`/admin/archive_order/${orderId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            colElement.style.transition = 'all 0.4s ease';
+                            colElement.style.opacity = '0';
+                            colElement.style.transform = 'scale(0.9)';
+                            setTimeout(() => colElement.remove(), 400);
+                        } else {
+                            alert("Fehler beim Archivieren: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert("Netzwerkfehler.");
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

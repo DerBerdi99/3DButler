@@ -1,0 +1,80 @@
+<div class="offcanvas offcanvas-end" tabindex="-1" id="manufacturingViewer" data-bs-backdrop="false" data-bs-scroll="true">
+    <div class="offcanvas-header bg-light">
+        <h5>Engineering-Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form id="viewerForm" method="POST" data-base-url="{{ url_for('admin_views.save_blueprint_data', bp_id='') }}">
+            <input type="hidden" name="project_id" id="view_project_id">
+            <div class="alert alert-secondary py-2"><strong id="view_project_name"></strong></div>
+            <div class="mb-3 text-start">
+                <label class="form-label fw-bold small">Volumen (cm³)</label>
+                <input type="number" step="0.1" name="volume" id="view_volume" class="form-control" required>
+            </div>
+            <div class="mb-3 text-start">
+                <label class="form-label fw-bold small">Materialgewicht (g)</label>
+                <input type="number" step="0.01" name="weight" id="view_weight" class="form-control" required>
+            </div>
+            <div class="mb-3 text-start">
+                <label class="form-label fw-bold small">Druckzeit (min)</label>
+                <input type="number" name="print_time" id="view_print_time" class="form-control" required>
+            </div>
+            <div class="mb-3 text-start">
+                <label class="form-label fw-bold small">Druckprofil</label>
+                <select name="profile_id" id="view_profile_id" class="form-select" required>
+                    {% for profile in print_profiles_list %}<option value="{{ profile.ProfileID }}">{{ profile.ProfileName }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="mb-3 text-start">
+                <label class="form-label fw-bold small">Materialart</label>
+                <select name="material_id" id="view_material_id" class="form-select" required>
+                    {% for material in materials_list %}<option value="{{ material.MaterialID }}">{{ material.MaterialName }}</option>{% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success w-100 mt-3">Technik speichern</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="bomWorkbench" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl shadow-lg" id="draggableModal">
+        <div class="modal-content bg-dark text-light border-primary" style="pointer-events: all;">
+            <div class="modal-header border-secondary" id="bomModalHeader" style="cursor: move;">
+                <h5 class="modal-title">BOM Builder: <span id="bom_proj_name" class="text-info"></span></h5>
+                <span id="bom_proj_id_display" class="ms-3 small text-muted"></span>
+                <div class="ms-auto me-3">
+                    <button type="button" class="btn btn-sm btn-outline-info me-2" onclick="createAssemblyContainer()">
+                        <i class="fa-solid fa-folder-plus"></i> + Baugruppe
+                    </button>
+                    <button type="button" class="btn btn-sm btn-info" onclick="addNewPart()">
+                        <i class="fa-solid fa-plus"></i> + Einzelteil
+                    </button>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="bom_parts_container"></div>
+                <div class="row g-2 mt-4 p-3 bg-opacity-10 bg-info rounded border border-info border-opacity-25 shadow-sm">
+                    <div class="col-md-4 text-center border-end border-secondary">
+                        <div class="small text-secondary uppercase fw-bold" style="font-size: 0.7rem;">Gesamtanzahl Teile</div>
+                        <div class="h5 mb-0 text-info" id="stats_total_parts">0</div>
+                    </div>
+                    <div class="col-md-4 text-center border-end border-secondary">
+                        <div class="small text-secondary uppercase fw-bold" style="font-size: 0.7rem;">Druckzeit Gesamt</div>
+                        <div class="h5 mb-0 text-warning" id="stats_total_time">0 min</div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="small text-secondary uppercase fw-bold" style="font-size: 0.7rem;">Kaufteile Quote</div>
+                        <div class="h5 mb-0 text-success" id="stats_bought_ratio">0%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Abbrechen</button>
+                <button type="button" class="btn btn-success px-4" onclick="saveFullBOM()">
+                    <i class="fa-solid fa-floppy-disk"></i> Gesamte BOM speichern
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -2,6 +2,167 @@
 
 {% block title %} Home {% endblock %}
 
+{% block extra_styles %}
+<style>
+p{
+    color: #bdbdbd;
+}
+.slideshow-img {
+    /* Setzt die maximale Breite und Höhe */
+    max-width: 400px;
+    max-height: 400px;
+    
+    /* Stellt sicher, dass das Bild seine Proportionen beibehält */
+    width: auto !important; 
+    height: auto; 
+    
+    /* Ersetzt die w-75 Klasse, falls diese zu groß war */
+    /* !important kann notwendig sein, um Bootstrap-Klassen zu überschreiben */
+}
+
+/* Optional: Für eine saubere, quadratische Darstellung im Container */
+.col-md-6 img.slideshow-img {
+    /* Sorgt dafür, dass der Container für das Bild immer genug Platz hat */
+    object-fit: contain; 
+}
+
+.btn-cyber-industrial {
+    position: relative;
+    display: inline-block;
+    padding: 15px 40px;
+    font-weight: 800;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #80d8ff; /* Dein Hellblau */
+    text-decoration: none;
+    /* Metallischer Hintergrund */
+    background: linear-gradient(145deg, #263238, #455a64);
+    border: 2px solid #0078a0;
+    border-radius: 5px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 120, 160, 0.4), inset 0 0 10px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+
+/* Der metallische Glanz-Effekt (Sweep) */
+.cyber-shimmer {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        transparent,
+        rgba(128, 216, 255, 0.4),
+        transparent
+    );
+    transform: skewX(-25deg);
+    transition: none;
+}
+
+/* Hover-Effekt: Der Glanz schießt durch */
+.btn-cyber-industrial:hover .cyber-shimmer {
+    animation: shimmer-sweep 0.6s ease;
+}
+
+@keyframes shimmer-sweep {
+    100% { left: 150%; }
+}
+
+/* Neon-Pulsieren im Normalzustand */
+.btn-cyber-industrial {
+    animation: neon-border-pulse 2s infinite alternate;
+}
+
+@keyframes neon-border-pulse {
+    from {
+        box-shadow: 0 0 10px rgba(0, 120, 160, 0.4);
+        border-color: #0078a0;
+    }
+    to {
+        box-shadow: 0 0 25px rgba(0, 120, 160, 0.8), 0 0 40px rgba(26, 35, 126, 0.6);
+        border-color: #80d8ff;
+    }
+}
+
+/* Text-Effekt beim Hover */
+.btn-cyber-industrial:hover {
+    color: #ffffff;
+    transform: scale(1.05);
+    background: #0078a0;
+    text-shadow: 0 0 8px #ffffff;
+}
+
+/* Kleines Detail: Techno-Ecken (Optional) */
+.btn-cyber-industrial::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 10px;
+    height: 10px;
+    border-top: 2px solid #80d8ff;
+    border-left: 2px solid #80d8ff;
+}
+
+.btn-cyber-industrial::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-bottom: 2px solid #80d8ff;
+    border-right: 2px solid #80d8ff;
+}
+.container-slideshow {
+    position: relative;
+}
+.main-banner-prev, .main-banner-next,
+.carousel-control-prev, .carousel-control-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%); /* Vertikale Zentrierung */
+    z-index: 10;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.15s ease; /* Einheitliche Transition-Zeit */
+    background: transparent;
+    border: none;
+    padding: 0;
+    width: auto; /* Verhindert Bootstrap-Standard-Breite */
+    bottom: auto; /* Überschreibt Bootstrap-Vorgabe */
+}
+
+/* Hover-Effekt: Opacity 1 und Skalierung 1.2 für alle */
+.main-banner-prev:hover, .main-banner-next:hover,
+.carousel-control-prev:hover, .carousel-control-next:hover {
+    opacity: 1 !important;
+    transform: translateY(-50%) scale(1.2);
+}
+
+/* Positionierung oberes Paar (Manual Slideshow) */
+.main-banner-prev { left: -120px; }
+.main-banner-next { right: -120px; }
+
+/* Positionierung unteres Paar (Bootstrap Carousel) */
+.carousel-control-prev { left: -160px; }
+.carousel-control-next { right: -160px; }
+
+/* Bild-Handling vereinheitlichen */
+.main-banner-prev img, .main-banner-next img,
+.carousel-control-prev img, .carousel-control-next img {
+    width: 50px; 
+    height: auto;
+    position: static !important;
+    display: block;
+}
+</style>
+{% endblock %}  
+
 {% block body %}
 
 <div class="container text-center">
@@ -37,8 +198,9 @@
             <img src="{{ url_for('static', filename='images/shop-items.png') }}" style="width:100%">
             <div class="text-overlay">
                 <h3>Entdecke unsere Produkte</h3>
-                <p>Kaufe hochwertige 3D-gedruckte Artikel oder Rohmaterialien.</p>
-                <a href="{{ url_for('views.shop') }}" class="btn btn-secondary btn-lg mt-3">Zum Shop</a>
+                <p>Kaufe hochwertige 3D-gedruckte Artikel aus Verbundwerkstoffen.</p>
+                <a href="{{ url_for('views.shop') }}" class="btn-cyber-industrial mt-3"><span class="cyber-glitch-effect">Zum Shop</span></a>
+                <span class="cyber-shimmer"></span>
             </div>
         </div>
 
@@ -48,7 +210,8 @@
             <div class="text-overlay">
                 <h3>So funktioniert's</h3>
                 <p>Das machen wir, das zeichnet uns aus.</p>
-                <a href="{{ url_for('views.what_we_make') }}" class="btn btn-warning btn-lg mt-3">Prozess ansehen</a>
+                <a href="{{ url_for('views.what_we_make') }}" class="btn-cyber-industrial mt-3"><span class="cyber-glitch-effect">Prozess ansehen</span></a>
+                <span class="cyber-shimmer"></span>
             </div>
         </div>
 
@@ -57,7 +220,8 @@
             <div class="text-overlay">
                 <h3>Wie kann ich mitmachen?</h3>
                 <p>Lade deine Modelle hoch und erhalte ein schnelles Review. Wie das genau geht erfährst du hier.</p>
-                <a href="{{ url_for('views.handle_project_start') }}" class="btn btn-warning btn-lg mt-3">Jetzt starten!</a>
+                <a href="{{ url_for('views.handle_project_start') }}" class="btn-cyber-industrial mt-3"><span class="cyber-glitch-effect">Jetzt starten!</span></a>
+                <span class="cyber-shimmer"></span>
             </div>
         </div>
 
@@ -66,7 +230,8 @@
             <div class="text-overlay">
                 <h3>Dein 3D-Projekt starten</h3>
                 <p>Lade deine Modelle hoch und erhalte ein schnelles Review.</p>
-                <a href="{{ url_for('views.start_project') }}" class="btn btn-warning btn-lg mt-3">Jetzt starten!</a>
+                <a href="{{ url_for('views.start_project') }}" class="btn-cyber-industrial mt-3"><span class="cyber-glitch-effect">Jetzt starten!</span></a>
+                <span class="cyber-shimmer"></span>
             </div>
         </div>
 
@@ -75,15 +240,16 @@
             <div class="text-overlay">
                 <h3>Eigene Filamente einsenden</h3>
                 <p>Nutze deine eigenen Materialien für deine Druckprojekte.</p>
-                <a href="{{ url_for('views.send_filaments') }}" class="btn btn-secondary btn-lg mt-3">Infos zur Einsendung</a>
+                <a href="{{ url_for('views.send_filaments') }}" class="btn-cyber-industrial mt-3"><span class="cyber-glitch-effect">Infos zur Einsendung</span></a>
+                <span class="cyber-shimmer"></span>
             </div>
         </div>
 
-    <a class="prev" onclick="plusSlides(-1)">
-        <img src="{{ url_for('static', filename='icons/backslide-icon.png') }}" alt="Previous Slide" style="position: absolute; left: 250px;">
+    <a class="main-banner-prev" onclick="plusSlides(-1)">
+        <img src="{{ url_for('static', filename='icons/backslide-icon.png') }}" alt="Previous Slide" style="position: absolute; left: 220px; width: 50px; height: auto;">
     </a>
-    <a class="next" onclick="plusSlides(1)">
-        <img src="{{ url_for('static', filename='icons/nextslide-icon.png') }}" alt="Next Slide" style="position: absolute; right: 250px;">
+    <a class="main-banner-next" onclick="plusSlides(1)">
+        <img src="{{ url_for('static', filename='icons/nextslide-icon.png') }}" alt="Next Slide" style="position: absolute; right: 220px; width: 50px; height: auto;">
     </a>
 </div>
 
@@ -91,38 +257,40 @@
 
  <!--Products-->
  <!-- Products Section Display Products infinity scroll -->
-<div class="row" style="margin-top: 20px;">
-    <div class="col">
-        <h2 style="text-align: center;">Unsere Produkte</h2>
-        <div class="d-flex justify-content-center">
-
-            <div class="card" style="width: 18rem; margin: 10px;">
-                <img class="card-img-top" src="{{ url_for('static', filename='images/P001.png') }}" alt="ALMOSTBLACK">
-                <div class="card-body">
-                    <h5 class="card-title">Tätowier-Sprühflaschenhalterung</h5>
-                    <p class="card-text">Maße: 40x10x4cm , Material: ABS, Farbe: Schwarz ,Maker: Peter Petersen .</p>
-                    <a href="{{ url_for('views.product_detail', product_id='bcdf7063-3e63-4045-b2ec-6d710a706c61') }}" class="btn-details">Details</a>
+ <div id="productCarousel" class="carousel slide my-5" data-bs-ride="carousel">
+    <div class="carousel-inner">
+        {% for product in slideshow_products %}
+            <div class="carousel-item {% if loop.first %}active{% endif %}">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-center">
+                        <img src="{{ url_for('static', filename=product.ImagePath) }}" 
+                            class="d-block w-75 mx-auto rounded shadow slideshow-img"
+                             alt="{{ product.ProductName }}">
+                        <a href="{{ url_for('views.product_detail', product_id=product.ProductID) }}" 
+                           class="btn btn-lg btn-primary mt-3">
+                            Jetzt ansehen!
+                        </a>
+                    </div>
+                    <div class="col-md-4 p-4">
+                        <h3>{{ product.ProductName }}</h3>
+                        <p class="lead">{{ product.ProductDescription | truncate(200) }}</p>
+                        </div>
                 </div>
             </div>
-
-            <div class="card" style="width: 18rem; margin: 10px;">
-                <img class="card-img-top" src="{{ url_for('static', filename='images/P002.png') }}" alt="CRIMSONRED">
-                <div class="card-body">
-                    <h5 class="card-title">Diffusor-LED Kombi</h5>
-                    <p class="card-text">Maße: 30x30x15cm , Material: Silk PLA , Farbe: Rot , Maker: Anders Anderssen.</p>
-                    <a href="{{ url_for('views.product_detail', product_id='b3efca71-fe88-4af9-9f22-ceb4b94f9edd') }}" class="btn-details">Details</a>
-                </div>
-            </div>
-            <div class="card" style="width: 18rem; margin: 10px;">
-                <img class="card-img-top" src="{{ url_for('static', filename='images/P003.png') }}" alt="LUNATICBLUE">
-                <div class="card-body">
-                    <h5 class="card-title">Products.Name</h5>
-                    <p class="card-text">Products.Description , Products.Color, Projects.UserID </p>
-                    <a href="{{ url_for('views.product_detail', product_id='b623b740-5eb3-42e1-825e-d8b582b94f12') }}" class="btn-details">Details</a>
-                </div>
-            </div>
-        </div>
+        {% else %}
+             <div class="carousel-item active text-center p-5">
+                <p class="text-muted">Aktuell keine Shopartikel verfügbar.</p>
+             </div>
+        {% endfor %}
     </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+        <img src="{{ url_for('static', filename='icons/backslide-icon.png') }}" alt="Previous Slide" style="width: 50px; height: auto;">
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+        <img src="{{ url_for('static', filename='icons/nextslide-icon.png') }}" alt="Next Slide" style="width: 50px; height: auto;">
+        <span class="visually-hidden">Next</span>
+    </button>
 </div>
 
 
@@ -130,11 +298,52 @@
     </div>
 </div>
 
+{% endblock %}
 
-
-
-
-
-
+{% block scripts %}
+<script>
+    let slideIndex = 0; // slideIndex MUST be global
+    let slides; // slides also needs to be global
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        slides = document.getElementsByClassName("mySlides");
+        showSlides(slideIndex);
+        startAutoSlide();
+    });
+    
+    function plusSlides(n) {
+        showSlides(slideIndex + n);
+    }
+    
+    function currentSlide(n) {
+        showSlides(slideIndex = n);
+    }
+    
+    function showSlides(n) {
+        let i;
+    
+        if (n >= slides.length) {
+            slideIndex = 0;
+        } else if (n < 0) {
+            slideIndex = slides.length - 1;
+        } else {
+            slideIndex = n; // This is CRUCIAL for correct indexing
+        }
+    
+        for (i = 0; i < slides.length; i++) {
+            slides[i].style.display = "none";
+        }
+    
+        slides[slideIndex].style.display = "block";
+    }
+    
+    let autoSlideInterval;
+    function startAutoSlide() {
+        autoSlideInterval = setInterval(() => {
+            plusSlides(1);
+        }, 6000);
+    }
+            </script>
+    
 
 {% endblock %}
