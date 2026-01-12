@@ -175,7 +175,8 @@
 
         <div class="file-upload-zone my-4 p-5 border border-dashed rounded-lg bg-light text-muted">
 
-            <h5> Technische Zeichnungen / 3D-Meshes / CAD-Files / STLs hochladen *</h5>
+            <h5> Technische Zeichnungen / 3D-Meshes / CAD-Files / STLs / gcode hochladen *</h5>
+            <small class="d-block"> Bitte denken Sie daran Ihre Dateien dem jeweiligen Bauteil entsprechend zu benennen! Das erleichtert uns die Zuordnung und wir können Sie schneller bedienen! </small>
 
             <input type="file" name="file_upload" id="file_input" hidden multiple>
 
@@ -184,7 +185,7 @@
                 <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('file_input').click()">Select files</button>
             </p>
             <small class="d-block">
-                Filesize &lt; 2MB. Supported formats: .stl, .step, .obj, .3mf.
+                Filesize &lt; 25MB. Supported formats: 'png', 'jpg', 'jpeg', 'gif', 'pdf', 'zip', 'gcode', 'stl', 'step', 'obj', 'blend'
             </small>
             <div id="file-list" class="mt-2"></div>
         </div>
@@ -265,7 +266,7 @@
         const dropZone = document.querySelector('.file-upload-zone');
 
         let selectedFiles = null;
-        const MAX_TOTAL_SIZE_MB = 2;
+        const MAX_TOTAL_SIZE_MB = 40;  /*TOGGELN ZUM EINSTELLEN MAXIMUM UPLOAD BYTES -> in DB Configurations auslagern asap*/
         const MAX_TOTAL_SIZE_BYTES = MAX_TOTAL_SIZE_MB * 1024 * 1024;
 
         function updateSubmitButton() {

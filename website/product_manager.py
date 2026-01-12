@@ -49,28 +49,16 @@ class ProductManager:
 
 # --- 1. Admin-Workflow (Review-Queue) ---
 
-    def get_products_for_finalization(self) -> List[sqlite3.Row]:
+    def get_products_for_finalization(self, include_inactive: bool = True):
         """
-        Ruft ALLE Produkte ab, die der Kunde zur Freigabe markiert hat (IsShopReady=1), 
-        unabhängig davon, ob sie bereits im Shop sichtbar sind (IsShopVisible=0/1).
-        Enthält notwendige JOINs für CreatorName.
+        ERSETZT die bisherige Fetch-Funktion für das Backlog.
+        Liefert alle Produkte inkl. ihrem Aktivierungsstatus.
         """
-        query = """
-        SELECT 
-            P.ProductName, 
-            P.ProductID,
-            P.CreatedAt, 
-            P.MaterialType, 
-            P.ProductDescription,
-            P.ProductCategory AS Category, 
-            U.UserName AS CreatorName,
-            P.IsShopReady,
-            P.IsShopVisible,            /* Der aktuelle Status */
-            P.ProductID                 /* Wichtig für die Finalisierungs-Aktion */
-        FROM Products P
-        JOIN Users U ON P.UserID = U.UserID
-        ORDER BY P.CreatedAt DESC
-        """
+        query = "SELECT * FROM Products"
+        if not include_inactive:
+            query += " WHERE IsActive = 1"
+
+        query += " ORDER BY IsActive DESC, CreatedAt DESC" # Aktive zuerst
         return self._execute_query(query, fetch=True)
     
     def get_product_by_id(self, product_id: str) -> sqlite3.Row:
@@ -128,6 +116,17 @@ class ProductManager:
         # Da _execute_query intern commit() aufruft, sind beide Operationen 
         # (wenn sie erfolgreich waren) persistent.
 
+
+    def toggle_product_visibility(self, product_id: str, status: int):
+        """
+        NEUE FUNKTION: Ersetzt das harte Löschen im normalen Workflow.
+        status: 0 für Deaktivieren (Soft Delete), 1 für Wiederherstellen.
+        """
+        self._execute_query(
+            "UPDATE Products SET IsActive = ? WHERE ProductID = ?",
+            (status, product_id)
+        )
+        return True
 
     def delete_product(self, product_id: str):
         """

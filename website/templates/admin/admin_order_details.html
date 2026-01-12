@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block body %}
-<div class="container">
+<div class="container content-shift">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Details zu Order #{{ order.OrderID[-8:] }}</h2>
         <a href="{{ url_for('admin_views.manage_orders') }}" class="btn btn-secondary">Zurück zur Übersicht</a>

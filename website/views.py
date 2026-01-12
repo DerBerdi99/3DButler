@@ -16,10 +16,6 @@ product_manager = ProductManager()
 order_manager = OrderManager()
 user_manager = UserManager()
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'zip'}
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @views.route('/home')
 def home():
@@ -247,8 +243,8 @@ def check_payment():
         )
         flash('Zahlungsmethode erfolgreich gespeichert.', 'success')
         return redirect(url_for('views.checkout_entry'))
-    except Exception as e:
-        flash(f'Fehler beim Speichern: {e}', 'error')
+    except Exception:
+        flash(f'Fehler beim Speichern', 'error')
         return redirect(url_for('views.home'))
 
 # -----------------------------------------------------------
@@ -542,8 +538,7 @@ def send_message(project_id):
         else:
             raise Exception("Manager returned False")
             
-    except Exception as e:
-        print(f"Fehler beim Senden der Nachricht: {e}")
+    except Exception:
         flash('Fehler beim Senden der Nachricht. Bitte versuchen Sie es später erneut.', 'danger')
         
     return redirect(url_for('views.project_detail', project_id=project_id))
@@ -710,8 +705,8 @@ def update_checkout_details(order_id):
             flash("Details gespeichert. Weiter zur Bezahlung.", 'success')
             return redirect(url_for('views.order_success', order_id=order_id))
             
-    except Exception as e:
-        flash(f"Fehler beim Speichern: {e}", 'danger')
+    except Exception:
+        flash(f"Fehler beim Speichern", 'danger')
         
     return redirect(url_for('views.checkout_entry', order_id=order_id))
 

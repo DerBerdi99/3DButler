@@ -3,69 +3,107 @@
 // 0. DATEN-INITIALISIERUNG
 const materialsData = JSON.parse(document.getElementById('inventory-data').textContent || '[]');
 const profilesData = JSON.parse(document.getElementById('profiles-data').textContent || '[]');
-
+// Globale Verfügbarkeit der Material/Profil-Daten im Fensterobjekt
 window.inventoryMaterials = materialsData;
 window.printProfiles = profilesData;
 
 // --- HILFSFUNKTIONEN (TEMPLATES & LOGIK) ---
+/**
+ * RENDER-LOGIK & DATEN-BINDUNG
+ * -------------------------------------------------------------------------
+ * Das Template nutzt Snake_Case (dim_x, part_name), um konsistent mit dem JSON-Backend zu bleiben.
+ * Fallbacks (||) sichern die Kompatibilität zwischen neu erstellten Zeilen und DB-Daten.
+ */
 
+// Erzeugt das HTML für eine Bauteil-Zeile. 
+// Verarbeitet sowohl DB-Objekte (part_name) als auch Initial-Objekte (name).
 function renderPartTemplate(data = {}, uniqueId) {
+
+    const isBought = (data.process === 'BOUGHT');
+    const colors = ['BLACK', 'WHITE', 'GRAY', 'RED', 'BLUE', 'GREEN'];
     return `
-    <div class="bom-part-row bg-dark border border-secondary p-2 mb-2 rounded shadow-sm" style="border-left: 5px solid #0dcaf0">
-        <div class="bom-part-item">
-            <div class="part-group flex-grow-1">
-                <label class="text-info fw-bold mb-1">Bezeichnung</label>
+    <div class="bom-part-row bg-dark border border-secondary p-2 mb-2 rounded shadow-sm ${isBought ? 'is-bought' : ''}" 
+        style="border-left: 5px solid ${isBought ? '#ffc107' : '#0dcaf0'}">
+        <div class="bom-part-item d-flex flex-wrap align-items-end gap-2">
+            
+            <div style="flex: 2; min-width: 180px;">
+                <label class="text-info fw-bold small mb-1">Bezeichnung</label>
                 <input type="text" class="form-control form-control-sm part-name text-white bg-dark border-secondary" 
-                       placeholder="Bauteil..." value="${data.name || ''}">
+                       placeholder="Bauteil..." value="${data.part_name || ''}">
             </div>
 
-            <div class="part-group group-qty">
-                <label class="text-info fw-bold mb-1">Menge</label>
+            <div style="width: 60px;">
+                <label class="text-info fw-bold small mb-1">Menge</label>
                 <input type="number" class="form-control form-control-sm part-qty text-white bg-dark border-secondary" 
-                       value="${data.qty || 1}" min="1">
+                       value="${data.quantity || 1}" min="1">
             </div>
 
-            <div class="part-group">
-                <label class="text-info fw-bold mb-1">Verfahren</label>
+            <div style="width: 110px;">
+                <label class="text-info fw-bold small mb-1">Verfahren</label>
                 <select class="form-select form-select-sm part-process bg-dark text-white border-secondary">
-                    <option value="FDM_PRINT" selected>FDM</option>
-                    <option value="CNC">CNC</option>
-                    <option value="BOUGHT">Kaufteil</option>
+                    <option value="FDM_PRINT" ${data.process === 'FDM_PRINT' ? 'selected' : ''}>FDM</option>
+                    <option value="CNC" ${data.process === 'CNC' ? 'selected' : ''}>CNC</option>
+                    <option value="BOUGHT" ${data.process === 'BOUGHT' ? 'selected' : ''}>Kaufteil</option>
                 </select>
             </div>
 
-            <div class="group-check">
-                <div class="form-check m-0">
-                    <input class="form-check-input part-is-bought" type="checkbox" id="${uniqueId}">
-                    <label class="form-check-label small text-white-50" for="${uniqueId}">Kaufteil</label>
+            <div class="d-flex gap-1 border border-secondary rounded p-1" style="background: rgba(255,255,255,0.05)">
+                <div style="width: 50px;">
+                    <label class="text-warning small mb-1" style="font-size: 0.65rem;">X (mm)</label>
+                    <input type="number" min="0" step="1" class="form-control form-control-sm part-dim-x bg-dark text-white border-0 p-0 text-center" value="${data.dim_x || 0}">
+                </div>
+                <div style="width: 50px;">
+                    <label class="text-warning small mb-1" style="font-size: 0.65rem;">Y (mm)</label>
+                    <input type="number" min="0" step="1" class="form-control form-control-sm part-dim-y bg-dark text-white border-0 p-0 text-center" value="${data.dim_y || 0}">
+                </div>
+                <div style="width: 50px;">
+                    <label class="text-warning small mb-1" style="font-size: 0.65rem;">Z (mm)</label>
+                    <input type="number" min="0" step="1" class="form-control form-control-sm part-dim-z bg-dark text-white border-0 p-0 text-center" value="${data.dim_z || 0}">
                 </div>
             </div>
 
-            <div class="part-group">
-                <label class="text-secondary mb-1">Material</label>
+            <div style="width: 110px;">
+                <label class="text-secondary small mb-1">Material</label>
                 <select class="form-select form-select-sm part-material bg-dark text-white border-secondary">
-                    ${window.inventoryMaterials.map(m => `<option value="${m.MaterialID}">${m.MaterialName}</option>`).join('')}
+                    ${(window.inventoryMaterials || []).map(m => `<option value="${m.MaterialID}" ${data.materialId == m.MaterialID ? 'selected' : ''}>${m.MaterialName}</option>`).join('')}
                 </select>
             </div>
 
-            <div class="part-group">
-                <label class="text-secondary mb-1">Profil</label>
+            <div style="width: 100px;">
+                <label class="text-secondary small mb-1">Farbe</label>
+                <select class="form-select form-select-sm part-color bg-dark text-white border-secondary">
+                    ${colors.map(c => `<option value="${c}" ${data.color === c ? 'selected' : ''}>${c}</option>`).join('')}
+                </select>
+            </div>
+
+            <div style="width: 100px;">
+                <label class="text-secondary small mb-1">Profil</label>
                 <select class="form-select form-select-sm part-profile bg-dark text-white border-secondary">
-                    ${window.printProfiles.map(p => `<option value="${p.ProfileID}">${p.ProfileName}</option>`).join('')}
+                    ${(window.printProfiles || []).map(p => `<option value="${p.ProfileID}" ${data.profileId == p.ProfileID ? 'selected' : ''}>${p.ProfileName}</option>`).join('')}
                 </select>
             </div>
 
-            <div class="part-group group-time">
-                <label class="text-secondary mb-1">Gewicht(g)</label>
-                <input type="number" step="0.1" class="form-control form-control-sm part-weight bg-dark text-white border-secondary" placeholder="0.0">
+            <div style="width: 70px;">
+                <label class="text-secondary small mb-1">Nozzle</label>
+                <select class="form-select form-select-sm part-nozzle bg-dark text-white border-secondary">
+                    <option value="0.4" ${data.nozzle == '0.4' ? 'selected' : ''}>0.4</option>
+                    <option value="0.2" ${data.nozzle == '0.2' ? 'selected' : ''}>0.2</option>
+                    <option value="0.6" ${data.nozzle == '0.6' ? 'selected' : ''}>0.6</option>
+                    <option value="0.8" ${data.nozzle == '0.8' ? 'selected' : ''}>0.8</option>
+                </select>
             </div>
 
-            <div class="part-group group-time">
-                <label class="text-secondary mb-1">Zeit(min)</label>
-                <input type="number" class="form-control form-control-sm part-time bg-dark text-white border-secondary" placeholder="Min">
+            <div style="width: 70px;">
+                <label class="text-secondary small mb-1">Gewicht(g)</label>
+                <input type="number" min="0" step="0.1" class="form-control form-control-sm part-weight bg-dark text-white border-secondary" value="${data.weight || 0.0}">
             </div>
 
-            <div class="group-actions">
+            <div style="width: 65px;">
+                <label class="text-secondary small mb-1">Zeit(min)</label>
+                <input type="number" min="0" class="form-control form-control-sm part-time bg-dark text-white border-secondary" value="${data.print_time || 0}">
+            </div>
+
+            <div class="ms-auto">
                 <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="removePartRow(this)">
                     &#x2715;
                 </button>
@@ -74,30 +112,64 @@ function renderPartTemplate(data = {}, uniqueId) {
     </div>`;
 }
 
-function bindPartEvents(row) {
-    const boughtCheck = row.querySelector('.part-is-bought');
-    const inputs = row.querySelectorAll('.part-material, .part-profile, .part-weight, .part-time');
-    const qtyInput = row.querySelector('.part-qty');
-    const timeInput = row.querySelector('.part-time');
+/**
+ * DATEN-EXTRAKTION (BACKEND-INTERFACE)
+ * -------------------------------------------------------------------------
+ * Sammelt alle Werte aus dem DOM und konvertiert sie in korrekte Datentypen.
+ * WICHTIG: Erzeugt das 'is_bought' Flag für Abwärtskompatibilität im Backend.
+ */
+function extractPartData(row) {
+    const processVal = row.querySelector('.part-process').value;
+    return {
+        part_name: row.querySelector('.part-name').value.trim(),
+        quantity: parseInt(row.querySelector('.part-qty').value) || 1,
+        process: processVal,
+        material_id: row.querySelector('.part-material').value,
+        color: row.querySelector('.part-color').value,
+        profile_id: row.querySelector('.part-profile').value,
+        weight: parseFloat(row.querySelector('.part-weight').value) || 0,
+        print_time: parseInt(row.querySelector('.part-time').value) || 0,
+        // Dimensionen mappen (neu für Backend)
+        dim_x: parseInt(row.querySelector('.part-dim-x').value) || 0,
+        dim_y: parseInt(row.querySelector('.part-dim-y').value) || 0,
+        dim_z: parseInt(row.querySelector('.part-dim-z').value) || 0,
+        nozzle: row.querySelector('.part-nozzle').value,
+        // Mapping für Abwärtskompatibilität im Backend
+        is_bought: (processVal === 'BOUGHT')
+    };
+}
 
-    // 1. Status-Wechsel (Kaufteil)
-    boughtCheck.addEventListener('change', function() {
-        const isBought = this.checked;
+// Registriert alle Event-Listener für eine neue Zeile.
+// Steuert die Deaktivierung von Feldern, wenn das Verfahren auf 'BOUGHT' steht.
+function bindPartEvents(row) {
+    const processSelect = row.querySelector('.part-process');
+    // Die Felder, die bei Kaufteilen gesperrt werden
+    const inputs = row.querySelectorAll('.part-material, .part-color, .part-profile, .part-weight, .part-time, .part-dim-x, .part-dim-y, .part-dim-z, .part-nozzle');
+
+    processSelect.addEventListener('change', function() {
+        const isBought = (this.value === 'BOUGHT');
         row.classList.toggle('opacity-50', isBought);
-        row.style.borderLeft = isBought ? "5px solid #6c757d" : "5px solid #0dcaf0";
+        row.style.borderLeft = isBought ? "5px solid #ffc107" : "5px solid #0dcaf0";
+        
         inputs.forEach(i => {
             i.disabled = isBought;
-            if (isBought) i.value = '';
+            if (isBought && i.tagName !== 'SELECT') i.value = ''; 
         });
-        updateBOMStats(); // Trigger Statistik
+        updateBOMStats();
     });
 
-    // 2. Wert-Änderungen (Menge/Zeit) für Live-Update beim Tippen
-    [qtyInput, timeInput].forEach(el => {
+    // Live-Update für Statistik
+    row.querySelectorAll('.part-qty, .part-time').forEach(el => {
         el.addEventListener('input', updateBOMStats);
     });
 }
 
+/**
+ * BERECHNUNG & STATISTIK
+ * -------------------------------------------------------------------------
+ * Summiert Mengen und Zeiten. Kaufteile werden in der Zeitberechnung ignoriert.
+ * Sicherheitsabfragen verhindern Abstürze bei fehlenden DOM-Elementen.
+ */
 function updateBOMStats() {
     let totalQty = 0;
     let totalTime = 0;
@@ -107,7 +179,8 @@ function updateBOMStats() {
     document.querySelectorAll('.bom-part-row').forEach(row => {
         const qty = parseInt(row.querySelector('.part-qty').value) || 0;
         const time = parseInt(row.querySelector('.part-time').value) || 0;
-        const isBought = row.querySelector('.part-is-bought').checked;
+        // Check via Dropdown statt Checkbox
+        const isBought = (row.querySelector('.part-process').value === 'BOUGHT');
 
         totalQty += qty;
         totalItems++;
@@ -118,37 +191,46 @@ function updateBOMStats() {
         }
     });
 
-    // Update UI
-    document.getElementById('stats_total_parts').textContent = totalQty;
-    document.getElementById('stats_total_time').textContent = `${totalTime} min (${(totalTime/60).toFixed(1)}h)`;
+    if(document.getElementById('stats_total_parts')) document.getElementById('stats_total_parts').textContent = totalQty;
+    if(document.getElementById('stats_total_time')) document.getElementById('stats_total_time').textContent = `${totalTime} min (${(totalTime/60).toFixed(1)}h)`;
     
     const ratio = totalItems > 0 ? Math.round((boughtCount / totalItems) * 100) : 0;
-    document.getElementById('stats_bought_ratio').textContent = `${ratio}%`;
+    if(document.getElementById('stats_bought_ratio')) document.getElementById('stats_bought_ratio').textContent = `${ratio}%`;
 }
+
+/**
+ * WORKBENCH-LIFECYCLE
+ * -------------------------------------------------------------------------
+ * openBOMWorkbench: Lädt JSON, räumt Container und rendert via Template.
+ * fillRowData: Fungiert als Post-Processing-Hook nach dem Einfügen ins DOM.
+ * Da das Template die Werte bereits setzt, triggert diese Funktion nur noch 
+ * die reaktive Logik (bindPartEvents & Change-Events).
+ */
+function fillRowData(row, data) {
+    // 1. Das Verfahren wird bereits durch das Template korrekt im HTML gesetzt.
+    // Wir müssen nur sicherstellen, dass bindPartEvents die Logik anhängt.
+    bindPartEvents(row);
+    
+    // 2. Den visuellen Status (Ausgrauen/Farbe) basierend auf dem geladenen Wert triggern.
+    const processSelect = row.querySelector('.part-process');
+    if (processSelect) {
+        processSelect.dispatchEvent(new Event('change'));
+    }
+}
+
+// Entfernt eine Bauteil-Zeile und aktualisiert die Statistik.
 function removePartRow(btn) {
     btn.closest('.bom-part-row').remove();
     updateBOMStats(); // Statistik nach dem Löschen aktualisieren
 }
-function extractPartData(row) {
-    return {
-        part_name: row.querySelector('.part-name').value.trim(),
-        quantity: parseInt(row.querySelector('.part-qty').value) || 1,
-        process: row.querySelector('.part-process').value,
-        material_id: row.querySelector('.part-material').value,
-        profile_id: row.querySelector('.part-profile').value,
-        weight: parseFloat(row.querySelector('.part-weight').value) || 0,
-        print_time: parseInt(row.querySelector('.part-time').value) || 0,
-        is_bought: row.querySelector('.part-is-bought').checked
-    };
-}
 
 // --- CORE FUNKTIONEN ---
-
+// Öffnet den Manufacturing Viewer und füllt die Felder.
 function openManufacturingViewer(button) {
     const bpId = button.dataset.blueprintId;
     const form = document.getElementById('viewerForm');
     if (!form) return;
-
+    // Setzt die Aktions-URL und füllt die Felder
     form.action = form.dataset.baseUrl + bpId;
     document.getElementById('view_project_id').value = button.dataset.projectId || '';
     document.getElementById('view_project_name').textContent = button.dataset.projectName || 'Unbekannt';
@@ -160,7 +242,7 @@ function openManufacturingViewer(button) {
 
     new bootstrap.Offcanvas(document.getElementById('manufacturingViewer')).show();
 }
-
+// Öffnet die BOM-Workbench und lädt die Daten via Fetch.
 async function openBOMWorkbench(button) {
     const bpId = button.dataset.projectId;
     const container = document.getElementById('bom_parts_container');
@@ -168,38 +250,36 @@ async function openBOMWorkbench(button) {
     
     document.getElementById('bom_proj_id_display').textContent = bpId;
     document.getElementById('bom_proj_name').textContent = button.dataset.projectName;
-
+    // Fetch der BOM-Daten
     try {
         const response = await fetch(`/admin/get_bom/${bpId}`);
         const result = await response.json();
-
+        // Verarbeiten der geladenen Daten
         if (result.success && result.data) {
             const data = result.data;
-            
-            // 1. Baugruppen wiederherstellen
+            // Baugruppen rendern
             if (data.assemblies) {
                 data.assemblies.forEach(asm => {
-                    // Erstelle die Baugruppe und fange die generierte ID ab
                     const assemblyId = `asm_${Math.random().toString(36).slice(2, 7)}`;
                     createAssemblyContainer(asm.assembly_name, assemblyId);
-                    
-                    // WICHTIG: Suche den Container INNERHALB der gerade erstellten Baugruppe
                     const asmPartsContainer = document.querySelector(`#${assemblyId} .parts-container`);
-                    
+                    // Teile der Baugruppe rendern
                     if (asm.parts) {
                         asm.parts.forEach(part => {
                             const uniqueId = `part_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`;
-                            asmPartsContainer.insertAdjacentHTML('beforeend', renderPartTemplate({name: part.part_name, qty: part.quantity}, uniqueId));
+                            // Hier das ganze part-Objekt übergeben!
+                            asmPartsContainer.insertAdjacentHTML('beforeend', renderPartTemplate(part, uniqueId));
                             fillRowData(asmPartsContainer.lastElementChild, part);
                         });
                     }
                 });
             }
 
-            // 2. Einzelteile (lose) wiederherstellen
             if (data.loose_parts) {
                 data.loose_parts.forEach(part => {
-                    addNewPart({name: part.part_name, qty: part.quantity});
+                    // Hier ebenfalls das ganze Objekt nutzen
+                    const uniqueId = `part_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`;
+                    container.insertAdjacentHTML('beforeend', renderPartTemplate(part, uniqueId));
                     fillRowData(container.lastElementChild, part);
                 });
             }
@@ -211,23 +291,7 @@ async function openBOMWorkbench(button) {
     new bootstrap.Modal(document.getElementById('bomWorkbench')).show();
     updateBOMStats();
 }
-
-// Hilfsfunktion zum Setzen der Selects und Checkboxen
-function fillRowData(row, data) {
-    row.querySelector('.part-process').value = data.process || 'FDM_PRINT';
-    row.querySelector('.part-material').value = data.material_id || '';
-    row.querySelector('.part-profile').value = data.profile_id || '';
-    row.querySelector('.part-weight').value = data.weight || '';
-    row.querySelector('.part-time').value = data.print_time || '';
-    
-    const boughtCheck = row.querySelector('.part-is-bought');
-    boughtCheck.checked = data.is_bought || false;
-    
-    // Trigger den Event-Listener für das Styling (Grau-Färbung)
-    bindPartEvents(row);
-    boughtCheck.dispatchEvent(new Event('change')); 
-}
-
+// Fügt ein neues Bauteil im DOM hinzu.
 function addNewPart(data = {}) {
     const container = document.getElementById('bom_parts_container');
     const uniqueId = `part_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
@@ -238,7 +302,8 @@ function addNewPart(data = {}) {
     bindPartEvents(newRow);
     updateBOMStats(); // <--- NEU: Direkt beim Erstellen rechnen
 }
-
+// Erstellt eine neue Baugruppen-Container im DOM.
+// Optionaler Parameter 'forcedId' für spezifische IDs (z.B. beim Laden).
 function createAssemblyContainer(name = "Neue Baugruppe", forcedId = null) {
     const container = document.getElementById('bom_parts_container');
     const assemblyId = forcedId || `asm_${Math.random().toString(36).slice(2, 7)}`;
@@ -256,21 +321,54 @@ function createAssemblyContainer(name = "Neue Baugruppe", forcedId = null) {
     container.insertAdjacentHTML('beforeend', asmHtml);
 }
 
-window.addNewPartToAssembly = function(assemblyId) {
-    const container = document.querySelector(`#${assemblyId} .parts-container`);
-    const uniqueId = `part_asm_${Date.now()}`;
-    
-    container.insertAdjacentHTML('beforeend', renderPartTemplate({}, uniqueId));
-    
-    const newRow = container.lastElementChild;
-    bindPartEvents(newRow);
-    updateBOMStats(); // <--- NEU: Direkt beim Erstellen rechnen
+// Flash-Nachrichtenanzeige für successmessages links, mitte und rechts des hauptcontaiers
+
+window.showBOMSaveFlash = function(message, category = 'success') {
+    const slot = document.getElementById('flash-container-center');
+    if (!slot) return;
+
+    slot.innerHTML = `
+        <div class="alert alert-${category} alert-dismissible fade show shadow" role="alert">
+            <i class="fas fa-save me-2"></i> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
 };
 
+window.showJobProductionFlash = function(message, category = 'success') {
+    const slot = document.getElementById('flash-container-left');
+    if (!slot) return;
+
+    slot.innerHTML = `
+        <div class="alert alert-${category} alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-industry me-2"></i> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+};
+
+window.showJobAssignmentFlash = function(message, category = 'success') {
+    const slot = document.getElementById('flash-container-right');
+    if (!slot) return;
+
+    slot.innerHTML = `
+        <div class="alert alert-${category} alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-industry me-2"></i> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+};
+/**
+ * SPEICHER-LOGIK
+ * -------------------------------------------------------------------------
+ * Iteriert durch Baugruppen (Assemblies) und lose Teile.
+ * Filtert leere Zeilen ohne Bezeichnung aus, um die DB sauber zu halten.
+ */
 function saveFullBOM() {
     const bpId = document.getElementById('bom_proj_id_display').textContent.trim();
     if (!bpId) return alert("Keine Projekt-ID!");
 
+    // Daten sammeln
     const assemblies = [];
     document.querySelectorAll('.assembly-group').forEach(asm => {
         const parts = [];
@@ -278,7 +376,10 @@ function saveFullBOM() {
             const d = extractPartData(row);
             if (d.part_name) parts.push(d);
         });
-        assemblies.push({ assembly_name: asm.querySelector('.asm-title').value, parts: parts });
+        assemblies.push({ 
+            assembly_name: asm.querySelector('.asm-title').value, 
+            parts: parts 
+        });
     });
 
     const looseParts = [];
@@ -287,41 +388,50 @@ function saveFullBOM() {
         if (d.part_name) looseParts.push(d);
     });
 
+    const payload = { assemblies: assemblies, loose_parts: looseParts };
+
     fetch(`/admin/save_bom/${bpId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assemblies: assemblies, loose_parts: looseParts })
-    }).then(res => res.ok ? location.reload() : alert("Fehler: " + res.status));
-}
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) throw new Error(`Server-Status: ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // 1. Feedback: BOM wurde gesichert
+            console.log("Server Antwort:", data);
+            if (window.showBOMSaveFlash) {
+                showBOMSaveFlash("Stückliste aktualisiert", "success");
+            }
 
-// --- INITIALISIERUNG ---
+            // 2. Modal schließen (Wichtig!)
+            const bomModalEl = document.getElementById('bomWorkbench');
+            if (bomModalEl) {
+                const modalInstance = bootstrap.Modal.getInstance(bomModalEl);
+                if (modalInstance) modalInstance.hide();
+            }
 
-
-document.addEventListener('DOMContentLoaded', () => {
-    initModalResizerAndDragger('bomWorkbench');
-    const myModalEl = document.getElementById('bomWorkbench');
-    myModalEl.addEventListener('shown.bs.modal', function () {
-        document.removeEventListener('focusin', bootstrap.Modal.prototype._enforceFocus);
-    });
-    // Globales Löschen für Blueprints
-    document.addEventListener('click', (e) => {
-        const btn = e.target.closest('.delete-btn');
-        if (btn && confirm(`Blueprint wirklich löschen?`)) {
-            const form = document.createElement('form');
-            form.method = 'POST'; form.action = btn.dataset.deleteUrl;
-            document.body.appendChild(form); form.submit();
+            // HINWEIS: refreshJobPool() und Counter-Inkrement 
+            // fliegen hier raus, da sie hier nichts zu suchen haben!
+        } else {
+            if (window.showBOMSaveFlash) {
+                showBOMSaveFlash("Fehler beim Speichern: " + data.message, "danger");
+            }
+        }
+    })
+    .catch(err => {
+        console.error("Kritischer Fehler:", err);
+        if (window.showBOMSaveFlash) {
+            showBOMSaveFlash("Netzwerkfehler: " + err.message, "danger");
         }
     });
-});
+}
 
-window.removePartRow = function(btn) {
-    const row = btn.closest('.bom-part-row');
-    if (row) {
-        row.remove();
-        updateBOMStats(); // Wichtig: Statistik neu berechnen
-    }
-};
-
+// --- MODAL RESIZER & DRAGGER ---
+// Ermöglicht das Ziehen und Größenändern des Modals
 function initModalResizerAndDragger(modalId) {
     const modal = document.getElementById(modalId);
     const dialog = modal.querySelector('.modal-dialog');
@@ -348,7 +458,7 @@ function initModalResizerAndDragger(modalId) {
     let isResizing = false;
     let startWidth = 0;
     let startX = 0;
-
+    // Resize Handle Mousedown
     handle.addEventListener('mousedown', (e) => {
         isResizing = true;
         startX = e.clientX;
@@ -375,6 +485,7 @@ function initModalResizerAndDragger(modalId) {
         }
     });
 
+    // MouseUp zum Stoppen von Drag & Resize
     document.addEventListener('mouseup', () => {
         isDragging = false;
         isResizing = false;
@@ -382,6 +493,110 @@ function initModalResizerAndDragger(modalId) {
         document.body.style.cursor = 'default';
     });
 }
+
+// --- JOB TRIGGERING FUNCTIONALITY ---
+// Triggern der Produktionsvorbereitung via Fetch API
+window.triggerProduction = function triggerProduction(projectId) {
+    const btn = document.getElementById(`trigger-btn-${projectId}`);
+    const signal = document.getElementById(`job-signal-${projectId}`);
+    if (!btn) return;
+
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-cog fa-spin"></i> PREPROCESSING...';
+    btn.classList.add('opacity-50');
+    btn.disabled = true;
+
+    fetch(`/admin/generate_jobs/${projectId}`, { method: 'POST' })
+    .then(response => {
+        if (!response.ok) throw new Error('Netzwerk-Fehler oder Server-Fehler (500)');
+        return response.json();
+    })
+    .then(data => {
+        // UI Button sofort zurücksetzen
+        btn.innerHTML = originalContent;
+        btn.classList.remove('opacity-50');
+        btn.disabled = false;
+
+        if (data.success) {
+            // 1. Nachricht anzeigen (Prüfung ob Funktion existiert)
+            if (typeof showJobProductionFlash === 'function') {
+                showJobProductionFlash(data.message || "Jobs erfolgreich hinzugefügt", "success");
+            }
+
+            // 2. Pool aktualisieren
+            if (window.refreshJobPool) {
+                window.refreshJobPool();
+            }
+
+            // 3. Lokale Animation auf der Card
+            if (signal) {
+                signal.style.display = 'block';
+                signal.style.opacity = '1';
+                setTimeout(() => {
+                    signal.style.transition = "opacity 1s ease";
+                    signal.style.opacity = "0";
+                    setTimeout(() => { signal.style.display = 'none'; }, 1000);
+                }, 3000);
+            }
+        } else {
+            // Server hat geantwortet, aber Erfolg war False
+            if (typeof showJobProductionFlash === 'function') {
+                showJobProductionFlash(data.message || "Fehler beim Erzeugen", "danger");
+            }
+        }
+    })
+    .catch(err => {
+        console.error("Fehler:", err);
+        btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> FEHLER';
+        btn.classList.add('bg-danger');
+        btn.disabled = false;
+        if (typeof showJobProductionFlash === 'function') {
+            showJobProductionFlash("Kritischer Fehler: " + err.message, "danger");
+        }
+    });
+};
+
+// Fügt ein neues Bauteil zu einer bestehenden Baugruppe hinzu.
+window.addNewPartToAssembly = function(assemblyId) {
+    const container = document.querySelector(`#${assemblyId} .parts-container`);
+    const uniqueId = `part_asm_${Date.now()}`;
+    
+    container.insertAdjacentHTML('beforeend', renderPartTemplate({}, uniqueId));
+    
+    const newRow = container.lastElementChild;
+    bindPartEvents(newRow);
+    updateBOMStats(); // <--- NEU: Direkt beim Erstellen rechnen
+};
+
+// --- INITIALISIERUNG ---
+// Initialisiert den Modal Resizer und Dragger sowie globale Event-Listener.
+
+document.addEventListener('DOMContentLoaded', () => {
+    initModalResizerAndDragger('bomWorkbench');
+    const myModalEl = document.getElementById('bomWorkbench');
+    myModalEl.addEventListener('shown.bs.modal', function () {
+        document.removeEventListener('focusin', bootstrap.Modal.prototype._enforceFocus);
+    });
+    // Globales Löschen für Blueprints
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.delete-btn');
+        if (btn && confirm(`Blueprint wirklich löschen?`)) {
+            const form = document.createElement('form');
+            form.method = 'POST'; form.action = btn.dataset.deleteUrl;
+            document.body.appendChild(form); form.submit();
+        }
+    });
+});
+// Entfernt eine Bauteil-Zeile und aktualisiert die Statistik.
+window.removePartRow = function(btn) {
+    const row = btn.closest('.bom-part-row');
+    if (row) {
+        row.remove();
+        updateBOMStats(); // Wichtig: Statistik neu berechnen
+    }
+};
+
+
 
 // Exports
 window.openManufacturingViewer = openManufacturingViewer;

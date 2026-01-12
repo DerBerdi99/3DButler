@@ -13,7 +13,11 @@
 {% block body %}
 <div class="container text-center mt-4">
     <h1 class="mb-2 text-primary">Manufacturing Control</h1>
-    
+    <div id="flash-container" class="d-flex mt-3">
+        <div id="flash-container-left" class="me-auto"></div>
+        <div id="flash-container-center" class="mx-auto"></div>
+        <div id="flash-container-right" class="ms-auto"></div>
+    </div>
     <div class="d-flex justify-content-center mb-4">
         <button type="button" class="btn btn-sm btn-outline-primary" onclick="rotateSections()">
             <i class="fa-solid fa-sync"></i> Ansicht rotieren
@@ -35,10 +39,14 @@
         </div>
 
         <div id="sec-printers" class="m-section mb-5 px-3">
-            <h3 class="text-warning border-bottom pb-2">3. Drucker (Live-Status)</h3>
-            <p class="p-4 bg-dark text-muted border rounded border-secondary border-opacity-25">
-                Keine Drucker-Hardware verbunden.
-            </p>
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h3 class="text-warning mb-0">3. Drucker (Live-Status)</h3>
+                <button class="btn btn-sm btn-outline-warning" onclick="">+ Drucker Initialisieren</button>
+            </div>
+            
+            <div class="bg-dark p-3 rounded border border-secondary border-opacity-25">
+                {% include 'admin/admin_printers.html' %}
+            </div>
         </div>
         
     </div>
@@ -87,5 +95,9 @@ function rotateSections() {
 </script>
 
 <script type="module" src="{{ url_for('static', filename='js/admin_blueprints.js') }}"></script>
+
+<script type="module" src="{{ url_for('static', filename='js/admin_printers.js') }}"></script>
+
+<script type="module" src="{{ url_for('static', filename='js/admin_jobs.js') }}"></script>
 
 {% endblock %}

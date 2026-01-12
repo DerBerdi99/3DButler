@@ -52,10 +52,21 @@
                         </td>
                         <td>
                             <form method="POST" action="{{ url_for('admin_views.manage_products') }}" style="display:inline;">
+                                <input type="hidden" name="action" value="toggle_status">
+                                <input type="hidden" name="product_id" value="{{ product.ProductID }}">
+                                {% if product.IsActive %}
+                                    <input type="hidden" name="new_status" value="0">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">Deaktivieren</button>
+                                {% else %}
+                                    <input type="hidden" name="new_status" value="1">
+                                    <button type="submit" class="btn btn-sm btn-success">Wiederherstellen</button>
+                                {% endif %}
+                            </form>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin_views.manage_products') }}" style="display:inline;">
                                 <input type="hidden" name="selected_product_id" value="{{ product.ProductID }}">
-                                <button type="submit" class="btn btn-sm btn-info">
-                                    Betrachten
-                                </button>
+                                <button type="submit" class="btn btn-sm btn-info">Betrachten</button>
                             </form>
                         </td>
                         <td>
@@ -63,9 +74,7 @@
                                   onsubmit="return confirm('Produkt wirklich löschen? Dieser Vorgang ist endgültig!');"
                                   style="display:inline;">
                                 <input type="hidden" name="product_id" value="{{ product.ProductID }}">
-                                <button type="submit" class="btn btn-sm btn-danger">
-                                    ✖
-                                </button>
+                                <button type="submit" class="btn btn-sm btn-danger">✖</button>
                             </form>
                         </td>
                     </tr>

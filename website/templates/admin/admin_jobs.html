@@ -1,21 +1,39 @@
-<div class="row g-2">
-    {% for job in jobs_list %}
-    <div class="col-12">
-        <div class="p-2 border rounded bg-dark text-white d-flex align-items-center">
-            
-            <div class="me-3 fw-bold text-success">{{ job.JobID }}</div>
-            <div class="flex-grow-1">
-                <div class="small">{{ job.ProjectName }}</div>
-                <div class="progress" style="height: 8px; background: #444;">
-                    <div class="progress-bar bg-success" 
-     role="progressbar"  
-     aria-valuenow="{{ job.Progress }}">
-</div>
-                </div>
-            </div>
-            <div class="ms-3 small text-muted">{{ job.Progress }}%</div>
+<div class="container-fluid py-4">
+  
 
+    <ul class="nav nav-pills mb-3 admin-tabs" id="jobTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-status="QUEUED">Warteschlange</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-status="PRINTING">In Arbeit</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-status="COMPLETED">Abgeschlossen</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-status="FAILED">Fehlgeschlagen</button>
+        </li>
+    </ul>
+
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="jobsTable">
+                <thead class="bg-light text-muted small uppercase">
+                    <tr>
+                        <th>Job-ID</th>
+                        <th>Bauteil</th>
+                        <th>Projekt-ID</th>
+                        <th>Technik</th>
+                        <th>Dimensionen (mm)</th>
+                        <th>Zeit</th>
+                        <th>Status</th>
+                        <th class="text-end">Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody id="jobPoolBody">
+                    </tbody>
+            </table>
         </div>
     </div>
-    {% endfor %}
 </div>

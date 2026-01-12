@@ -11,8 +11,8 @@ venv/
 env/
 
 # Datenbanken (falls du SQLite nutzt)
-*.sqlite3
-*.db
+#*.sqlite3
+#*.db   Vollbackup mit DB
 
 # Betriebssystem-Müll
 .DS_Store

@@ -1,6 +1,9 @@
 import os
+import json
 import uuid
 import sqlite3
+import re
+import struct
 from werkzeug.utils import secure_filename
 from datetime import datetime
 
@@ -50,9 +53,110 @@ class ProjectManager:
             if conn:
                 conn.close()
 
-    def _allowed_file(self, filename):
-        return '.' in filename and \
-               filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+    def _detect_extension_by_content(self, file_storage):
+        # Lese den Anfang für ASCII/Blender/GCode
+        header = file_storage.read(2048)
+        file_storage.seek(0, 2) # Springe ans Ende
+        file_size = file_storage.tell() # Hole Dateigröße
+        file_storage.seek(0) # Zurück zum Anfang
+
+        # 1. Bekannte Header
+        if header.startswith(b'BLENDER'): return 'blend'
+        if header.lower().startswith(b'solid'): return 'stl' # ASCII STL
+        # G-Code Erkennung (Header wurde bereits gelesen)
+        # 1. Check auf Kommentare (viele Slicer starten so)
+        if header.startswith(b';') or header.startswith(b'('):
+            return 'gcode'
+
+        # 2. Check auf typische G-Befehle (G0-G4, G20, G21, G28, G90, G91, G92)
+        # Wir suchen in den ersten 500 Bytes nach dem Muster "G" gefolgt von Zahlen
+        if re.search(b'(?m)^(G|M)[0-9]{1,3}', header[:500]):
+            return 'gcode'
+
+        # 2. Binäre STL Validierung
+        # Eine binäre STL ist (80 Bytes Header) + (4 Bytes Count) + (Count * 50 Bytes)
+        if file_size >= 84:
+            # Die 4 Bytes nach dem 80-Byte Header enthalten die Anzahl der Dreiecke (uint32)
+            tri_count_data = header[80:84]
+            if len(tri_count_data) == 4:
+                tri_count = struct.unpack('<I', tri_count_data)[0]
+                expected_size = 80 + 4 + (tri_count * 50)
+                if file_size == expected_size:
+                    return 'stl'
+
+        return None
+    
+    def _process_file_validation(self, file_storage):
+        filename = file_storage.filename
+        detected_ext = self._detect_extension_by_content(file_storage)
+
+        # 1. Fall: Keine Endung -> Reparatur-Versuch
+        if '.' not in filename:
+            return f"{filename}.{detected_ext}" if detected_ext else None
+
+        current_ext = filename.rsplit('.', 1)[1].lower()
+        is_valid_whitelisted = current_ext in ALLOWED_EXTENSIONS
+
+        # 2. Fall: Inhalt wurde erkannt (Blender, Gcode, STL-ASCII)
+        if detected_ext:
+            if current_ext == detected_ext:
+                return filename
+            # Wenn Endung Müll ist (.9mm), hängen wir die richtige an
+            if current_ext not in ALLOWED_EXTENSIONS:
+                return f"{filename}.{detected_ext}"
+            # Wenn Endung valide ist (.stl) aber Inhalt Blender -> REJECT
+            return None
+
+        # 3. Fall: Inhalt NICHT eindeutig erkannt (MIME-Spoofing Verdacht oder STEP)
+        if is_valid_whitelisted:
+            # HARTE REGEL: Wenn es behauptet, STL/GCODE/BLEND zu sein, 
+            # aber der Header-Check oben (detected_ext) fehlgeschlagen ist: REJECT
+            STRICT_CHECK_EXTENSIONS = {'stl', 'gcode', 'blend'}
+
+            if current_ext in STRICT_CHECK_EXTENSIONS:
+                return None
+
+            # Für STEP/STP vertrauen wir weiterhin der Endung (da schwer zu erkennen)
+            return filename
+
+        return None
+    
+    def _allowed_file(self, file_storage):
+        filename = file_storage.filename
+        
+        # 1. Klassische Prüfung über die Dateiendung
+        if '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS:
+            return True
+    
+        # 2. Inhaltsprüfung (MIME/Magic Bytes), falls Endung fehlt oder falsch ist
+        # Wir lesen die ersten Bytes direkt aus dem file_storage Stream
+        header = file_storage.read(32)
+        file_storage.seek(0) # Stream sofort zurücksetzen!
+    
+        # Check auf Blender (Datei beginnt mit 'BLENDER')
+        if header.startswith(b'BLENDER'):
+            # Optional: Hier könnte man dem file_storage ein Suffix verpassen, 
+            # falls dein nachfolgender Code auf die Endung angewiesen ist
+            if '.' not in filename:
+                file_storage.filename += '.blend'
+            return True
+    
+        # Check auf Gcode (Beginnt meist mit G0, G1 oder Semikolon für Kommentare)
+        if header.startswith(b'G') or header.startswith(b'M') or header.startswith(b';'):
+            if '.' not in filename:
+                file_storage.filename += '.gcode'
+            return True
+            
+        # Check auf STL (Binary fängt oft mit 80 Bytes Header an, schwer zu greifen, 
+        # ASCII fängt mit 'solid' an)
+        if header.startswith(b'solid'):
+            if '.' not in filename:
+                file_storage.filename += '.stl'
+            return True
+    
+        return False
 
     def get_config_value(self, key):
         # UNVERÄNDERT: Konfigurationsabfrage
@@ -93,49 +197,41 @@ class ProjectManager:
     # NEUE INTERNE HILFSFUNKTION FÜR DATEI-SPEICHERUNG
     # **********************************************
     def _save_files_and_metadata(self, user_id, uploaded_files, temp_upload_folder):
-        """
-        Speichert hochgeladene Dateien im angegebenen Ordner und schreibt Metadaten in die Files-Tabelle.
-
-        Args:
-            user_id (str): ID des hochladenden Benutzers.
-            uploaded_files (list): Liste von FileStorage-Objekten.
-            temp_upload_folder (str): Der absolute oder relative Pfad zum temporären Speicherordner.
-
-        Returns:
-            tuple: (Liste der erfolgreich gespeicherten FileIDs, Status-Nachricht, Status (bool))
-        """
         all_file_ids = []
-
-        # Sicherstellen, dass der Ordner existiert (optional, aber robust)
         os.makedirs(temp_upload_folder, exist_ok=True)
 
         for uploaded_file in uploaded_files:
-            original_filename = secure_filename(uploaded_file.filename)
+            # 1. Validierung & Reparatur über deine Helper-Funktion
+            # Diese Funktion muss intern den Content prüfen und den Namen fixen
+            fixed_name = self._process_file_validation(uploaded_file)
 
-            if not original_filename:
-                continue # Leere Datei ignorieren
+            if not fixed_name:
+                # Wenn None zurückkommt, war es weder eine erlaubte Endung 
+                # noch ein erkennbarer Inhalt.
+                raise ValueError(f"Ungültiges Dateiformat für '{uploaded_file.filename}'.")
 
-            if not self._allowed_file(original_filename):
-                # Beim Chat-Upload könnten wir hier fortfahren, aber beim Projektstart brechen wir ab.
-                # Da dies die Hilfsfunktion ist, werfen wir einen Fehler für den Aufrufer.
-                raise ValueError(f"Ungültiges Dateiformat für '{original_filename}'.")
+            # 2. Den Namen absichern (für das Dateisystem)
+            safe_name = secure_filename(fixed_name)
 
-            # Einzigartige IDs für Datei und Pfad erstellen
+            # 3. Einzigartige IDs für Datei und Pfad erstellen
             file_id = f"FILE_{str(uuid.uuid4())}"
-            file_extension = original_filename.rsplit('.', 1)[1].lower()
+
+            # Sicherer Split: Da fixed_name validiert wurde, ist ein Punkt vorhanden
+            file_extension = safe_name.rsplit('.', 1)[1].lower()
             new_filename = f"{file_id}.{file_extension}"
             file_path = os.path.join(temp_upload_folder, new_filename)
 
-            # Datei speichern
+            # 4. Datei speichern
+            # WICHTIG: Deine Helper-Funktion MUSS am Ende ein .seek(0) gemacht haben!
             uploaded_file.save(file_path)
 
-            # Größe ermitteln und in KB speichern (Ganzzahl)
-            filesize_kb_float = os.path.getsize(file_path) / 1024
-            filesize_for_db = int(round(filesize_kb_float))
+            # 5. Metadaten ermitteln
+            filesize_kb = int(round(os.path.getsize(file_path) / 1024))
 
-            # Metadaten in der Datenbank speichern
+            # 6. Datenbank-Eintrag
             file_insert_query = "INSERT INTO Files (FileID, FilePath, FileName, FileSizeKB, UserID) VALUES (?, ?, ?, ?, ?)"
-            self._execute_query(file_insert_query, (file_id, new_filename, original_filename, filesize_for_db, user_id))
+            # Wir speichern 'safe_name', damit der ursprüngliche Name (mit Endung) erhalten bleibt
+            self._execute_query(file_insert_query, (file_id, new_filename, safe_name, filesize_kb, user_id))
 
             all_file_ids.append(file_id)
 
@@ -213,14 +309,14 @@ class ProjectManager:
 
             return True, f"Projekt erfolgreich mit {len(all_file_ids)} Datei(en) eingereicht.", project_id
 
-        except ValueError as e:
+        except ValueError:
              # Fängt ungültiges Dateiformat aus _save_files_and_metadata
-            return False, f"Fehler beim Speichern der Datei: {e}", None
-        except sqlite3.Error as e:
+            return False, f"Fehler beim Speichern der Datei.", None
+        except sqlite3.Error:
             # Rollback-Logik für Dateilöschung fehlt hier, ist aber idealerweise nötig.
-            return False, f"Fehler bei der Datenbankoperation: {e}", None
-        except Exception as e:
-            return False, f"Ein unerwarteter Fehler ist aufgetreten: {e}", None
+            return False, f"Fehler bei der Datenbankoperation.", None
+        except Exception:
+            return False, f"Ein unerwarteter Fehler ist aufgetreten.", None
 
 
     # **********************************************
@@ -269,8 +365,8 @@ class ProjectManager:
         # Der Benutzer (Kunde) ist nicht intern, daher IsInternal=0
         try:
             self._execute_query(chat_insert_query, (comm_id, project_id, sender_type, file_save_message, date_sent, 1, 0, 1))
-        except sqlite3.Error as e:
-            return False, f"Datenbankfehler beim Speichern der Chat-Nachricht: {e}"
+        except sqlite3.Error:
+            return False, f"Datenbankfehler beim Speichern der Chat-Nachricht"
 
         return True, f"{uploaded_count} Datei(en) erfolgreich hochgeladen und als Chat-Nachricht gespeichert."
 
@@ -400,29 +496,20 @@ class ProjectManager:
                 conn.close()
 
     def get_project_details(self, project_id):
-        # ÄNDERUNG: Explizites SELECT der Spalten, um die Reihenfolge zu garantieren
+        # Explizites SELECT der Spalten, um die Reihenfolge zu garantieren
         query = "SELECT ProjectID, FileIDs, UserID, MaterialType, ProjectDescription, ProjectName, ProjectQuantity, Status, VolumeCM3, PrintTimeMin, EstimatedMaterialG, DateAdded, Priority, FinalQuotePrice FROM Projects WHERE ProjectID = ?"
 
         result = self._execute_query(query, (project_id,), fetch=True)
 
         if result and result[0]:
             # Die Spaltennamen müssen EXAKT mit der SELECT-Anweisung übereinstimmen
-            # Wir müssen diesen Schritt entfernen, da er eine zweite DB-Verbindung öffnet
-            # und die Reihenfolge nicht garantiert:
-            # columns = [column[0] for column in sqlite3.connect(self.db_path).cursor().execute("PRAGMA table_info(Projects)").fetchall()]
-
-            # HINWEIS: Wir definieren die Spalten EXPLIZIT, damit das Mapping sicher ist
+            # Wir definieren die Spalten EXPLIZIT, damit das Mapping sicher ist
             columns = [
                 "ProjectID", "FileIDs", "UserID", "MaterialType", "ProjectDescription",
                 "ProjectName", "ProjectQuantity","Status", "VolumeCM3", "PrintTimeMin",
                 "EstimatedMaterialG", "DateAdded", "Priority", "FinalQuotePrice"
             ]
-
             project_details = dict(zip(columns, result[0]))
-
-            # DEBUG: Jetzt sollte der Wert korrekt sein
-            print(f"DEBUG: Abgerufene UserID aus DB (nach Korrektur): {project_details.get('UserID')}")
-
             return project_details
 
         return None
@@ -493,32 +580,16 @@ class ProjectManager:
                 return False
 
     def get_projects_by_user(self, user_id):
-        # Abfrage aller Projekte, die dem Benutzer gehören, sortiert nach Datum
-        query = "SELECT * FROM Projects WHERE UserID = ? ORDER BY DateAdded DESC"
+        # Die Query gibt die Reihenfolge vor
+        query = "SELECT ProjectID, ProjectName, Status, DateAdded, ProjectDescription FROM Projects WHERE UserID = ? ORDER BY DateAdded DESC"
         results = self._execute_query(query, (user_id,), fetch=True)
 
-        # 1. Spaltennamen definieren (Muss vor der Nutzung von results erfolgen!)
-        columns = [
-            "ProjectID", "FileIDs", "UserID", "MaterialType", "ProjectDescription",
-            "ProjectName", "ProjectQuantity","Status", "VolumeCM3", "PrintTimeMin",
-            "EstimatedMaterialG", "DateAdded", "Priority"
-        ]
+        # Wenn dein Database-Cursor bereits Dictionary-ähnliche Objekte liefert (z.B. sqlite3.Row):
+        # return list(results) if results else []
 
-        # 2. FRÜHER AUSSTIEG, falls keine Ergebnisse vorliegen
-        if not results:
-            return []
-
-        # 3. ERGEBNISSE ITERIEREN und in eine Liste von Dictionaries umwandeln
-        project_list = []
-
-        # Der Fehler lag hier: Sie haben versucht, nur results[0] zu mappen.
-        for row_tupel in results:
-            # Mappe JEDES Tupel in ein Dictionary
-            project_dict = dict(zip(columns, row_tupel))
-            project_list.append(project_dict)
-
-        # 4. Rückgabe der vollständigen Liste
-        return project_list
+        # Falls es reine Tupel sind, reicht ein minimales Mapping:
+        columns = ["ProjectID", "ProjectName", "Status", "DateAdded", "ProjectDescription"]
+        return [dict(zip(columns, row)) for row in results] if results else []
 
     def get_all_projects_for_admin(self) -> list[sqlite3.Row]:
             """
@@ -955,39 +1026,186 @@ class ProjectManager:
         """
         return self._execute_query(query, (full_path, project_id))
     
+
+    def finalize_blueprint(self, project_id, bom_path):
+        try:
+            # Wir versuchen nur das Nötigste zu updaten
+            query = """
+                UPDATE Blueprints 
+                SET BOMPath = ?, 
+                    Status = 'COMPLETED'
+                WHERE ProjectID = ?
+            """
+            self._execute_query(query, (bom_path, project_id))
+            return True
+        except Exception as e:
+            # Das gibt uns jetzt die ECHTE Fehlermeldung der DB aus
+            print(f"DATABASE ERROR: {str(e)}") 
+            return False
+        
     def check_bom_exists(self, project_id):
         bom_filename = f"BOM_{project_id}.json"
         return os.path.exists(os.path.join(TEMP_UPLOAD_FOLDER, bom_filename))
 
-    def create_jobs_from_bom(self, project_id, bom_data):
-        """Erzeugt aus den BOM-Daten die einzelnen ProductionJobs im Pool."""
-        parts = bom_data.get('parts', [])
-        
-        # Clean-up: Bestehende QUEUED Jobs für dieses Projekt entfernen (Idempotenz)
-        self._execute_query(
-            "DELETE FROM ProductionJobs WHERE SourceProjectID = ? AND JobStatus = 'QUEUED'",
-            (project_id,)
-        )
-    
-        for part in parts:
-            # Intelligenz: Kaufteile ignorieren
-            if part.get('is_bought') is True:
-                continue
-                
+    def process_bom_to_production(self, project_id):
+        """Zentrale Koordination: BOM finden, Preprocessing, Job-Erzeugung."""
+
+        # 1. Datenbeschaffung (Kapselung der DB-Zustände)
+        # Erst in Temp schauen, dann in Permanent
+        bom_raw = self._get_bom_source(project_id)
+        if not bom_raw:
+            return False, "BOM-Quelle nicht identifizierbar."
+
+        # 2. Preprocessing (Flachklopfen der Struktur)
+        printable_parts = self._extract_printable_parts(bom_raw)
+
+        # 3. Job-Erzeugung
+        count = self._persist_production_jobs(project_id, printable_parts)
+
+        return True, count
+
+    def _get_bom_source(self, project_id):
+        """Interne Logik: Sucht die BOM in temp_uploads oder Projects."""
+        # Suche in Temp
+        bom_filename = f"BOM_{project_id}.json"
+        full_path = os.path.join(TEMP_UPLOAD_FOLDER, bom_filename)
+
+        if os.path.exists(full_path):
+            with open(full_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data
+        else:
+            return None
+
+
+    def _extract_printable_parts(self, bom_data):
+        """Filtert das JSON auf das Wesentliche."""
+        parts = []
+        # Alles aus Assemblies
+        for assy in bom_data.get('assemblies', []):
+            parts.extend([p for p in assy.get('parts', []) 
+                          if not p.get('is_bought') and p.get('process') == 'FDM_PRINT'])
+        # Alles aus Loose Parts
+        parts.extend([p for p in bom_data.get('loose_parts', []) 
+                      if not p.get('is_bought') and p.get('process') == 'FDM_PRINT'])
+        return parts
+
+    def _persist_production_jobs(self, project_id, parts_list):
+        """Schreibt die finalen Zeilen in ProductionJobs basierend auf dem neuen Schema."""
+        count = 0
+        for part in parts_list:
+            # Extraktion der technischen Daten aus der BOM
             qty = int(part.get('quantity', 1))
-            # Für jedes Stück ein separater Job (Kein Multi-Printing)
+            part_name = part.get('part_name', 'Unbenanntes Teil')
+            material = part.get('material_id')
+            profile = part.get('profile_id')
+            color = part.get('color')
+            print_time = part.get('print_time', 0)
+            nozzle = part.get('nozzle', 0.4)
+            # Dimensionen
+            dx = part.get('dim_x', 0)
+            dy = part.get('dim_y', 0)
+            dz = part.get('dim_z', 0)
+
             for i in range(qty):
-                job_id = f"JOB-{uuid.uuid4().hex[:8].upper()}"
+                # Eindeutige JobID (kurz & knackig)
+                job_id = f"JOB_{uuid.uuid4()}"
+
                 query = """
                     INSERT INTO ProductionJobs (
-                        JobID, SourceProjectID, JobStatus, Priority, 
-                        CalculatedPrintTimeMin, Notes
-                    ) VALUES (?, ?, 'QUEUED', 3, ?, ?)
+                        JobID, 
+                        SourceProjectID, 
+                        JobStatus, 
+                        Priority, 
+                        PartName,
+                        MaterialID, 
+                        ProfileID,
+                        Color, 
+                        NozzleDiam, 
+                        PrintTimeMin,
+                        DimX, 
+                        DimY, 
+                        DimZ
+                    ) VALUES (?, ?, 'QUEUED', 3, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """
+
                 params = (
-                    job_id, 
-                    project_id, 
-                    part.get('time'), 
-                    f"{part.get('part_name')} ({i+1}/{qty})"
+                    job_id,
+                    project_id,
+                    part_name,
+                    material,
+                    profile,
+                    color,
+                    nozzle,
+                    print_time,
+                    dx,
+                    dy,
+                    dz
                 )
+
                 self._execute_query(query, params)
+                count += 1
+
+        return count
+
+    def get_all_printers(self):
+        """Ruft alle Drucker ab und mappt sie ohne Umwege auf Spaltennamen."""
+        query = "SELECT * FROM Printers ORDER BY PrinterName"
+        
+        # Wir holen die Daten über deine bestehende Methode
+        # Falls _execute_query direkt sqlite3.Row Objekte liefert, reicht ein [dict(row) for row in rows]
+        result_rows = self._execute_query(query, fetch=True)
+    
+        if not result_rows:
+            return []
+    
+        # Falls result_rows einfache Tupel sind, mappen wir sie hier manuell.
+        # Wenn deine DB-Klasse sqlite3.Row nutzt, kannst du direkt:
+        # return [dict(row) for row in result_rows] nutzen.
+        
+        # Sicherster Weg ohne PRAGMA, falls es Tupel sind:
+        return [dict(row) for row in result_rows] if result_rows else []
+
+    def initialize_printer(self, printer_name, dim_x, dim_y, dim_z, cost_per_min):
+        """Initialisiert einen neuen Drucker in der Datenbank."""
+        query = """
+            INSERT INTO Printers (
+                PrinterID,
+                PrinterName,
+                PrinterStatus,
+                DimX,
+                DimY,
+                DimZ,
+                CostPerMin,
+                RuntimeHours,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        self._execute_query(query, (
+            f"PRNT_{str(uuid.uuid4())}",
+            printer_name,
+            'NEWBORN',
+            dim_x,
+            dim_y,
+            dim_z,
+            cost_per_min,
+            0
+        ))
+
+    def get_production_jobs_by_status(self, status):
+        """Holt alle Jobs eines bestimmten Status aus der DB."""
+        query = """
+            SELECT 
+                JobID, SourceProjectID, JobStatus, Priority, PartName, 
+                MaterialID, ProfileID, Color, NozzleDiam, PrintTimeMin, 
+                DimX, DimY, DimZ, PrinterID 
+            FROM ProductionJobs 
+            WHERE JobStatus = ?
+            ORDER BY Priority ASC, JobID DESC
+        """
+        # Nutze deinen DB-Wrapper, der Dicts zurückgibt
+        rows = self._execute_query(query, (status,), fetch=True)
+        # Falls keine Treffer, leere Liste zurückgeben statt None
+        if not rows:
+            return []
+        # Umwandlung: Jedes Row-Objekt wird zu einem Dict
+        return [dict(row) for row in rows]

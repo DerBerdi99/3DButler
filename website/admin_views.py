@@ -302,64 +302,60 @@ def delete_project_route(project_id):
 @admin_bp.route('/manage_products', methods=['GET', 'POST'])
 @check_admin
 def manage_products():
-    # Annahme: product_manager ist global initialisiert
-    # product_manager = ProductManager() 
     selected_product_data = None
     
-    # --- 1. POST-Handling ---
     if request.method == 'POST':
+        action = request.form.get('action')
         
-        # A) Finalisierungs-Aktion (Formular 2: Zum Shop hinzufügen)
-        if request.form.get('action') == 'finalize_product':
+        # A) Finalisierungs-Aktion
+        if action == 'finalize_product':
             try:
-                # Daten aus dem PV-Formular extrahieren
                 product_id = request.form.get('product_id')
                 final_price = float(request.form.get('final_price'))
                 final_category = request.form.get('final_category')
                 
-                # Prüfen, ob alle kritischen Daten vorhanden sind
                 if not product_id or final_price is None or not final_category:
                     flash('Fehler: Kritische Finalisierungsdaten fehlen.', 'danger')
                 else:
-                    # HIER WIRD finalize_product AUFGERUFEN
                     product_manager.finalize_product(
                         product_id=product_id,
                         final_price=final_price,
                         final_category=final_category,
-                        is_shop_visible=1  # Setze auf sichtbar
+                        is_shop_visible=1
                     )
-                    flash(f'Produkt **{product_id}** erfolgreich finalisiert und freigegeben.', 'success')
-                    # Nach erfolgreicher Finalisierung: Redirect zur GET-Ansicht
+                    flash(f'Produkt **{product_id}** erfolgreich finalisiert.', 'success')
                     return redirect(url_for('admin_views.manage_products'))
-
-            except ValueError:
-                flash('Fehler: Preis muss eine gültige Zahl sein.', 'danger')
             except Exception as e:
-                flash(f'Datenbankfehler bei der Finalisierung: {e}', 'danger')
+                flash(f'Fehler bei Finalisierung: {e}', 'danger')
 
-
-        # B) Produkt-Auswahl-Aktion (Formular 1: Betrachten)
-        elif 'selected_product_id' in request.form:
+        # B) Produkt-Auswahl-Aktion
+        elif 'selected_product_id' in request.form and action != 'toggle_status':
             selected_id = request.form.get('selected_product_id')
-            
-            # Die Logik zum Laden der Details bleibt unverändert
             try:
                 selected_product_data = product_manager.get_product_by_id(selected_id)
             except Exception as e:
-                flash(f'Fehler beim Laden der Produktdetails: {e}', 'danger')
+                flash(f'Fehler beim Laden der Details: {e}', 'danger')
 
-    # --- 2. GET-Handling (Immer) ---
-    # Daten für das Product Backlog (PB) und Kategorien abrufen
+        # C) NEU: Status-Aktion (Aktivieren/Deaktivieren)
+        elif action == 'toggle_status':
+            product_id = request.form.get('product_id')
+            new_status = int(request.form.get('new_status'))
+            try:
+                product_manager.toggle_product_visibility(product_id, new_status)
+                msg = "reaktiviert" if new_status == 1 else "deaktiviert"
+                flash(f'Produkt wurde erfolgreich {msg}.', 'success')
+                return redirect(url_for('admin_views.manage_products'))
+            except Exception as e:
+                flash(f'Status-Fehler: {e}', 'danger')
+
+    # --- 2. GET-Handling ---
     try:
-        products_to_finalize = product_manager.get_products_for_finalization()
+        products_to_finalize = product_manager.get_products_for_finalization(include_inactive=True)
         all_categories = product_manager.get_all_product_categories()
     except Exception as e:
-        # Hier werden Fehler des initialen Ladens behandelt, die nicht mit POST zusammenhängen
-        flash(f'Fehler beim Laden des Backlogs oder der Kategorien: {e}', 'danger')
-        products_to_finalize = []
-        all_categories = []
+        flash(f'Fehler beim Laden: {e}', 'danger')
+        products_to_finalize, all_categories = [], []
         
-    # 3. Rendern des Templates
     return render_template(
         'admin/admin_product_main.html',
         products_for_review=products_to_finalize,
@@ -553,8 +549,6 @@ def save_blueprint_data(bp_id):
         # NEU: Profil und Materialart (für die Vorauswahl im Quote)
         profile_id = request.form.get('profile_id')
         material_id = request.form.get('material_id')
-
-        print(material_id, profile_id)
         
         # 1. Update der Projekttabelle (Technische Wahrheit für Kalkulation)
         # Wir fügen hier die Felder ProfileID und MaterialID hinzu
@@ -588,16 +582,31 @@ def save_bom(project_id):
         with open(full_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
-        # 2. Den Blueprint-Status in der DB aktualisieren
-        project_manager.finalize_blueprint(project_id, full_path)
+        # 2. DB-Update delegieren
+        # Wir fangen den spezifischen Fehler des Managers ab
+        success = project_manager.finalize_blueprint(project_id, full_path)
+        
+        if not success:
+            # Wenn der Manager False liefert, aber keine Exception wirft
+            return jsonify({
+                "success": False, 
+                "error_type": "DB_FINALIZE_FAILED",
+                "message": f"Manager konnte Projekt {project_id} nicht finalisieren. Check die DB-Constraints."
+            }), 422 
 
-        # 3. Die Jobs intelligent in den Pool schieben
-        project_manager.create_jobs_from_bom(project_id, data)
-
-        return jsonify({"success": True, "message": "BOM und Production-Jobs verarbeitet."})
+        return jsonify({"success": True, "message": "BOM gespeichert und Blueprint finalisiert."})
 
     except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+        # Hier loggen wir den echten Traceback in die Konsole
+        import traceback
+        print(f"ERROR in save_bom: {str(e)}")
+        traceback.print_exc()
+        
+        return jsonify({
+            "success": False, 
+            "error_type": "PYTHON_EXCEPTION",
+            "message": str(e) # Das landet in deinem Alert im Frontend
+        }), 500
 
 @admin_bp.route('/get_bom/<string:project_id>', methods=['GET'])
 def get_bom(project_id):
@@ -610,3 +619,72 @@ def get_bom(project_id):
         return jsonify({"success": True, "data": data})
     
     return jsonify({"success": False, "message": "Keine BOM gefunden."}), 404
+
+@admin_bp.route('/get_printers', methods=['GET'])
+def get_printers():
+    try:
+        # get_all_printers liefert bereits [{}, {}]
+        printers = project_manager.get_all_printers()
+        return jsonify(printers) # Direkt das Array senden
+    except Exception as e:
+        print(f"Fehler: {e}")
+        return jsonify([]), 500
+
+@admin_bp.route('/initialize_printer', methods=['POST'])
+def initialize_printer():
+    try:
+        data = request.get_json()
+        printer_name = data.get('printer_name')
+        hotend_id = data.get('hotend_id')
+        printhead_id = data.get('printhead_id')
+        buildplate_id = data.get('buildplate_id')
+        dim_x = int(data.get('dim_x'))
+        dim_y = int(data.get('dim_y'))
+        dim_z = int(data.get('dim_z'))
+        cost_per_min = float(data.get('cost_per_min'))
+        
+        if not all([printer_name, hotend_id, printhead_id, buildplate_id, dim_x, dim_y, dim_z, cost_per_min]):
+            return jsonify({"success": False, "message": "Alle Felder müssen ausgefüllt sein."}), 400
+
+        project_manager.initialize_printer(
+            printer_name=printer_name,
+            hotend_id=hotend_id,
+            printhead_id=printhead_id,
+            buildplate_id=buildplate_id,
+            dim_x=dim_x,
+            dim_y=dim_y,
+            dim_z=dim_z,
+            cost_per_min=cost_per_min
+        )
+        
+        return jsonify({"success": True, "message": "Drucker erfolgreich initialisiert."})
+    
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@admin_bp.route('/generate_jobs/<string:project_id>', methods=['POST'])
+def generate_jobs_endpoint(project_id):
+    success, result = project_manager.process_bom_to_production(project_id)
+    
+    if not success:
+        return jsonify({
+            "success": False, 
+            "message": result
+        }), 400
+        
+    return jsonify({
+        "success": True, 
+        "message": f"Jobs erfolgreich hinzugefügt: {result}",
+        "jobs_created": result
+    }), 200
+
+@admin_bp.route('/jobs/data', methods=['GET'])
+def get_jobs_data():
+    # Status aus den Query-Parametern extrahieren (?status=QUEUED)
+    status = request.args.get('status', 'QUEUED')
+    
+    # Delegation an den Manager
+    jobs = project_manager.get_production_jobs_by_status(status)
+    
+    # Rückgabe als JSON-Liste
+    return jsonify(jobs)
