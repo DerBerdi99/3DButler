@@ -1,0 +1,122 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %} Admin Dashboard {% endblock %}
+
+{% block wishlist_icon %}{% endblock %}
+{% block cart_icon %}{% endblock %}
+
+{% block body %}
+<div class="col-12 col-md-9 col-xl-10 py-4 px-4 ms-auto">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h3 class="mb-0"><i class="fa-solid fa-users-gear me-2"></i> Dashboard</h3>
+        </div>
+        <form action="{{ url_for('admin_views.rotate_dashboard') }}" method="POST" class="m-0">
+            <button type="submit" class="btn btn-outline-primary font-weight-bold">
+                Ansicht rotieren
+            </button>
+        </form>
+    </div>
+
+    {% for section_name in section_order %}
+        
+        {% if section_name == 'finances' %}
+        <div class="row g-4 mb-5" id="section-finances">
+            <div class="col-12 col-lg-4">
+                <h3 class="h5 mb-3 font-weight-bold text-secondary text-uppercase" style="letter-spacing: 0.05em;">
+                    <i class="fa-solid fa-wallet me-2 text-primary"></i>Finanzen
+                </h3>
+                <div class="card shadow-sm border-0 bg-white mb-3" style="border-radius: 8px; border-left: 4px solid #1A237E !important;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted small text-uppercase mb-1 font-weight-bold">Aktueller Kontostand</p>
+                                <h2 class="display-6 font-weight-bold m-0 text-dark">
+                                    {{ "%.2f"|format(account.CurrentBalance) if account else "0.00" }} €
+                                </h2>
+                            </div>
+                            <div class="bg-light p-3 rounded-circle text-primary">
+                                <i class="fa-solid fa-piggy-bank fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-2 border-top text-muted small">
+                            <i class="fa-solid fa-arrow-rotate-right me-1"></i> Sync: <span class="font-weight-bold">{{ account.LastSync if account else 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if section_name == 'orders' %}
+        <div class="row g-4 mb-5" id="section-orders">
+            <div class="col-12">
+                <h3 class="h5 mb-3 font-weight-bold text-secondary text-uppercase" style="letter-spacing: 0.05em;">
+                    <i class="fa-solid fa-file-invoice-dollar me-2 text-success"></i>Letzte Bestellungen
+                </h3>
+                <div class="card shadow-sm border-0 bg-white" style="border-radius: 8px; border: 1px solid #dee2e6;">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 text-sm" style="font-size: 0.9rem;">
+                                <thead style="background-color: #1A237E; color: #bdbdbd;">
+                                    <tr>
+                                        <th class="ps-3 py-3 border-0">Order-ID</th>
+                                        <th class="py-3 border-0">Datum</th>
+                                        <th class="py-3 border-0">Status</th>
+                                        <th class="py-3 border-0">Zahlung</th>
+                                        <th class="pe-3 py-3 border-0 text-end">Betrag</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if orders %}
+                                        {% for order in orders %}
+                                        <tr>
+                                            <td class="ps-3 font-weight-bold text-dark"><code>{{ order.OrderID }}</code></td>
+                                            <td class="text-muted" title="{{ order.OrderDate }}">{{ order.OrderDate.split(' ')[0] }}</td>
+                                            <td><span class="badge bg-info text-dark">{{ order.OrderStatus }}</span></td>
+                                            <td><span class="badge bg-light text-success border border-success">{{ order.PaymentStatus }}</span></td>
+                                            <td class="pe-3 font-weight-bold text-end text-dark">{{ "%.2f"|format(order.OrderAmount / 100.0) }} €</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr><td colspan="5" class="text-center py-4 text-muted">Keine Bestellungen vorhanden.</td></tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if section_name == 'analysis' %}
+        <div class="row g-4 mb-5" id="section-analysis">
+            <div class="col-12">
+                <h3 class="h5 mb-3 font-weight-bold text-secondary text-uppercase" style="letter-spacing: 0.05em;">
+                    <i class="fa-solid fa-chart-line me-2 text-info"></i>Visuelle Geschäftsdaten-Analyse
+                </h3>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="card shadow-sm border-0 bg-white" style="border-radius: 8px; border: 1px solid #dee2e6;">
+                    <div class="card-header bg-light border-0 py-3 font-weight-bold text-dark">Bestellumsätze nach Datum</div>
+                    <div class="card-body p-3 text-center">
+                        {% if order_plot_url %}<img src="data:image/png;base64,{{ order_plot_url }}" class="img-fluid rounded">{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="card shadow-sm border-0 bg-white" style="border-radius: 8px; border: 1px solid #dee2e6;">
+                    <div class="card-header bg-light border-0 py-3 font-weight-bold text-dark">Bank-Transaktionen (Cashflow)</div>
+                    <div class="card-body p-3 text-center">
+                        {% if bank_plot_url %}<img src="data:image/png;base64,{{ bank_plot_url }}" class="img-fluid rounded">{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Admin - Projekt Review{% endblock %}
+
+{% block extra_styles %}
+<style>
+.message-container {
+    max-height: 500px;
+    overflow-y: auto;
+    background-color: #f8f9fa; 
+    padding: 15px;
+    border-radius: 8px;
+}
+.message-bubble {
+    max-width: 80%;
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    border-radius: 18px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+.admin-message {
+    background-color: #e2e6ea; 
+    color: #212529;
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+}
+.user-message {
+    background-color: #370987; 
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+}
+.timestamp {
+    font-size: 10px;
+    margin-top: 3px;
+    opacity: 0.7;
+}
+.card-body.p-0 > .message-container {
+    border: none !important;
+}
+
+/* Neue Styles für die Dateiliste */
+.file-badge {
+    background-color: #f1f3f5;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+.file-badge:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+</style>
+{% endblock %}
+
+{% block wishlist_icon %}{% endblock %}
+{% block cart_icon %}{% endblock %}
+
+{% block body %}
+<div class="container content-shift">
+    <h1 class="mb-4 text-primary text-center">Admin Review Page</h1>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <strong>📁 Bereitgestellte Projektdateien (Kunden-Uploads)</strong>
+            <span class="badge bg-secondary">{{ project_files | length }} Datei(en)</span>
+        </div>
+        <div class="card-body">
+            {% if project_files %}
+                <div class="row g-3">
+                    {% for file in project_files %}
+                    <div class="col-md-6">
+                        <div class="p-3 file-badge d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center style-truncate" style="max-width: 70%;">
+                                <span style="font-size: 1.5rem; margin-right: 12px;">
+                                    {% if file.FileName.lower().endswith('.stl') or file.FileName.lower().endswith('.obj') %}
+                                        📦
+                                    {% elif file.FileName.lower().endswith('.png') or file.FileName.lower().endswith('.jpg') %}
+                                        🖼️
+                                    {% elif file.FileName.lower().endswith('.gcode') %}    
+                                        🖨️
+                                    {% else %}
+                                        📄
+                                    {% endif %}
+                                </span>
+                                <div class="text-start">
+                                    <strong class="d-block text-truncate" title="{{ file.FileName }}">{{ file.FileName }}</strong>
+                                    <small class="text-muted">{{ file.FileSizeKB }} KB | ID: <code>{{ file.FileID }}</code></small>
+                                </div>
+                            </div>
+                            <a href="{{ url_for('admin_views.admin_download_file', file_id=file.FileID, project_id=project.ProjectID) }}" class="btn btn-sm btn-outline-primary">
+                                ⬇️ Herunterladen
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center text-muted py-3">
+                    <p class="mb-0">⚠ Keine verknüpften Dateien für dieses Projekt in der Datenbank gefunden.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-secondary text-white text-start">
+            <strong>Projekt:</strong> {{ project.ProjectName }}
+        </div>
+        <div class="card-body text-start">
+            <strong>Kunden User ID:</strong> {{ project.UserID }}
+        </div>
+        <div class="card-body text-start">
+            <strong>Arbeitsaufwand:</strong> {{ project.MaterialType }}
+        </div>
+        <div class="card-body text-start">
+            <p><strong>Status:</strong> <span class="badge bg-warning">{{ project.Status | replace('_', ' ') }}</span></p>
+            <p><strong>Beschreibung:</strong> {{ project.ProjectDescription }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-start">
+                    Projekt-Kommunikation
+                </div>
+                <div class="card-body p-0">
+                    <div class="message-container" id="chat-messages">
+                        {% if messages %}
+                            {% for message in messages %}
+                                {% set is_admin = message.SenderType == 'Admin' %}
+                                <div class="d-flex {{ 'justify-content-end' if is_admin else 'justify-content-start' }}">
+                                    <div class="message-bubble {{ 'user-message' if is_admin else 'admin-message' }} shadow-sm">
+                                        {{ message.MessageText }}
+                                        <div class="timestamp {{ 'text-white' if is_admin else 'text-dark' }}">
+                                            {{ 'Sie (Admin)' if is_admin else 'Kunde' }} - {{ message.Timestamp | default('Datum N/A') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted p-5">
+                                <h1>📪</h1>
+                                <h5>Noch keine Nachrichten in diesem Projekt.</h5>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+
+            <!-- NEU: Add Quote, gleiche Logik wie auf der Projekt-Card -->
+            <div class="mb-3">
+                {% if project.Status == 'WAITING_FOR_QUOTE' %}
+                    <a href="{{ url_for('admin_views.review_final_quote', project_id=project.ProjectID) }}"
+                       class="btn btn-success w-100"
+                       style="font-size: 1.1rem;">
+                        Add Quote
+                    </a>
+                {% else %}
+                    <button type="button" class="btn btn-success w-100" style="font-size: 1.1rem;" disabled>
+                        Add Quote
+                    </button>
+                {% endif %}
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white text-start">
+                    1. Review & Status-Aktionen
+                </div>
+                <div class="card-body text-start">
+                    <form method="POST" action="{{ url_for('admin_views.admin_send_review', project_id=project.ProjectID) }}">
+                        <div class="mb-3">
+                            <label for="message_text" class="form-label">Nachricht an Kunden (Preisvorschlag/Rückfrage):</label>
+                            <textarea class="form-control" id="message_text" name="message_text" rows="3" required></textarea>
+                        </div>
+
+                        <hr class="my-4">
+
+                        {% if messages.RequiredFilesProvided %}
+                        <div class="mb-4 p-3 border border-success bg-light-green rounded text-success">
+                            <h5 class="mb-0">ZUSÄTZLICHE DOKUMENTE VORHANDEN</h5>
+                            <small class="d-block">Der Kunde hat die nachgeforderten Unterlagen erfolgreich bereitgestellt.</small>
+                        </div>
+                        {% else %}
+                        <div class="form-check mb-3 p-3 border border-warning rounded">
+                            <input class="form-check-input" type="checkbox" name="request_documents" id="request_documents">
+                            <label class="form-check-label text-warning" for="request_documents">
+                                <strong>ZUSÄTZLICHE DOKUMENTE ANFORDERN</strong>
+                            </label>
+                            <small class="form-text text-muted d-block">Setzt den Status auf "REQUIRES_FILES" und informiert den Kunden über fehlende Unterlagen.</small>
+                        </div>
+                        {% endif %}
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" name="skip_review_1" id="skip_review_1">
+                            <label class="form-check-label" for="skip_review_1">
+                                <strong>Review 1 überspringen</strong> (Direkt zur finalen Prüfung)
+                            </label>
+                            <small class="form-text text-muted d-block">Setzt den Status direkt auf 'WAITING_FOR_QUOTE'.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger w-100"
+                            {% if project.Status != 'PROJECT_COMPLETED' and project.Status != 'UNDER_REVIEW' and project.Status != 'WAITING_FOR_QUOTE' %} disabled {% endif %}>
+                            Nachricht senden & Aktionen speichern
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatWindow = document.getElementById('chat-messages');
+        if (chatWindow) {
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+    });
+</script>
+{% endblock %}

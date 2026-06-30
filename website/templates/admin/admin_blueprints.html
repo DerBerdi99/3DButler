@@ -1,0 +1,78 @@
+<div class="row">
+    {% if blueprints_list %}
+    {% for bp in blueprints_list %}
+    <div class="col-12 col-md-6 col-lg-4 mb-4 text-start">
+        <div class="card shadow-sm h-100 border-0 printer-card-main" style="border: 1px solid #bdbdbd !important;">
+            <button class="btn btn-sm delete-btn" 
+                    data-blueprint-id="{{ bp.BlueprintID }}" 
+                    data-delete-url="{{ url_for('admin_views.delete_blueprint', blueprint_id=bp.BlueprintID) }}"
+                    style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                &#x2715;
+            </button>
+    
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title text-primary">{{ bp.ProjectName }}</h5>
+                <p class="small text-muted mb-2 fw-mono">ID: {{ bp.ProjectID | truncate(15) }}</p>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge {% if bp.BlueprintStatus == 'INITIALIZED' %}bg-info{% else %}bg-success{% endif %}" style="font-size: 0.7rem;">
+                        {{ bp.BlueprintStatus }}
+                    </span>
+                    <div id="job-signal-{{ bp.ProjectID }}" class="small fw-bold text-accent-custom" style="display:none; opacity:1;">
+                        <i class="fas fa-check-circle"></i> JOBS ERZEUGT
+                    </div>
+                </div>
+                
+                <div class="mt-auto d-grid gap-2">
+                    <button class="btn btn-outline-secondary btn-sm" 
+                            type="button"
+                            data-blueprint-id="{{ bp.BlueprintID }}"
+                            data-project-id="{{ bp.ProjectID }}"
+                            data-project-name="{{ bp.ProjectName }}"
+                            data-volume="{{ bp.VolumeCM3 or '' }}"
+                            data-weight="{{ bp.EstimatedMaterialG or '' }}"
+                            data-time="{{ bp.PrintTimeMin or '' }}"
+                            data-profile="{{ bp.ProfileID or '' }}"
+                            data-material="{{ bp.MaterialID or '' }}"
+                            onclick="openManufacturingViewer(this)">
+                            <i class="fas fa-edit me-1"></i> Blueprint bearbeiten
+                    </button>
+    
+                    <button id="bom-trigger-display-{{ bp.ProjectID }}"
+                            class="btn btn-cyber-industrial" 
+                            onclick="openBOMWorkbench(this)"
+                            data-project-id="{{ bp.ProjectID }}"
+                            data-project-name="{{ bp.ProjectName }}">
+                        <!-- ID am Icon: Farbe (text-muted / text-accent-custom) wird nach Save umgeschaltet -->
+                        <i id="bom-icon-{{ bp.ProjectID }}" 
+                           class="fa-solid fa-file-lines {{ 'text-accent-custom' if bp.bom_exists else 'text-muted' }} me-2"></i>
+                        <!-- ID am Label: Text "(fehlt)" / "(vorhanden)" wird nach Save umgeschaltet -->
+                        <span id="bom-label-{{ bp.ProjectID }}">
+                            BOM {{ '(vorhanden)' if bp.bom_exists else '(fehlt)' }}
+                        </span>
+                    </button>
+    
+                    <a href="{{ url_for('admin_views.project_details', project_id=bp.ProjectID) }}" 
+                        class="btn btn-link text-decoration-none text-center">
+                        Details einsehen
+                    </a>
+
+                    <button id="trigger-btn-{{ bp.ProjectID }}"
+                            class="btn start-production-btn" 
+                            type="button"
+                            {{ 'disabled' if not bp.bom_exists }}
+                            onclick="triggerProduction('{{ bp.ProjectID }}')">
+                        PRODUKTION STARTEN
+                    </button>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+        <div class="col-12 text-center mt-5">
+            <h2 class="text-muted">Keine Projekte in der Fertigung gefunden.</h2>
+        </div>
+    {% endif %}
+</div>

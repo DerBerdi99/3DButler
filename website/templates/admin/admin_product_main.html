@@ -1,0 +1,38 @@
+
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Shopartikel verwalten{% endblock %}
+
+{% block wishlist_icon %}
+
+{% endblock %}
+
+{% block cart_icon %}
+
+{% endblock %}
+
+
+{% block body %}
+
+<div class="col-12 col-md-10 ms-auto px-4 py-2 mt-1 mt-md-n5 position-relative">
+            
+        <h3 class="mb-0"><i class="fa-solid fa-users-gear me-2"></i> Shopartikel verwalten</h3>
+    
+    <div class="row">
+        <div class="col-lg-7">
+            {% include 'admin/admin_product_backlog.html' %}
+        </div>
+
+        <div class="col-lg-5">
+            <div class="row">
+                <div class="col-12 mb-4">
+                    {% include 'admin/admin_product_viewer.html' %}
+                </div>
+                <div class="col-12">
+                    {% include 'admin/admin_product_scoring.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

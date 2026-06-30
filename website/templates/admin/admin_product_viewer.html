@@ -1,0 +1,90 @@
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">📝 Product Viewer</h6>
+    </div>
+    <div class="card-body">
+        
+        {% if selected_product %}
+        <form id="viewer_form" method="POST" action="{{ url_for('admin_views.manage_products') }}">
+            
+            <input type="hidden" name="action" value="finalize_product">
+            <input type="hidden" name="product_id" value="{{ selected_product.ProductID }}">
+
+            
+            <div class="mb-3">
+                <label for="pv_name" class="form-label">Name:</label>
+                <input type="text" id="pv_name" name="product_name" class="form-control" 
+                       value="{{ selected_product.ProductName or '' }}" required>
+            </div>
+            
+            <!-- NEU: prominente Anzeige des aktuell gültigen Preises (read-only, unabhängig vom Finalisierungsfeld unten) -->
+            <div class="mb-3 p-2 border rounded bg-light d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Aktuell gültiger Preis:</span>
+                {% if selected_product.ProductPrice is not none %}
+                    <span class="fw-bold text-success">{{ "%.2f"|format(selected_product.ProductPrice) }} €</span>
+                {% else %}
+                    <span class="text-muted">Kein Preis festgelegt</span>
+                {% endif %}
+            </div>
+            
+            <!-- NEU: ProjectID-Anzeige (read-only, aus SourceProjectID) -->
+            <div class="mb-3">
+                <label for="pv_project_id" class="form-label">Quell-Projekt-ID:</label>
+                <input type="text" id="pv_project_id" class="form-control" 
+                       value="{{ selected_product.SourceProjectID or '–' }}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="pv_beschreibung" class="form-label">Beschreibung:</label>
+                <textarea id="pv_beschreibung" name="product_description" class="form-control" rows="3" required>{{ selected_product.ProductDescription or '' }}</textarea>
+            </div>
+
+            <div class="text-center mb-4 p-3 border rounded bg-light">
+                {% if selected_product.ImagePath %}
+                    <img src="{{ url_for('static', filename=selected_product.ImagePath | trim) }}" alt="Produktbild" style="max-width: 100%; height: auto;">
+                    <p class="text-muted small mt-2">Pfad: <code>{{ selected_product.ImagePath }}</code></p>
+                {% else %}
+                    
+                    <p class="text-muted small mt-2">Kein Bildpfad verfügbar.</p>
+                {% endif %}
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="pv_category" class="form-label">Kategorie (Final):</label>
+                    <select id="pv_category" name="final_category" class="form-select" required>
+                        <option value="">Kategorie wählen</option>
+                        {% for cat in all_categories %}
+                            <option value="{{ cat }}" 
+                                    {% if cat == selected_product.ProductCategory %}selected{% endif %}>
+                                {{ cat }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="pv_creator" class="form-label">Creator Name:</label>
+                    <input type="text" id="pv_creator" class="form-control" 
+                           value="{{ selected_product.CreatorName or '' }}" readonly>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="pv_listprice" class="form-label">Listenpreis (€):</label>
+                <input type="number" step="0.01" id="pv_listprice" name="final_price" class="form-control" 
+                       value="{{ selected_product.CurrentListPrice or '' }}" required 
+                       placeholder="Finalen Preis festlegen">
+            </div>
+
+            <button type="submit" class="btn btn-success w-100" id="submit_finalize_btn">
+                Zum Shop hinzufügen
+            </button>
+        </form>
+        
+        {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            Wählen Sie ein Produkt im **Product Backlog** (links), um es hier zu finalisieren.
+        </div>
+        {% endif %}
+    </div>
+</div>

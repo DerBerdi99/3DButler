@@ -1,0 +1,1355 @@
+/* Den bestehenden Background der base.html beibehalten und Schimmer drüberlegen */
+body {
+    position: relative;
+    overflow-x: hidden; /* Verhindert Scrollbars durch den Schimmer */
+}
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: -150%; /* Startet weit außerhalb */
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        120deg,
+        transparent,
+        rgba(128, 216, 255, 0.04) 40%, /* Extrem subtiles Hellblau */
+        rgba(255, 255, 255, 0.08) 50%, /* Kurzer Glanz-Peak */
+        rgba(128, 216, 255, 0.04) 60%,
+        transparent
+    );
+    z-index: -1; /* Hinter dem Inhalt, aber über dem Background-Gradienten */
+    transform: skewX(-25deg);
+    animation: global-shimmer 12s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    pointer-events: none; /* Klicks gehen durch den Schimmer durch */
+}
+/* Erlaubt Interaktion mit dem Hintergrund, wenn das Modal offen ist */
+body.modal-open {
+    overflow: auto !important;
+    padding-right: 0 !important;
+}
+@keyframes global-shimmer {
+    0% {
+        left: -150%;
+    }
+    30% {
+        left: 150%; /* Schimmer wandert durch */
+    }
+    100% {
+        left: 150%; /* Lange Pause, bis der nächste Schimmer kommt */
+    }
+}
+
+h1{
+
+
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(217, 209, 201);
+
+}
+
+h2{
+
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(217, 209, 201);
+}
+h3{
+
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(217, 209, 201);
+}
+h4{
+
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(217, 209, 201);
+}
+h5{
+
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(217, 209, 201);
+}
+h6{
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(217, 209, 201);
+
+}
+.btn{
+    background: #1A237E;
+    border: 2px solid #0078a0;
+    border-radius: 8px;
+    color: #fff;
+}
+.d-flex .search-btn{
+    background: #1A237E;
+    border: 2px solid #0078a0;
+    border-radius: 8px;
+    color: #fff;
+}
+
+.p-site-description{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: rgb(200, 200, 200);
+}
+
+.d-flex .btn:hover{
+    background: rgb(228, 150, 7);
+    border: 2px solid rgb(228, 150, 7);
+}
+
+#right1 :hover{
+    color: orange;
+    transition: 300ms;
+}
+
+.row .right2 {
+    margin-left: -10px;
+    height: 180px;
+    width: 180px;
+    border-radius: 10px;
+}
+
+.container .row .col .row .col a {
+    background-color: orange;
+    padding: 10px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: white;
+
+}
+
+.container .row .col .row .col a :hover {
+    background-color: rgb(201, 132, 5);
+}
+
+.container-slideshow {
+    outline: 3px solid #0078a0;
+    outline-offset: 6px;
+    border-radius: 3%;
+    /* Füge Padding hinzu, das den Abstand zwischen Inhalt und Outline gewährleistet */
+    padding: 10px; /* Muss größer sein als der outline-offset von 6px */
+
+    /* ... Rest des Stils ... */
+}
+
+/* NEU: CSS zur Verschiebung des Hauptinhalts nach rechts, um Platz für eine fixierte linke Navigationsleiste zu schaffen.
+   Dieser Wert muss an die Breite Ihrer linken Navbar angepasst werden. */
+.content-shift {
+    /* Standard-Abstand für Desktops (270px schafft Platz für eine ca. 250px breite linke Navbar) */
+    padding-left: 45px;
+}
+#column :hover{
+    transform: scale(0.9);
+    transition: 450ms;
+    border-radius: 10px;
+}
+
+#items :hover {
+    color: orange;
+    transition: 200ms;
+}
+.lavaplates-icon{
+    background-image: url('/static/icons/lavaplates.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.cart-icon {
+    background-image: url('/static/icons/shoppingcart-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.heart-icon {
+    background-image: url('/static/icons/wishlist-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.account-icon{
+    background-image: url('/static/icons/account-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.shop-link{
+    background-image: url('/static/icons/shop-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.project-link{
+    background-image: url('/static/icons/start-project-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.reviews-link{
+    background-image: url('/static/icons/my-reviews-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.orders-link{
+    background-image: url('/static/icons/my-orders-icon1.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.placeholder1{
+    background-image: url('/static/icons/special.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+.placeholder2{
+    background-image: url('/static/icons/furniture.png');
+    width: 30px;      /* Set the width of the icon */
+    height: 30px;     /* Set the height of the icon */
+    background-size: cover; /* or contain, or 100% 100% */
+    background-repeat: no-repeat; /* Prevent the image from tiling */
+    display: inline-block; /* or block, depending on how you want the element to flow */
+}
+
+
+
+.mySlides{
+    display: none;
+    }
+.mySlides img{
+    border-radius: 3%;
+}
+.prev, .next{
+
+position: absolute;
+top:50%;
+width: auto;
+margin-top: -22px;
+padding: 16px;
+color:white;
+
+transition: transform 0.3s, opacity 0.3s;
+border-radius: 0 3px 3px 0;
+
+}
+.prev{
+left:0;
+border-radius:3px 0 0 3px;
+}
+.next{
+right:0;
+border-radius:3px 0 0 3px;
+}
+.prev:hover,.next:hover{
+    opacity: 0.8; /* Slightly reduce opacity for effect */
+}
+.prev img,
+.next img {
+    /* WICHTIG: Die Images stylen, da der Schatten direkt auf das Icon soll */
+    
+    /* Definiert einen weichen, dunklen Schatten.
+       Parameter: Versatz-X | Versatz-Y | Weichzeichner-Radius | Farbe */
+    filter: drop-shadow(0px 4px 12px rgba(0, 0, 0, 0.4));
+    
+    /* Optionale Anpassung bei Hover (Schatten verstärken) */
+    transition: filter 0.2s ease-in-out;
+}
+
+/* Optional: Stärkerer Schatten bei Interaktion */
+.prev:hover img,
+.next:hover img {
+    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.6));
+}
+
+.fade{
+animation-name: fade;
+animation-duration: 6s;
+}
+@keyframes fade {
+        from {opacity:.4}
+        to {opacity:1}
+}
+
+.list-group{
+position: absolute;
+left:0px;
+width: 300px;   /*Navbar ist 300px breit */
+}
+.list-group-item{
+    padding-top: 20px; /* Adjust as needed */
+    padding-bottom: 20px; /* Adjust as needed */
+}
+/* Basis für alle Nav-Items */
+.nav-custom-item {
+    background-color: #ffffff;
+    color: #1A237E; /* Hauptblau für den Text */
+    border: 1px solid #BDBDBD !important;
+    border-left: 5px solid #1A237E !important; /* Dunkelblau für Standard */
+    margin-bottom: 8px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 500;
+}
+
+/* Subtile Unterscheidung für die "Wartungs/Steuerungs"-Items */
+.nav-custom-item.item-priority {
+    border-left-color: #0078a0 !important; /* Petrol für Review/Fertigung */
+    background-color: #BDBDBD; /* Ganz zarter Petrol-Schimmer */
+}
+
+/* Hover-Effekt für beide Typen */
+.nav-custom-item:hover {
+    background-color: #1A237E !important;
+    color: #ffffff !important;
+    transform: translateX(8px);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Wenn ein Item aktiv ist (optional für JS-Ansteuerung) */
+.nav-custom-item.active {
+    background-color: #BDBDBD;
+    border-left-color: #0078a0 !important;
+}
+.rotate-1 {
+    transform: rotate(-2deg);
+}
+
+.rotate-2 {
+    transform: rotate(2deg);
+}
+
+.rotate-3 {
+    transform: rotate(45deg);
+}
+.btn-details{
+    background-color: #8e0b0b;
+    text-decoration: none;
+    margin: 2%;
+    font-size: larger;
+    padding: 10px;
+    border-radius: 15%;
+    border: 2px solid rgb(162, 59, 59);
+    color: rgb(246, 172, 172);
+    transition: transform 0.3s, opacity 0.3s;
+}
+.btn-details:hover{
+    transform: scale(1.1); /* Makes the image stick out */
+    opacity: 0.8; /* Slightly reduce opacity for effect */
+}
+.Icon{
+    transform: scale(.8);
+    border-radius: 5%;
+}
+.text-overlay h3
+{
+    font-size: 2.5em;
+    color: white;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.text-overlay p
+{
+    font-size: 1.2em;
+    color:#bdbdbd;
+    margin-bottom: 20px;
+}
+.site-description{
+    background-color: rgba(255, 255, 255, 0.6);
+    padding: 20px;
+    border-radius: 10px;
+    display: inline-block;
+    text-align: center;
+}
+
+/* --- Header Monitor Admin Base Html --- */
+.header-monitor-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Hintergrund: Mittleres Grau passend zum Blau-Verlauf */
+    background: #2c3e50; 
+    color: #ecf0f1;
+    padding: 0 25px;
+    height: 100px;
+    /* Border-Radius an allen Ecken */
+    border-radius: 10px;
+    border-bottom: 2px solid #3498db;
+    font-family: 'Segoe UI', sans-serif;
+    box-sizing: border-box;
+    margin: 10px; /* Kleiner Abstand zum Rand für den Radius-Effekt */
+}
+
+/* --- Links: Job Meta --- */
+.job-meta {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 180px;
+}
+
+.job-meta .label {
+    font-size: 0.7rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.job-meta .value {
+    font-size: 1.1rem;
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- Mitte: Massive Progress Area --- */
+.job-progress-center {
+    flex: 5; /* Nimmt den meisten Platz ein */
+    display: flex;
+    flex-direction: column;
+    padding: 0 50px;
+}
+
+.execution-group {
+    width: 100%;
+}
+
+.progress-stats-wrapper {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 1rem;
+    color: #00d4ff;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 16px;
+    background: #34495e; /* Etwas dunkleres Grau für den Slot */
+    border-radius: 10px; /* Radius konsistent halten */
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.progress-bar {
+    height: 100%;
+    /* Übergang Blau zu Grau (dein gewünschter Verlauf) */
+    background: linear-gradient(90deg, #1a597e 0%, #876b9e 100%);
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+    transition: width 0.5s ease;
+}
+
+/* Controls unter dem Balken */
+.execution-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin-top: 10px;
+}
+
+.btn-start, .btn-stop {
+    border: none;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 10px; /* Konsistenter Radius */
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.85rem;
+    background: #3498db; /* Einheitliches Blau als Basis */
+    transition: background 0.3s, transform 0.1s;
+    min-width: 100px;
+}
+
+.btn-stop {
+    background: #e74c3c !important;
+}
+.btn-stop:active, .btn-stop.active {
+    background: #c0392b !important;
+    transform: scale(0.95);
+}
+
+.btn-start:hover, .btn-stop:hover {
+    filter: brightness(1.1);
+}
+.btn-start:active, .btn-start.active {
+    background: #27ae60 !important;
+    transform: scale(0.95);
+}
+.btn-bom-link {
+    color: #3498db;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border: 2px solid #3498db;
+    padding: 4px 12px;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+
+.btn-bom-link:hover {
+    background: #3498db;
+    color: #2c3e50;
+}
+
+/* --- Rechts: Navigation & Ticker --- */
+.view-navigation {
+    flex: 1.5;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    border-left: 1px solid #333;
+    padding-left: 20px;
+}
+
+.header-log-ticker {
+    flex: 1.5;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 15px;
+    height: 100%;
+}
+
+.header-log-ticker ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.header-log-ticker li {
+    font-family: 'Consolas', 'Monaco', monospace; /* Feste Breite für Zeitstempel */
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: #bdc3c7; /* Helles Grau */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* Status-Präfixe hervorheben */
+.header-log-ticker li::first-line {
+    color: #ecf0f1;
+}
+
+/* Optional: Farbige Akzente für die Kürzel */
+.header-log-ticker li:contains("OK:") { color: #2ecc71; } /* Nur falls JS-gestützt, sonst über Klassen */
+
+.nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-controls button {
+    background: transparent;
+    border: 1px solid #444;
+    color: #fff;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 3px;
+}
+
+.nav-controls button:hover { background: #333; }
+
+.job-index {
+    font-size: 0.85rem;
+    color: #aaa;
+    min-width: 80px;
+    text-align: center;
+}
+
+.bom-workbench-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    max-height: 500px;
+    background: #212529; /* Dark Look */
+    border: 1px solid #3d444b;
+    border-radius: 8px;
+    z-index: 1060;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel-body {
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.bom-part-row input {
+    background: #2b3035 !important;
+    border-color: #495057 !important;
+    color: white !important;
+}
+/* Verhindert, dass das Modal den gesamten Bildschirm für Klicks sperrt */
+#bomWorkbench {
+    pointer-events: none;
+    z-index: 1040 !important; /* Höher als Standard Offcanvas (1045) */
+    background: none !important;
+}
+#bomWorkbench .modal-dialog {
+    pointer-events: all;
+    margin: 0; /* Wichtig für das freie Draggen */
+}
+/* Der Content muss Klicks wieder annehmen */
+#bomWorkbench .modal-content {
+    pointer-events: all;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+/* Erzwingt Klickbarkeit für alle Inputs in der Workbench, egal was offen ist */
+#bomWorkbench input, 
+#bomWorkbench select, 
+#bomWorkbench button {
+    pointer-events: all !important;
+    position: relative;
+    z-index: 1061;
+}
+/* Sidebar Z-Index sicherstellen */
+.sidebar, #offcanvasRight {
+    z-index: 1060 !important;
+}
+/* Cursor-Hinweis für das Verschieben */
+#bomModalHeader {
+    user-select: none;
+}
+
+/* Die Klasse, die alles steuert */
+.bom-part-row.is-bought {
+    opacity: 0.4; /* Macht die Zeile blass */
+    filter: grayscale(1); /* Entzieht die Farbe */
+    transition: all 0.25s ease;
+}
+
+/* Deaktiviere die Eingabefelder für Zukaufteile */
+.bom-part-row.is-bought .part-dim-x,
+.bom-part-row.is-bought .part-dim-y,
+.bom-part-row.is-bought .part-dim-z,
+.bom-part-row.is-bought .part-material,
+.bom-part-row.is-bought .part-profile,
+.bom-part-row.is-bought .part-nozzle,
+.bom-part-row.is-bought .part-weight,
+.bom-part-row.is-bought .part-time {
+    pointer-events: none; /* Sperrt Klicks */
+    background-color: #1a1a1a !important; /* Dunkelt Felder ab */
+}
+/* Label hell und deutlich */
+.form-check-label {
+    color: #adb5bd !important; /* Helles Grau */
+    cursor: pointer;
+    padding-left: 0.5rem;
+    user-select: none;
+}
+
+/* Falls das Label durch das Modal-Layout "verschluckt" wird */
+.form-check {
+    display: flex;
+    align-items: center;
+    min-height: 1.5rem;
+}
+
+/* Fokus-Farbe für die Box im Dark Mode */
+.form-check-input:checked {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+}
+
+/* Sorgt dafür, dass die Box im uncheck-Zustand auf dunklem Grund sichtbar bleibt */
+.form-check-input {
+    background-color: #2b3035;
+    border: 1px solid #495057;
+}
+
+/* Animation für das Offcanvas-Panel (rechts die klappbare Bar) abschalten */
+#manufacturingViewer {
+    transition: none !important;
+}
+
+/* Verhindert das verzögerte Einblenden des dunklen Hintergrunds */
+.offcanvas-backdrop.fade {
+    transition: none !important;
+    opacity: 0.5 !important; /* Sofortige Deckkraft */
+}
+/* Placeholder hell genug machen */
+.part-name::placeholder, 
+.part-weight::placeholder, 
+.part-time::placeholder {
+    color: #adb5bd !important; /* Helles Grau */
+    opacity: 0.6;
+}
+
+/* Container für ein Bauteil */
+.bom-part-item {
+    display: flex;
+    flex-wrap: wrap; /* Erlaubt Umbruch bei Platzmangel */
+    gap: 10px;
+    align-items: flex-end;
+    transition: border-color 0.2s;
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Die Gruppen innerhalb der Zeile */
+.part-group {
+    flex: 1 1 150px; /* Wachsen, schrumpfen, Basis-Breite 150px */
+    min-width: 120px;
+}
+
+/* Spezifische Breiten für kleine Felder */
+.group-qty { flex: 0 0 70px; min-width: 70px; }
+.group-time { flex: 0 0 90px; min-width: 90px; }
+.group-check { flex: 0 0 auto; min-width: 80px; align-self: center; padding-top: 15px; }
+.group-actions { flex: 0 0 auto; align-self: flex-end; }
+
+/* Styling-Korrektur für die Inputs */
+.bom-part-item label {
+    font-size: 0.7rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bom-part-item:hover {
+    border-color: #0dcaf0 !important;
+}
+
+/* Fokus-Zustand für Eingaben */
+.bom-part-item input:focus, 
+.bom-part-item select:focus {
+    border-color: #0dcaf0 !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+}
+.border-dashed {
+    border-style: dashed !important;
+    opacity: 0.6;
+}
+.border-dashed:hover {
+    opacity: 1;
+}
+/* Resize Handle am rechten Rand */
+#bomWorkbench .modal-content {
+    position: relative;
+    overflow: hidden; /* Verhindert Content-Überlauf beim Verkleinern */
+}
+
+#flash-container {
+    position: sticky;
+    top: 10px;
+    z-index: 1;
+    width: 90%;
+    border-radius: 5px;
+    margin: 10px auto;
+    padding: 0 20px;
+    /* Grid erzwingt 3 absolut gleich große Spalten */
+    display: grid !important; 
+    grid-template-columns: 1fr 1fr 1fr; 
+    background: rgba(52, 58, 64, 0.85); /* Grauer Hintergrund, leicht transparent */
+    border-bottom: 2px solid #495057;   /* Akzentlinie unten */
+    min-height: 60px;                   /* Konstante Höhe, damit es nicht springt */
+    backdrop-filter: blur(5px);         /* Schöner Unschärfe-Effekt für Content darunter */
+    pointer-events: none;
+}
+
+.flash-container-left, 
+.flash-container-center, 
+.flash-container-right {
+    display: flex;
+    width: 100%;
+}
+
+/* Inhalte innerhalb der Grid-Zellen ausrichten */
+.flash-container-left   { justify-content: flex-start; padding-left: 20px; }
+.flash-container-center { justify-content: center; }
+.flash-container-right  { justify-content: flex-end; padding-right: 20px; }
+
+.alert {
+    pointer-events: auto;
+    min-width: 300px;
+    margin: 0;
+}
+.resize-handle-e {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 10px;
+    height: 100%;
+    cursor: e-resize;
+    z-index: 9999;
+}
+
+/* Optional: Optisches Feedback beim Hover */
+.resize-handle-e:hover {
+    background: rgba(13, 202, 240, 0.2);
+}
+
+/* Damit das Modal nicht zu schmal wird */
+#draggableModal {
+    min-width: 500px;
+    max-width: 95vw !important; /* Fast volle Bildschirmbreite möglich */
+}
+
+.bom-part-row:hover {
+    background-color: rgba(13, 202, 240, 0.08) !important;
+    border-color: #0dcaf0 !important;
+    transition: all 0.2s ease;
+}
+
+/*  softe transition für das reflow */
+/* Der sanfte Wipe-Effekt für den Container */
+@keyframes softWipe {
+    0% { 
+        clip-path: inset(0 0 100% 0);
+        opacity: 0.6;
+    }
+    100% { 
+        clip-path: inset(0 0 0 0);
+        opacity: 1;
+    }
+}
+
+.section-scan {
+    position: relative;
+    animation: softWipe 0.5s ease-out forwards;
+}
+
+/* Die dezente Lichtkante */
+.section-scan::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    background: linear-gradient(to bottom, rgba(13, 110, 253, 0.4), transparent);
+    border-top: 2px solid rgba(13, 110, 253, 0.6);
+    z-index: 10;
+    /* Die Linie fährt synchron mit dem clip-path nach unten */
+    animation: scanLineDown 0.5s ease-out forwards;
+}
+
+@keyframes scanLineDown {
+    0% { top: 0; }
+    100% { top: 100%; }
+}
+
+/*Printer-Card Styles*/
+/* --- 1. Basis-Container & Card --- */
+.printer-card-main {
+    width: 100% !important; /* Sicherstellen, dass die Karte nicht breiter als die Spalte ist */
+    max-width: 500px;        /* Optional: Damit sie auf riesigen Bildschirmen nicht zu fett wird */
+    margin: 0 auto;
+    background-color: #ffffff !important;
+    border: 2px solid #bdbdbd !important;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s ease-in-out;
+}
+/* Verhindert, dass die Tabelle die Karte breiter drückt als die 50% Spalte */
+.printer-card-main .job-table-scroll-container {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.printer-card-main table {
+    min-width: 400px; /* Erlaubt horizontales Scrollen innerhalb der Karte falls nötig */
+}
+
+/* Die untere Box flexibel machen, damit sie nicht stapelt */
+.notch-bottom .fs-5 {
+    font-size: 1.1rem !important; /* Etwas kleiner, damit 1200x5x5 nicht umbricht */
+}
+
+/* Erzwinge das Nebeneinander im Grid-Container */
+/* Das hier zwingt den schwarzen Kasten und den Container auf volle Breite */
+/* Der äußere Kasten erlaubt horizontales Scrollen */
+.printer-horizontal-scroll-wrapper {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    white-space: nowrap; /* Verhindert Umbrüche auf Textebene */
+    padding-top: 35px !important; /* Platz für die Notch oben */
+}
+
+/* In deine CSS-Datei */
+#printer_grid_container {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important; /* DAS verhindert das Stapeln */
+    overflow-x: auto !important;   /* DAS erlaubt das Scrollen */
+    min-height: 400px;
+    align-items: flex-start;
+}
+
+.printer-card-wrapper {
+    flex: 0 0 450px !important; /* DAS erzwingt die Breite */
+    margin-top: 25px;
+}
+
+.printer-card-main {
+    width: 100% !important;
+    position: relative;
+    border: 2px solid #bdbdbd !important;
+    background: #fff !important;
+}
+.printer-card-main:hover {
+    transform: translateY(-5px);
+}
+/* --- 3. Job-Queue (Scrollbar links) --- */
+.job-table-scroll-container {
+    height: 220px;
+    overflow-y: scroll;
+    direction: rtl; /* Scrollbar links */
+    scrollbar-width: thin;
+    scrollbar-color: #0078a0 #ffffff;
+    border-bottom: 1px solid #bdbdbd;
+}
+
+.job-table-scroll-container > table {
+    direction: ltr; /* Textinhalt rechts */
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* Webkit Scrollbar (Chrome/Safari) */
+.job-table-scroll-container::-webkit-scrollbar {
+    width: 8px;
+}
+.job-table-scroll-container::-webkit-scrollbar-track {
+    background: #ffffff;
+}
+.job-table-scroll-container::-webkit-scrollbar-thumb {
+    background-color: #0078a0;
+    border-radius: 4px;
+}
+
+/* Tabellen-Zellen Fix */
+.job-table-scroll-container table tbody tr td {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* --- 4. Steuerung & Emojis --- */
+.move-emoji {
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    user-select: none;
+    transition: transform 0.1s ease;
+    display: block;
+}
+
+.move-emoji:hover {
+    transform: scale(1.3);
+}
+
+.move-emoji:active {
+    transform: scale(0.9);
+}
+
+/* --- 5. Filament-Rolle & Fortschritt --- */
+.spool-outer {
+    width: 60px;
+    height: 60px;
+    border: 3px solid #bdbdbd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    margin: 0 auto;
+}
+
+.spool-inner {
+    background: #1a237e; /* Primärblau für Filament */
+    border-radius: 50%;
+    transition: width 0.4s ease, height 0.4s ease;
+}
+
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #bdbdbd !important; /* Grauer Hintergrund Balken */
+    height: 12px;
+}
+
+/* --- 6. Buttons & Akzente --- */
+.start-production-btn {
+    background-color: #0078a0;
+    color: white;
+    border: none;
+    font-weight: bold;
+    font-size: 0.75rem;
+    padding: 4px 0;
+    transition: background 0.2s;
+    box-shadow: 0 2px 4px rgba(26, 35, 126, 0.2);
+}
+
+.start-production-btn:hover {
+    background-color: #0078a0;
+}
+
+.text-primary-custom { color: #f0f0f0 !important; }
+.text-accent-custom { color: #0078a0 !important; }
+
+/* Warn-Animation */
+.blink {
+    animation: industrial-warn-blink 1.2s infinite;
+}
+
+@keyframes industrial-warn-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+}
+
+.badge {
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    border-radius: 4px;
+}
+
+/* --- 2. Header mit Notch (Aussparung) --- */
+
+/* Basis für beide Header/Footer mit Notch */
+.notch-container {
+    position: relative;
+    background-color: #1a237e; /* Deine Primärfarbe direkt hier */
+    padding: 1rem;
+    overflow: visible;
+}
+#printer_grid_container .col {
+    margin-top: 40px; 
+}
+
+/* Verhindert, dass die erste Reihe oben aus dem schwarzen Kasten ragt */
+#printer_grid_container {
+    padding-top: 20px;
+}
+/* Die Notch selbst (das Pseudo-Element) */
+.notch-container::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 25px;
+    background-color: #f0f0f0; /* Dashboard-Hintergrund */
+    border: 2px solid #bdbdbd;
+    z-index: 10;
+}
+
+/* Modifikator für OBEN (Aussparung zeigt nach unten) */
+.notch-top {
+    border-bottom: 2px solid #bdbdbd;
+}
+.notch-top::after {
+    top: -2px;
+    border-top: none;
+    clip-path: polygon(0 0, 100% 0, 85% 100%, 15% 100%);
+}
+
+/* Modifikator für UNTEN (Aussparung zeigt nach oben) */
+.notch-bottom {
+    border-top: 2px solid #bdbdbd;
+    background-color: #1a237e; /* Deine Primärfarbe direkt hier */
+    color: #f0f0f0;
+}
+.notch-bottom::after {
+    bottom: -2px;
+    border-bottom: none;
+    clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%);
+}
+
+/* =========================================================================
+   WORKSHOP ZENTRALE (Light Mode Modifikationen)
+   ========================================================================= */
+.workshop-container { 
+    background: #ffffff; 
+    color: #000000; 
+    padding: 15px; 
+    margin-bottom: 20px; 
+    border-radius: 8px;
+    border: 2px solid #bdbdbd !important; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+    transition: transform 0.2s ease-in-out;
+
+    /* FIX FÜR ZOOM */
+    max-width: 1270px;
+    margin-left: 50px; /* Exakte Breite der Navbar + 20px Sicherheitsabstand */
+    width: 100%;
+}
+
+.container-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border-bottom: 2px solid #e9ecef; 
+    padding-bottom: 8px; 
+    margin-bottom: 12px; 
+}
+
+.container-header h3 {
+    margin: 0;
+    color: #343a40;
+}
+
+.compact-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    font-size: 0.9rem; 
+}
+
+.compact-table th {
+    background-color: #1A237E;
+    color: #bdbdbd;
+    font-weight: 600;
+}
+
+.compact-table th, .compact-table td { 
+    padding: 8px 10px; 
+    text-align: left; 
+    border-bottom: 1px solid #dee2e6; 
+}
+
+.compact-table tr:hover {
+    background-color: #fdfdfd; /* Minimaler Hover-Effekt für die Zeilen */
+}
+
+.expandable-form { 
+    display: none; 
+    background: #f8f9fa; 
+    color: #212529;
+    padding: 15px; 
+    margin-top: 10px; 
+    margin-bottom: 15px;
+    border-radius: 4px; 
+    border: 1px solid #ced4da;
+    border-left: 4px solid #00adb5; 
+}
+
+/* Input-Felder innerhalb der aufklappbaren Masken für Light-Mode */
+.expandable-form input, .expandable-form select {
+    padding: 6px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background-color: #ffffff;
+    color: #212529;
+}
+
+.inline-increment-form { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 5px; 
+}
+
+.inline-increment-form input {
+    padding: 2px 5px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.btn-sm { 
+    padding: 4px 8px; 
+    font-size: 0.8rem; 
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer; 
+}
+
+.filter-bar { 
+    display: inline-flex; 
+    gap: 10px; 
+    font-size: 0.85rem; 
+    align-items: center; 
+}
+
+.filter-bar select {
+    padding: 4px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+/* Status- & Warnfarben (auf hellem Grund leicht nachgedunkelt für Lesbarkeit) */
+.status-online { color: #1e7e34; font-weight: bold; }
+.status-offline { color: #d39e00; font-weight: bold; }
+.status-maintenance { color: #bd2130; font-weight: bold; }
+
+.stock-low { color: #dc3545; font-weight: bold; }
+.stock-ok { color: #28a745; font-weight: bold; }
+
+/* Container für den gesamten Modal-Body  des BOM Workbenchs*/
+.bom-workbench-body {
+    display: flex !important;
+    gap: 1.25rem;
+    height: 70vh;
+    overflow: hidden;
+}
+
+/* Linke Spalte: Projekt-Dateien */
+.bom-sidebar-files {
+    flex: 0 0 320px !important; /* Verhindert das Zusammendrücken komplett */
+    width: 320px !important;
+    min-width: 320px !important;
+    max-width: 320px !important;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #2d3748;
+    padding-right: 1rem;
+}
+
+/* Scroll-Bereich für die Dateien links */
+.bom-file-scroll-container {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+/* Rechte Spalte: BOM-Inhalt */
+.bom-main-content {
+    flex: 1 !important;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding-left: 0.25rem;
+}
+
+/* Schmalere Scrollbar für die linke Liste, damit sie nicht clippt */
+.bom-file-scroll-container::-webkit-scrollbar {
+    width: 6px;
+}
+.bom-file-scroll-container::-webkit-scrollbar-thumb {
+    background-color: #4a5568;
+    border-radius: 3px;
+}
+.modal-footer {
+    opacity: 1;
+}
+/* Drag-and-Drop Hover-Effekt für die Drucker-Cards */
+.printer-card-wrapper.printer-drag-hover {
+    /* Kein transform: scale mehr – das verhindert das unruhige Zappeln */
+    box-shadow: 0 10px 25px rgba(48, 255, 7, 0.25) !important; /* Grüner, weicher Schatten-Glüheffekt */
+    transition: box-shadow 0.2s ease;
+}
+
+.printer-card-wrapper.printer-drag-hover .printer-card-main {
+    border: 2px solid #30ff07 !important; /* Durchgezogener (solid), kräftig grüner Rand */
+    background-color: rgba(48, 255, 7, 0.04); /* Ganz dezentes, transparentes Grün im Kartenhintergrund */
+}
+/* 1. Den gesamten Layout-Bereich unter der Top-Bar fixieren */
+.admin-layout-container {
+    display: flex;
+    width: 100vw;
+    height: calc(100vh - 140px); /* Zwingt den Container exakt in den sichtbaren Bereich */
+    overflow: hidden; /* Verhindert, dass die gesamte Seite scrollt */
+    align-items: stretch;
+}
+
+/* Der Hauptcontent-Bereich */
+.admin-main-content {
+    flex: 1;
+    height: 100%;
+    overflow-y: auto; /* Gewährleistet das unabhängige Scrollen links */
+    
+    /* WICHTIG: Erhöht den linken Abstand drastisch, damit der Content erst NACH dem Navigationsmenü beginnt */
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    padding-left: 280px; /* Falls dein linkes Navigationsmenü fixiert ist und ca. 240px breit ist */
+    padding-right: 1.5rem; 
+}
+
+/* Sicherstellen, dass die Grid-Reihen nicht negativ ausbrechen */
+.admin-main-content .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* 3. Die Sidebar rechts bekommt ebenfalls ihr striktes Scroll-Limit */
+#transaction-sidebar {
+    width: 350px;
+    min-width: 350px;
+    height: 100%;
+    background-color: #212529; /* bg-dark */
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 4. Die Liste im Inneren der Sidebar scrollt jetzt vollkommen autark */
+#transaction-list {
+    flex: 1;
+    overflow-y: auto; /* Aktiviert den Infinite-Scroll nur hier drin */
+    padding-right: 5px;
+}
+/* Einzelne Transaktionskarte */
+.tx-card {
+    background-color: #fff; /* Entspricht Bootstrap bg-secondary */
+    color: #000;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    font-size: 0.875rem; /* Entspricht Bootstrap small */
+    border: 0;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Text-Kürzung für lange Namen/Verwendungszwecke */
+.tx-truncate {
+    display: inline-block;
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Datumstext */
+.tx-date {
+    font-size: 0.75rem;
+    color: rgba(0, 0, 0, 0.5); /* Entspricht text-black-50 */
+}
+
+/* Haupt-Content-Container verschieben, damit nichts überlappt */
+.admin-content-shifted {
+    margin-right: 370px;
+}
+
+/* Rotfärbung für gesperrte Benutzerzeilen innerhalb dunkler Tabellen */
+.table-dark tbody tr.table-danger-custom {
+    background-color: rgba(220, 53, 69, 0.25) !important;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.table-dark tbody tr.table-danger-custom:hover {
+    background-color: rgba(220, 53, 69, 0.4) !important;
+}
+
+/* Fixes für Kontraste gesperrter Zeilen */
+.table-danger-custom td {
+    color: #f8d7da !important;
+}
+
+

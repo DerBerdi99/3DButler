@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %} Registrieren {% endblock %}
+
+{% block extra_styles %}
+<style>
+body {
+    background: linear-gradient(to right, #263238, #BDBDBD, #1A237E);
+    font-family: Arial, Helvetica, sans-serif;
+    min-height: 100vh;
+}
+
+/* Die Card als zentrales Element */
+.registration-card {
+    background-color: #BDBDBD;
+    width: 40%; /* Etwas breiter als die Inputs für Padding */
+    margin: 50px auto;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    text-align: center;
+}
+
+h2 {
+    color: #263238;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+/* Inputs auf die Card anpassen */
+input[type=text], input[type=password], input[type=email], input[type=tel], select {
+    width: 80%; /* Relativ zur Card-Breite */
+    margin: 10px auto;
+    display: block;
+    padding: 12px 15px;
+    border: 1px solid #9e9e9e;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+/* Spezialfall für Straße und Hausnummer in einer Zeile */
+.address-row {
+    width: 80%;
+    margin: 0 auto;
+    display: flex;
+    gap: 10px;
+}
+
+#street-name { flex: 3; }
+#street-address { flex: 1; }
+
+button {
+    background-color: #263238; /* Passend zur CI */
+    color: white;
+    padding: 14px 20px;
+    margin: 20px auto 0;
+    display: block;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 80%;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #1A237E;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    color: #263238;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+
+
+<div class="registration-card">
+    <h2>Registrieren</h2>
+    
+    <form action="/send" method="POST">
+        {{ csrf_field() }}
+        <input type="text" id="username" placeholder="Username" name="username" required>
+        <input type="text" id="firstname" placeholder="Vorname" name="firstname" required>
+        <input type="text" id="lastname" placeholder="Nachname" name="lastname" required>
+        
+        <label for="gender">Geschlecht</label>
+        <select id="gender" name="gender">
+            <option value="" selected disabled>Bitte auswählen</option>
+            <option value="M">Männlich</option>
+            <option value="W">Weiblich</option>
+            <option value="N">Keine Angabe</option>
+        </select>
+
+        <input type="password" id="password" placeholder="Passwort wählen" name="password" required>
+        <input type="password" id="passwordvalidation" placeholder="Passwort bestätigen" name="passwordvalidation" required>
+        
+        <input type="email" id="email" placeholder="E-Mail Adresse" name="email" required>
+        <input type="tel" id="phone" placeholder="Telefonnummer" name="phone" required>
+        
+        <input type="text" id="zipcode" placeholder="Postleitzahl" name="zipcode" required>
+        
+        <div class="address-row">
+            <input type="text" id="street-name" placeholder="Straße" name="street-name" required>
+            <input type="text" id="street-address" placeholder="Nr." name="street-number" required>
+        </div>
+        
+        <input type="text" id="city" placeholder="Stadt" name="city" required>
+        <input type="text" id="country" placeholder="Land" name="country" required>
+
+        <button type="submit">Account erstellen</button>
+    </form>
+</div>
+{% endblock %}

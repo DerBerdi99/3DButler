@@ -1,0 +1,265 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Projektbegutachtung: Übersicht{% endblock %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+{% block wishlist_icon %}
+
+{% endblock %}
+
+{% block cart_icon %}
+
+{% endblock %}
+
+{% block body %}
+<div class="container text-center">
+    <h1 class="mb-4 text-primary">Admin Project Page</h1>
+    <a href="{{ url_for('admin_views.start_project') }}" class="btn btn-md btn-info mt-2">
+        Projekt erstellen
+    </a>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12 text-center mb-4">
+            <h3>{{ titles[0] }}</h3> <!-- Hier wird der erste Titel (EIGENE PROJEKTE, CUSTOMER = OWNER) angezeigt -->
+
+            <p class="site-description">Filterung nach Status:</p>
+
+                <div class="btn-group mb-3 flex-wrap" role="group">
+                    <a href="{{ url_for('admin_views.review_projects') }}"
+                       class="btn {% if not current_filter %}btn-primary{% else %}btn-outline-primary{% endif %} m-1">
+                        Standard-Queue
+                    </a>
+
+                    {% for status in available_statuses %}
+                    {% set button_class = 'btn-success' if status == current_filter else 'btn-outline-success' %}
+
+                    <a href="{{ url_for('admin_views.review_projects', status=status) }}"
+                       class="btn {{ button_class }} m-1">
+                        {{ status | replace('_', ' ') }}
+                    </a>
+
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+        <!-- 1. ÄUSSEREN CONTAINER STARTEN (Passt sich der gesamten Breite an) -->
+        <div class="container-fluid">
+            <!-- 2. ÄUSSERE ROW STARTEN (Benötigt für das Grid-System) -->
+            <div class="row">
+            <!-- 3. HIER ERFOLGT DIE VERSCHIEBUNG UND BREITENBEGRENZUNG -->
+            <!-- col-lg-12: 12 Spalten der Breite -->
+                <div class="col-12 col-lg-12">
+            {% if projects %}
+                <div class="row">
+
+
+            {% for project in projects %}
+                    <div class="col-12 col-md-6 col-lg-4 mb-4">
+
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body d-flex flex-column">
+
+                            <h5 class="card-title text-primary">{{ project.ProjectName | default('Unbenanntes Projekt') }}</h5>
+
+                            <button class="btn btn-sm delete-btn" data-project-id="{{ project.ProjectID }}"title="Projekt löschen"
+                            style="position: absolute; top: 10px; right: 10px;">
+
+                                &#x2715;  <!--deleteButton-->
+
+                            </button>
+                            <button class="btn btn-sm add-mes-btn" data-project-id="{{ project.ProjectID }}"title="Projekt ins MES laden"
+                            style="position: absolute; top: 50px; right: 10px;">
+
+                                &#x1F3ED;  <!--MESLoadingButton-->
+
+                            </button>
+                            {% if project.AdminMessagesSent and project.AdminMessagesSent > 0 %}
+                                <span title="{{ project.AdminMessagesSent }} Nachrichten gesendet">
+                                   <p>Admin-Feedback gesendet  &#10004; ({{ project.AdminMessagesSent }})</p>
+                                </span>
+                            {% endif %}
+
+                            <p class="card-text mb-1">
+                                <strong>ID:</strong> {{ project.ProjectID | truncate(15) }}
+                            </p>
+                            <p class="card-text mb-1">
+                                <strong>Kunde:</strong> {{ project.CustomerName | truncate(15) }}
+                            </p>
+                            <p class="card-text mb-1">
+                                <strong>Status:</strong> <span class="badge bg-warning">{{ project.Status }}</span>
+                            </p>
+                            <p class="card-text mb-3">
+                                <strong>Material:</strong> {{ project.MaterialType | default('Nicht angegeben') }}
+                            </p>
+                            {# Button nur anzeigen, wenn der Status WAITING_FOR_QUOTE ist #}
+                            {% if project.Status == 'WAITING_FOR_QUOTE' %}
+                                <a href="{{ url_for('admin_views.review_final_quote', project_id=project.ProjectID) }}"
+                                class="btn btn-sm btn-success mt-auto">
+                                    Add Quote
+                                </a>
+                            {% endif %}
+
+                            <a href="{{ url_for('admin_views.project_details', project_id=project.ProjectID) }}" class="btn btn-sm btn-info mt-2">
+                                Details & Bearbeiten
+                            </a>
+
+                            </div>
+                        </div>
+
+                    </div>
+                {% endfor %}
+                {% else %}
+            <h3 class= "text-center text-muted text-white-50">Keine Projekte in dieser Ansicht gefunden.</h3>
+            </div>
+            {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12 text-center mb-4">
+            <h3>{{ titles[1] }}</h3> <!-- Hier wird der zweite Titel (EIGENE PROJEKTE, SYSTEM = OWNER) angezeigt -->
+
+            </div>
+        </div>
+        <!-- 1. ÄUSSEREN CONTAINER STARTEN (Passt sich der gesamten Breite an) -->
+        <div class="container-fluid">
+            <!-- 2. ÄUSSERE ROW STARTEN (Benötigt für das Grid-System) -->
+            <div class="row">
+            <!-- 3. HIER ERFOLGT DIE VERSCHIEBUNG UND BREITENBEGRENZUNG -->
+            <!-- col-lg-12: 12 Spalten der Breite -->
+                <div class="col-12 col-lg-12">
+            {% if system_projects %}
+                <div class="row">
+
+
+            {% for system_project in system_projects %}
+                    <div class="col-12 col-md-6 col-lg-4 mb-4">
+
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body d-flex flex-column">
+
+                            <h5 class="card-title text-primary">{{ system_project.ProjectName | default('Unbenanntes Projekt') }}</h5>
+
+                            <button class="btn btn-sm delete-btn" data-project-id="{{ system_project.ProjectID }}"title="Projekt löschen"
+                            style="position: absolute; top: 10px; right: 10px;">
+
+                                &#x2715;  <!--deleteButton-->
+
+                            </button>
+                            <button class="btn btn-sm add-mes-btn" data-project-id="{{ system_project.ProjectID }}"title="Projekt ins MES laden"
+                            style="position: absolute; top: 50px; right: 10px;">
+
+                                &#x1F3ED;  <!--MESLoadingButton-->
+
+                            </button>
+
+                            <p class="card-text mb-1">
+                                <strong>ID:</strong> {{ system_project.ProjectID | truncate(15) }}
+                            </p>
+                            <p class="card-text mb-1">
+                                <strong>Admin:</strong> {{ system_project.AdminName | truncate(15) }}
+                            </p>
+                            <p class="card-text mb-1">
+                                <strong>Status:</strong> <span class="badge bg-warning">{{ system_project.Status }}</span>
+                            </p>
+                            <p class="card-text mb-3">
+                                <strong>Material:</strong> {{ system_project.MaterialType | default('Nicht angegeben') }}
+                            </p>
+                                <a href="{{ url_for('admin_views.show_quote_pricing', project_id=system_project.ProjectID) }}"
+                                class="btn btn-sm btn-success mt-auto mb-2">
+                                    Details & Bearbeiten
+                                </a>
+                        
+                            {% if system_project.VolumeCM3 and system_project.PrintTimeMin and system_project.EstimatedMaterialG and system_project.ProfileID and system_project.MaterialID %}
+                    <form method="POST" action="{{ url_for('admin_views.convert_to_product', project_id=system_project.ProjectID) }}" class="mt-auto">
+                        <button type="submit" class="btn btn-sm btn-success w-100">
+                            In Produkt konvertieren
+                        </button>
+                    </form>
+                    {% else %}
+                    <p class="text-muted mt-auto">Keine Konversion möglich</p>
+
+                    {% endif %}
+                            
+
+                            </div>
+                        </div>
+
+                    </div>
+                {% endfor %}
+                {% else %}
+            <h3 class= "text-center text-muted text-white-50">Keine Projekte in dieser Ansicht gefunden.</h3>
+            </div>
+            {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    const mesButtons = document.querySelectorAll('.add-mes-btn');
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const projectId = this.getAttribute('data-project-id');
+            const projectName = this.closest('.card-body').querySelector('.card-title').textContent.trim();
+
+            // Bestätigungsdialog anzeigen
+            if (confirm(`Sind Sie sicher, dass Sie das Projekt "${projectName}" (ID: ${projectId}) löschen möchten?`)) {
+
+                // Formular dynamisch erstellen (für POST Request)
+                const form = document.createElement('form');
+                form.method = 'POST';
+                // WICHTIG: Verwenden der Flask-Route
+                form.action = "{{ url_for('admin_views.delete_project_route', project_id='0') }}".replace('0', projectId);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+    mesButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const projectId = this.getAttribute('data-project-id');
+            const projectName = this.closest('.card-body').querySelector('.card-title').textContent.trim();
+
+            // Bestätigungsdialog anzeigen
+            if (confirm(`Möchten Sie das Projekt "${projectName}" (ID: ${projectId}) ins MES laden?`)) {
+
+                // Formular dynamisch erstellen (für POST Request)
+                const form = document.createElement('form');
+                form.method = 'POST';
+                // WICHTIG: Verwenden der Flask-Route
+                form.action = "{{ url_for('admin_views.load_project_to_mes', project_id='0') }}".replace('0', projectId);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+});
+</script>
+
+
+{% endblock %}

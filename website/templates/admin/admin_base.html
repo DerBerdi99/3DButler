@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap-icons.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+
+    <script src= "{{ url_for('static',filename='js/bootstrap.bundle.min.js') }}"></script>
+
+    <title>3DButler | {% block title %} {% endblock %}</title>
+    {% block extra_styles %} {% endblock %}
+</head>
+<body style="background: linear-gradient(to right, #1A237E, #263238, #1A237E);">
+
+    <nav class="navbar navbar-expand-lg" style="background-color: #BABABA;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#" style="color: #242424ad; font-size: 30px; margin-right: -2px;">
+                <a href="{% if session.get('is_admin') == 1 %}
+                            {{ url_for('admin_views.dashboard') }}
+                         {% else %}
+                            {{ url_for('views.home') }}
+                         {% endif %}" class="Icon-link">
+                <img class="Icon" src="{{url_for('static',filename='icons/3dbutler.png')}}" alt="Home Icon">
+                </a>
+            </a>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                    <li class="nav-item">
+                        <a class="nav-link text-grey" href="#" style="font-size: 18px; color: #BDBDBD;">About Us</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link text-grey" href="#" style="font-size: 18px; color: #BDBDBD;">Contact us</a>
+                    </li>
+                </ul>
+
+                {# ----------------------------------------------------------- #}
+                {# START BLOCK: Kopfzeile (Im shop Suchleiste: zum Überschreiben) #}
+                {% block header %}
+                <div class="header-monitor-strip">
+                    <div class="job-meta">
+                        <span class="label">Job</span>
+                        <span class="value">Part_01</span>
+                        <span class="label">Projekt</span>
+                        <span class="value">Projekt_1</span>
+                    </div>
+                
+                    <div class="job-progress-center">
+                        <div class="execution-group">
+                            <div class="progress-stats-wrapper">
+                                <span class="percent">52.4 %</span>
+                                <span class="eta">Rest: 1h 10m</span>
+                            </div>
+                            
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" style="width: 52.4%;"></div>
+                            </div>
+                
+                            <div class="execution-controls">
+                                <a href="#" class="btn-bom-link">BOM</a>
+                                <button class="btn-start">▶ START</button>
+                                <button class="btn-stop">⏹ STOP</button>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="view-navigation">
+                        <div class="header-log-ticker">
+                            <ul>
+                                <li>OK: Print Finished 12/31 21:02</li>
+                                <li>ST: Print Started 01/01 12:14</li>
+                                <li>OK: Print Finished 01/01 17:43</li>
+                            </ul>
+                        </div>
+                        <div class="nav-controls">
+                            <button class="btn-prev">◀</button>
+                            <span class="job-index">Drucker 1/4</span>
+                            <button class="btn-next">▶</button>
+                        </div>
+                    </div>
+                </div>
+                {% endblock %}
+                {# END BLOCK:Kopfzeile #}
+                {# ----------------------------------------------------------- #}
+            </div>
+
+
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                {# ----------------------------------------------------------- #}
+                {# START BLOCK: Warenkorb Icon (zum Überschreiben) #}
+                {% block cart_icon %}
+                <li class="nav-item mx-2" id="items">
+                    <a class="nav-link text-grey" href="{% if logged_in %}{{ url_for('views.cart') }}{% else %}{{ url_for('auth.login') }}{% endif %}" style="color: rgb(0, 0, 0);"><span class="badge bg-success"></span> 
+                        <i class="cart-icon"></i>Einkaufswagen
+                    </a>
+                </li>
+                {% endblock %}
+                {# END BLOCK: Warenkorb Icon #}
+                {# ----------------------------------------------------------- #}
+
+                {# ----------------------------------------------------------- #}
+                {# START BLOCK: WishList Icon (zum Überschreiben) #}
+                {% block wishlist_icon %}
+                <li class="nav-item mx-2" id="items">
+                    <a class="nav-link text-grey" href="{% if logged_in %}{{ url_for('views.wishlist') }}{% else %}{{ url_for('auth.login') }}{% endif %}" style="color: rgb(0, 0, 0);"><span class="badge bg-success"></span> 
+                    <i class="heart-icon"></i>Wunschliste
+                    </a>
+                </li>
+                {% endblock %}
+                {# END BLOCK: WishList Icon #}
+                {# ----------------------------------------------------------- #}
+
+
+                <li class="nav-item dropdown mx-2">
+                    <a class="nav-link dropdown-toggle text-grey" href="#" role="button", id="profileDropdown"
+                    data-bs-toggle="dropdown" aria-hidden="false" style="color: #1A237E;">
+                    <i class="account-icon"></i>Account
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="profileDropdown">
+
+
+
+                        <li><a class="dropdown-item" href="#">Profile <i class="fa-solid fa-user"></i></a></li>
+                        <li><a class="dropdown-item" href="#">Orders <i class="fa-solid fa-truck-fast"></i></a></li>
+                        {% if 'user_id' in session %}
+                        <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Log Out <i class="fa-solid fa-right-from-bracket"></i></a></li>
+                        {% else %}
+                        <li><a class="dropdown-item disabled" href="#">Log Out <i class="fa-solid fa-right-from-bracket"></i></a></li>
+                        {% endif %}
+
+
+
+                        {% if not 'user_id' in session %}
+                        <li><a class="dropdown-item" href="{{ url_for('auth.login') }}">Login <i class="fa-solid fa-right-to-bracket"></i></a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('auth.registrationform') }}">Register <i class="fa-solid fa-right-from-bracket"></i></a></li>
+                        {% endif %}
+
+
+
+                    </ul>
+
+                </li>
+
+            </ul>
+
+
+        </div>
+
+
+    </nav>
+
+
+    
+    {% for message in get_flashed_messages() %}
+
+    <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-top: 5px;">
+        <strong>{{ message }}</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+    </div>
+    {% endfor %}
+
+    {% block admin_navbar %}
+<div class="col-md-6">
+    <div class="list-group border-0">
+        <a href="{{ url_for('views.shop') }}" class="list-group-item list-group-item-action nav-custom-item">
+            <span class="link-name">Zum Shop (Kundenansicht)</span>
+        </a>
+        
+        <a href="{{ url_for('admin_views.review_projects') }}" class="list-group-item list-group-item-action nav-custom-item item-priority">
+            <span class="link-name">Projekte begutachten (Review-Queue)</span>
+        </a>
+
+        <a href="{{ url_for('admin_views.manage_users') }}" class="list-group-item list-group-item-action nav-custom-item">
+            <span class="link-name">Benutzer verwalten</span>
+        </a>
+
+        <a href="{{ url_for('admin_views.manage_products') }}" class="list-group-item list-group-item-action nav-custom-item item-priority">
+            <span class="link-name">Produkte verwalten</span>
+        </a>
+
+        <a href="{{ url_for('admin_views.manage_orders') }}" class="list-group-item list-group-item-action nav-custom-item">
+            <span class="link-name">Bestellungen verwalten</span>
+        </a>
+
+        <a href="{{ url_for('admin_views.manufacturing_control') }}" class="list-group-item list-group-item-action nav-custom-item item-priority">
+            <span class="link-name">Fertigung steuern</span>
+        </a>
+
+        <a href="{{ url_for('admin_views.workshop') }}" class="list-group-item list-group-item-action nav-custom-item">
+            <span class="link-name">Werkstatt betreten</span>
+        </a>
+    </div>
+</div>
+    {% endblock %}
+
+
+    {% block body %}
+
+
+    {% endblock %}
+    {% if session.get('is_admin') == 0 %}
+    <footer class="container-fluid text-center p-2 mt-5" style="background-color: rgb(92, 92, 92); color: white;">
+        <a href="https://github.com/Frost-Codes" style="color: white;">3DButler</a> | <span>
+            <i class="fa-sharp fa-regular fa-copyright"></i></span> 2025 All rights reserved
+    {% endif %}
+    </footer>
+</body>
+
+
+</html>
+
+{% block scripts %}
+    <!-- Dieser Block ist standardmäßig leer und wird vererbt. genau wie die ganzen anderen da oben ^ -->
+{% endblock %}

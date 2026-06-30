@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product_description }}{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .product-container {
+        background: linear-gradient(135deg, rgba(76, 163, 175, 0.05), rgba(76, 86, 175, 0.1));
+        border-radius: 20px;
+        padding: 40px;
+        margin-top: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 40px rgba(76, 160, 175, 0.15);
+    }
+
+    .product-image-wrapper {
+        position: relative;
+        overflow: hidden;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    .product-image-wrapper img {
+        width: 100%;
+        height: auto;
+        max-height: 500px;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+
+    .product-image-wrapper:hover img {
+        transform: scale(1.05);
+    }
+
+    .product-details {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .product-title {
+        font-weight: bold;
+        color: #bdbdbd;
+        margin-bottom: 20px;
+        text-shadow: 0 2px 5px rgba(76, 172, 175, 0.2);
+    }
+    .product-description {
+        margin-top: 30px;
+        padding: 20px;
+        background: rgba(76, 147, 175, 0.08);
+        border-left: 4px solid #1A237E;
+        border-radius: 8px;
+        color: #ffffff;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    .product-price {
+        font-size: 2rem;
+        color: #fff;
+        font-weight: 600;
+        margin: 15px 0;
+    }
+
+    .product-stock {
+        font-size: 1.1rem;
+        color: #ffffff;
+        padding: 10px 15px;
+        background: linear-gradient(135deg, rgba(51, 140, 167, 0.5), #1A237E);
+        border-radius: 8px;
+        display: inline-block;
+        width: fit-content;
+        margin: 15px 0;
+        box-shadow: 0 4px 15px rgba(76, 160, 175, 0.3);
+    }
+    .creator-name {
+        margin-top: 10px;
+        padding: 20px;
+        background: rgba(76, 147, 175, 0.08);
+        border-left: 4px solid #1A237E;
+        border-radius: 8px;
+        color: #ffffff;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    .highlight {
+        font-weight: bold;
+        color: #1ff;
+    }
+    .product-stock.low-stock {
+        background: linear-gradient(135deg, #FF6B6B, #EE5A52);
+    }
+
+    .quantity-input-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 25px 0;
+    }
+
+    .quantity-input-group label {
+        font-weight: 600;
+        color: #ffffff;
+        font-size: 1.05rem;
+    }
+
+    .quantity-input-group input {
+        width: 80px;
+        padding: 10px;
+        border: 2px solid #1A237E;
+        border-radius: 8px;
+        background-color: rgba(170, 221, 255, 0.05);
+        color: #1ff;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .quantity-input-group input:focus {
+        outline: none;
+        border-color: #1A237E;
+        box-shadow: 0 0 10px rgba(76, 144, 175, 0.3);
+    }
+
+    .btn-add-cart {
+        background: linear-gradient(135deg, #1ff, #1A237E);
+        color: #ffffff;
+        padding: 15px 40px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 20px rgba(76, 155, 175, 0.3);
+        margin-right: 15px;
+    }
+
+    .btn-add-cart:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(82, 144, 202, 0.5);
+        background: linear-gradient(135deg, #1ff, #1A237E);
+    }
+
+    .btn-wishlist {
+        background: linear-gradient(135deg, #FF6B6B, #EE5A52);
+        color: #ffffff;
+        padding: 15px 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+    }
+
+    .btn-wishlist:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(255, 107, 107, 0.5);
+        background: linear-gradient(135deg, #EE5A52, #E53935);
+    }
+
+    .alert-danger {
+        background-color: rgba(255, 107, 107, 0.2);
+        color: #FF6B6B;
+        border-left: 4px solid #FF6B6B;
+    }
+      .button-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .product-title {
+            font-size: 1.8rem;
+        }
+        .product-price {
+            font-size: 1.5rem;
+        }
+        .button-group {
+            flex-direction: column;
+        }
+        .btn-add-cart, .btn-wishlist {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="product-container">
+        <div class="row align-items-center">
+            <!-- Product Image -->
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <div class="product-image-wrapper">
+                    <img src="{{ url_for('static', filename= product_image) }}" alt="{{ product_description }}" class="img-fluid">
+                </div>
+            </div>
+
+            <!-- Product Details -->
+            <div class="col-lg-6">
+                <div class="product-details">
+                    <h3 class="product-title">{{ product_name }}</h3>
+                    
+                    <div class="product-price">💰 €{{ price }}</div>
+                    
+                    <div class="product-stock {% if stock_quantity < 5 %}low-stock{% endif %}">
+                        📦 {% if stock_quantity > 0 %}{{ stock_quantity }} verfügbar{% else %}Nicht verfügbar{% endif %}
+                    </div>
+
+                    <div class="product-description">
+                        {{ product_description }}
+                    </div>
+
+                    <div class="creator-name"> 
+                       Ersteller: <span class="highlight"> {{ creator_name }} </span>
+                    </div>
+
+                    <!-- Add to Cart Form -->
+                    <form method="POST" action="{{ url_for('views.add_to_cart', product_id=product_id) }}" style="display: inline;">
+                        {{ csrf_field() }}
+                        <div class="quantity-input-group">
+                            <label for="quantity">Menge:</label>
+                            <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ stock_quantity }}">
+                        </div>
+
+                        <div class="button-group">
+                            <button type="submit" class="btn-add-cart">🛒 In den Warenkorb</button>
+                            
+                            <!-- Wishlist Button -->
+                            <button type="button" class="btn-wishlist" onclick="addToWishlist('{{ product_id }}')">❤️ Wunschliste</button>
+                        </div>
+                    </form>
+
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">✓ {{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function addToWishlist(productId) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ url_for('views.add_to_wishlist', product_id='') }}".replace('', productId);
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>
+{% endblock %}
